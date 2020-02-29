@@ -1,0 +1,10 @@
+build:
+    image: latest
+
+python:
+    version: 3.6
+    pip_install: true
+
+requirements: docs/requirements.txt
+sphinx:
+  configuration: docs/conf.py

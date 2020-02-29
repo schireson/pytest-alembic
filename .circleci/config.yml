@@ -1,0 +1,127 @@
+version: 2.1
+
+executors:
+  python36:
+    docker:
+      - image: circleci/python:3.6
+
+  python37:
+    docker:
+      - image: circleci/python:3.7
+
+  python38:
+    docker:
+      - image: circleci/python:3.8
+
+  publish:
+    docker:
+      - image: circleci/python:3.6
+
+commands:
+  setup:
+    steps:
+      - checkout
+      - run:
+          name: Execute prerequisite setup
+          command: |
+            curl -sSL https://raw.githubusercontent.com/sdispater/poetry/master/get-poetry.py | python
+            echo 'export PATH="$HOME/.poetry/bin:$PATH"' >> $BASH_ENV
+
+  run-make:
+    parameters:
+      command:
+        type: string
+    steps:
+      - run:
+          name: Run a make command
+          command: |
+            poetry run make << parameters.command >>
+
+  setup-python:
+    description: Install python dependencies
+    steps:
+      - setup
+      - restore_cache:
+          key: v1-{{ checksum "pyproject.toml" }}-{{ checksum "poetry.lock" }}
+      - run-make:
+          command: install
+      - save_cache:
+          paths:
+            - /home/circleci/.cache/pypoetry/virtualenvs
+          key: v1-{{ checksum "pyproject.toml" }}-{{ checksum "poetry.lock" }}
+
+  persist-coverage:
+    steps:
+      - persist_to_workspace:
+          root: .
+          paths:
+            - .coverage
+            - coverage.xml
+
+  publish:
+    steps:
+      - attach_workspace:
+          at: .
+      - run: bash <(curl -s https://codecov.io/bash)
+
+jobs:
+  test-python36:
+    executor: python36
+    steps:
+      - setup-python
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - attach_workspace:
+          at: .
+      - run-make:
+          command: test
+      - persist-coverage
+
+  test-python37:
+    executor: python37
+    steps:
+      - setup-python
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - run-make:
+          command: test
+
+  test-python38:
+    executor: python38
+    steps:
+      - setup-python
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - run-make:
+          command: test
+
+  lint:
+    executor: python36
+    steps:
+      - setup-python
+      - run-make:
+          command: lint
+
+  publish:
+    executor: publish
+    steps:
+      - setup-python
+      - publish
+
+
+workflows:
+  build_all:
+    jobs:
+      - test-python36
+      - test-python37
+      - test-python38
+
+      - publish:
+          requires:
+            - test-python36
+            - test-python37
+            - test-python38
+          filters:
+            branches:
+              only:
+                - /^master$/

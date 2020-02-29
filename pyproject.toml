@@ -1,0 +1,55 @@
+[tool.poetry]
+name = "pytest-alembic"
+version = "0.1.0"
+description = "A pytest plugin for verifying alembic migrations."
+authors = [
+    "Dan Cardin <ddcardin@gmail.com>",
+]
+license = "MIT"
+keywords = [ "pytest", "sqlalchemy", "alembic", "migration", "revision" ]
+classifiers = [ "Framework :: Pytest" ]
+repository = "https://github.com/schireson/pytest-alembic"
+packages = [
+    { include = "pytest_alembic", from = "src" },
+]
+readme = 'README.md'
+include = [
+    "*.md",
+]
+
+[tool.poetry.dependencies]
+python = ">=3.5, <4"
+
+pytest = {version = ">=1.0"}
+alembic = "*"
+sqlalchemy = "*"
+dataclasses = {version = "*", python = "<=3.7" }
+
+[tool.poetry.dev-dependencies]
+black = {version = "=>19.3b0", allow-prereleases = true, python = ">=3.6"}
+coverage = "*"
+flake8 = "*"
+isort = "*"
+mypy = {version = "*", python = ">=3.5"}
+pydocstyle = {version = "*", python = ">=3.5"}
+
+[tool.poetry.plugins.pytest11]
+pytest_alembic = "pytest_alembic.plugin"
+
+[tool.isort]
+default_section = 'FIRSTPARTY'
+include_trailing_comma = true
+indent = '    '
+length_sort = false
+line_length = 100
+multi_line_output = 3
+order_by_type = false
+known_first_party = 'tests'
+use_parentheses = true
+
+[tool.black]
+line_length = 100
+
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"

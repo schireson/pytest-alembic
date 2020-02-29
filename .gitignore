@@ -1,0 +1,61 @@
+# Editors
+.idea/
+.tags*
+*.iml
+*.iws
+*.sublime-project
+*.sublime-workspace
+*.sw?
+*~
+.vscode
+Session.vim
+.ropeproject/
+
+# IPython Notebook
+.ipynb_checkpoints
+
+# Mac
+.DS_Store
+Icon
+
+# Distribution / packaging
+.Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg
+*.egg-info/
+eggs/
+.eggs/
+.mypy_cache/
+dist/
+build/
+pip-wheel-metadata/
+
+# Testing
+.coverage
+.cache
+coverage.xml
+.coverage.*
+*.cover
+junit_results.xml
+coverage/
+.pytest_cache/
+
+# Logging
+log/
+
+# Environments
+.env
+.envrc
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.direnv/
+shell.nix
+
+# Documentation
+docs/_*
