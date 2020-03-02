@@ -1,4 +1,4 @@
-from pytest_alembic.plugin.plugin import PytestAlembicModule, collect_all_tests
+from pytest_alembic.plugin.plugin import collect_all_tests, collect_tests
 
 
 def pytest_addoption(parser):
@@ -31,17 +31,6 @@ def pytest_configure(config):
     config.addinivalue_line("markers", "alembic: Tests produced by pytest-alembic.")
 
 
-def pytest_collect_file(path, parent):
-    # XXX: This is called for every file, it really should be called once. Figure out
-    #      which hook should be used instead.
-    collected = getattr(pytest_collect_file, "collected", False)
-    if collected:
-        return
-    pytest_collect_file.collected = True
-
-    cli_enabled = parent.config.option.pytest_alembic_enabled
-    config_enabled = parent.config.getini("pytest_alembic_enabled")
-    if not cli_enabled and config_enabled:
-        return
-
-    return PytestAlembicModule(path, parent)
+def pytest_collection_modifyitems(session, config, items):
+    tests = collect_tests(session, config)
+    items.extend(tests)

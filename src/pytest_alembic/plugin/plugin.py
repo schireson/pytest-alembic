@@ -1,3 +1,4 @@
+import os
 import re
 
 import pytest
@@ -46,19 +47,26 @@ def enabled_test_names(all_test_names, raw_included_tests, raw_excluded_tests):
     return all_test_names - excluded_tests
 
 
-class PytestAlembicModule(pytest.Module):
-    def collect(self):
-        raw_included_tests = self.config.getini("pytest_alembic_include")
-        raw_excluded_tests = self.config.getini("pytest_alembic_exclude")
+def collect_tests(session, config):
+    cli_enabled = config.option.pytest_alembic_enabled
+    config_enabled = config.getini("pytest_alembic_enabled")
+    if not cli_enabled and config_enabled:
+        return []
 
-        all_tests = collect_all_tests()
-        test_names = enabled_test_names(set(all_tests), raw_included_tests, raw_excluded_tests)
+    raw_included_tests = config.getini("pytest_alembic_include")
+    raw_excluded_tests = config.getini("pytest_alembic_exclude")
 
-        for test_name in sorted(test_names):
-            test = all_tests[test_name]
-            yield PytestAlembicItem(
-                "pytest_alembic" + test.__name__, self, test,
-            )
+    all_tests = collect_all_tests()
+    test_names = enabled_test_names(set(all_tests), raw_included_tests, raw_excluded_tests)
+
+    result = []
+    for test_name in sorted(test_names):
+        test = all_tests[test_name]
+        result.append(
+            PytestAlembicItem(os.path.join("pytest_alembic", "tests", test_name), session, test)
+        )
+
+    return result
 
 
 class PytestAlembicItem(pytest.Item):
