@@ -1,7 +1,7 @@
 import contextlib
 import functools
 from dataclasses import dataclass
-from typing import List
+from typing import List, Optional
 
 from pytest_alembic.executor import CommandExecutor
 from pytest_alembic.history import AlembicHistory
@@ -57,6 +57,15 @@ class MigrationContext:
         """Get the list of revision heads.
         """
         return self.executor.run_command("heads")
+
+    @property
+    def current(self) -> Optional[str]:
+        """Get the list of revision heads.
+        """
+        current = self.executor.run_command("current")
+        if current:
+            return current[0]
+        return None
 
     def raw_command(self, *args, **kwargs):
         """Execute a raw alembic command.

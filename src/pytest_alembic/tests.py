@@ -1,4 +1,7 @@
 import pytest
+import logging
+
+log = logging.getLogger(__name__)
 
 
 @pytest.mark.alembic
@@ -55,10 +58,15 @@ def test_up_down_consistency(alembic_runner):
     While downgrading may not be lossless operation data-wise, there’s a theory of database
     migrations that says that the revisions in existence for a database should be able to go
     from an entirely blank schema to the finished product, and back again.
+
+    Individually upgrade to ensure that it's clear which revision caused the failure.
     """
-    # Individually upgrade to ensure that it's clear which revision caused the failure.
     for revision in alembic_runner.history.revisions:
+        current = alembic_runner.current
+        log.info(f"Migrating {current} -> {revision}")
         alembic_runner.migrate_up_to(revision)
 
     for revision in reversed(alembic_runner.history.revisions):
+        current = alembic_runner.current
+        log.info(f"Migrating {current} -> {revision}")
         alembic_runner.migrate_down_to(revision)
