@@ -1,3 +1,5 @@
+import os
+
 from pytest_alembic.plugin.plugin import collect_all_tests, collect_tests
 
 
@@ -32,5 +34,10 @@ def pytest_configure(config):
 
 
 def pytest_collection_modifyitems(session, config, items):
+    parent_paths = {os.path.dirname(path) for path in session._initialpaths}
+    has_root_parent = any(parent_path == config.rootdir for parent_path in parent_paths)
+    if parent_paths and not has_root_parent:
+        return
+
     tests = collect_tests(session, config)
     items.extend(tests)
