@@ -6,7 +6,9 @@ Welcome to Pytest Alembic's documentation!
    :caption: Contents:
 
    Quickstart <quickstart>
-   Fixtures <fixtures>
+   Setup <setup>
+   Custom Data Hooks <custom_data>
+   Custom Tests <custom_tests>
    API <api>
    Contributing <contributing>
 

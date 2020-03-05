@@ -135,9 +135,17 @@ class MigrationContext:
         self.migrate_up_one()
 
     def insert_into(self, table, data):
+        """Insert data into a given table.
+
+        Args:
+            table: The name of the table to insert data into
+            data: The data to insert. This is eventually passed through to SQLAlchemy's
+                Table class `values` method, and so should accept either a list of
+                `dict`s representing a list of rows, or a `dict` representing one row.
         """
-        """
-        return self.connection_executor(revision=self.current, tablename=table, data=data)
+        return self.connection_executor.table_insert(
+            revision=self.current, tablename=table, data=data
+        )
 
 
 class RevisionSuccess(Exception):

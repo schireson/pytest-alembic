@@ -69,11 +69,12 @@ class ConnectionExecutor:
         meta = cls.metadata(revision)
         return Table(name, meta, autoload=True, autoload_with=connection)
 
-    def table_insert(self, revision: str, data: Union[Dict, List]):
+    def table_insert(self, revision: str, data: Union[Dict, List], tablename=None):
         if isinstance(data, dict):
             data = [data]
 
         for item in data:
-            tablename = item.pop("__tablename__")
+            if tablename is None:
+                tablename = item.pop("__tablename__")
             table = self.table(revision, tablename, self.connection)
             self.connection.execute(table.insert().values(item))
