@@ -16,13 +16,7 @@ def alembic_runner(alembic_config, alembic_engine):
 def alembic_config():
     """Override this fixture to configure the exact alembic context setup required.
     """
-    return {
-        "target_metadata": None,
-        "process_revision_directives": None,
-        "include_schemas": True,
-        "script_location": "migrations",
-        "file": "alembic.ini",
-    }
+    return {}
 
 
 @pytest.fixture

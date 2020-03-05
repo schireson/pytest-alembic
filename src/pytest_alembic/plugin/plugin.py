@@ -49,8 +49,7 @@ def enabled_test_names(all_test_names, raw_included_tests, raw_excluded_tests):
 
 def collect_tests(session, config):
     cli_enabled = config.option.pytest_alembic_enabled
-    config_enabled = config.getini("pytest_alembic_enabled")
-    if not cli_enabled and config_enabled:
+    if not cli_enabled:
         return []
 
     raw_included_tests = config.getini("pytest_alembic_include")
