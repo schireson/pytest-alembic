@@ -62,11 +62,7 @@ def test_up_down_consistency(alembic_runner):
     Individually upgrade to ensure that it's clear which revision caused the failure.
     """
     for revision in alembic_runner.history.revisions:
-        current = alembic_runner.current
-        log.info(f"Migrating {current} -> {revision}")
         alembic_runner.migrate_up_to(revision)
 
     for revision in reversed(alembic_runner.history.revisions):
-        current = alembic_runner.current
-        log.info(f"Migrating {current} -> {revision}")
         alembic_runner.migrate_down_to(revision)

@@ -32,6 +32,7 @@ flake8 = "*"
 isort = "*"
 mypy = {version = "*", python = ">=3.5"}
 pydocstyle = {version = "*", python = ">=3.5"}
+pytest-mock-resources = "*"
 
 [tool.poetry.plugins.pytest11]
 pytest_alembic = "pytest_alembic.plugin"
