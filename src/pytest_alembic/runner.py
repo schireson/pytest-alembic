@@ -1,9 +1,9 @@
 import contextlib
 import functools
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import Optional, Dict, List, Union
 
-from pytest_alembic.executor import CommandExecutor
+from pytest_alembic.executor import CommandExecutor, ConnectionExecutor
 from pytest_alembic.history import AlembicHistory
 
 
@@ -15,12 +15,12 @@ def runner(config, engine=None):
         `MigrationContext` to the caller.
     """
     command_executor = CommandExecutor.from_config(config)
-    migration_context = MigrationContext(command_executor)
+    migration_context = MigrationContext.from_config(config, command_executor)
 
     if engine:
-        with engine.begin() as connection:
-            command_executor.configure(connection=connection)
-            yield migration_context
+        command_executor.configure(connection=engine)
+        migration_context.connection_executor = ConnectionExecutor(engine)
+        yield migration_context
     else:
         yield migration_context
 
@@ -30,7 +30,16 @@ class MigrationContext:
     """Within a given environment/execution context, executes alembic commands.
     """
 
-    executor: CommandExecutor
+    command_executor: CommandExecutor
+    revision_upgrade_data: Dict[str, Union[Dict, List]]
+    connection_executor: Optional[ConnectionExecutor] = None
+
+    @classmethod
+    def from_config(cls, config, command_executor):
+        return cls(
+            command_executor=command_executor,
+            revision_upgrade_data=config.get("revision_upgrade_data", {}),
+        )
 
     def generate_revision(self, process_revision_directives=None, **kwargs):
         """Generate a test revision.
@@ -41,7 +50,9 @@ class MigrationContext:
         """
         fn = RevisionSuccess.process_revision_directives(process_revision_directives)
         try:
-            return self.executor.run_command("revision", process_revision_directives=fn, **kwargs)
+            return self.command_executor.run_command(
+                "revision", process_revision_directives=fn, **kwargs
+            )
         except RevisionSuccess:
             pass
 
@@ -49,45 +60,53 @@ class MigrationContext:
     def history(self) -> AlembicHistory:
         """Get the revision history.
         """
-        raw_history = self.executor.run_command("history")
-        return AlembicHistory.parse(raw_history)
+        raw_history = self.command_executor.run_command("history")
+        return AlembicHistory.parse(tuple(raw_history))
 
     @property
     def heads(self) -> List[str]:
         """Get the list of revision heads.
         """
-        return self.executor.run_command("heads")
+        return self.command_executor.run_command("heads")
 
     @property
     def current(self) -> Optional[str]:
         """Get the list of revision heads.
         """
-        current = self.executor.run_command("current")
+        current = self.command_executor.run_command("current")
         if current:
-            return current[0]
-        return None
+            return current[0].strip()
+        return "base"
 
     def raw_command(self, *args, **kwargs):
         """Execute a raw alembic command.
         """
-        return self.executor.run_command(*args, **kwargs)
+        return self.command_executor.run_command(*args, **kwargs)
+
+    def managed_upgrade(self, dest_revision):
+        current = self.current
+        for next_revision in self.history.revision_range(current, dest_revision):
+            upgrade_data = self.revision_upgrade_data.get(next_revision)
+            if upgrade_data:
+                self.connection_executor.table_insert(next_revision, upgrade_data)
+            self.raw_command("upgrade", next_revision)
 
     def migrate_up_before(self, revision):
         """Upgrade up to, but not including the given `revision`.
         """
         preceeding_revision = self.history.previous_revision(revision)
-        self.raw_command("upgrade", preceeding_revision)
+        self.managed_upgrade(preceeding_revision)
 
     def migrate_up_to(self, revision):
         """Upgrade up to, and including the given `revision`.
         """
-        self.history.validate_revision(revision)
-        self.raw_command("upgrade", revision)
+        self.managed_upgrade(revision)
 
     def migrate_up_one(self):
         """Upgrade up by exactly one revision.
         """
-        self.raw_command("downgrade", "+1")
+        revision = self.history.next_revision(self.current)
+        self.managed_upgrade(revision)
 
     def migrate_down_before(self, revision):
         """Upgrade down to, but not including the given `revision`.
@@ -114,6 +133,11 @@ class MigrationContext:
         self.migrate_up_one()
         self.migrate_down_one()
         self.migrate_up_one()
+
+    def insert_into(self, table, data):
+        """
+        """
+        return self.connection_executor(revision=self.current, tablename=table, data=data)
 
 
 class RevisionSuccess(Exception):

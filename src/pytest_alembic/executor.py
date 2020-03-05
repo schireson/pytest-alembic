@@ -1,8 +1,12 @@
+import functools
 from dataclasses import dataclass
 from io import StringIO
+from typing import Dict, List, Union
 
 import alembic
 from alembic.config import Config
+from sqlalchemy import MetaData, Table
+from sqlalchemy.engine import Connection
 
 
 @dataclass
@@ -33,11 +37,43 @@ class CommandExecutor:
         for key, value in kwargs.items():
             self.alembic_config.attributes[key] = value
 
+    @property
+    def connection(self):
+        return self.alembic_config.attributes["connection"]
+
     def run_command(self, command, *args, **kwargs):
         self.stream_position = self.stdout.tell()
 
         executable_command = getattr(alembic.command, command)
-        executable_command(self.alembic_config, *args, **kwargs)
+        try:
+            executable_command(self.alembic_config, *args, **kwargs)
+        except alembic.util.exc.CommandError as e:
+            raise RuntimeError(e)
 
         self.stdout.seek(self.stream_position)
         return self.stdout.readlines()
+
+
+@dataclass
+class ConnectionExecutor:
+    connection: Connection
+
+    @classmethod
+    @functools.lru_cache()
+    def metadata(cls, revision: str) -> MetaData:
+        return MetaData()
+
+    @classmethod
+    @functools.lru_cache()
+    def table(cls, revision: str, name: str, connection: Connection) -> Table:
+        meta = cls.metadata(revision)
+        return Table(name, meta, autoload=True, autoload_with=connection)
+
+    def table_insert(self, revision: str, data: Union[Dict, List]):
+        if isinstance(data, dict):
+            data = [data]
+
+        for item in data:
+            tablename = item.pop("__tablename__")
+            table = self.table(revision, tablename, self.connection)
+            self.connection.execute(table.insert().values(item))
