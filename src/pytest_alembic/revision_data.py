@@ -31,6 +31,7 @@ class RevisionSpec:
 class RevisionData:
     """Describe the data which should exist at given revisions when performing upgrades.
     """
+
     before_revision_data: RevisionSpec
     at_revision_data: RevisionSpec
 

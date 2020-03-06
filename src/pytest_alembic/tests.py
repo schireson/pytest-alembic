@@ -1,5 +1,6 @@
-import pytest
 import logging
+
+import pytest
 
 log = logging.getLogger(__name__)
 
@@ -14,7 +15,7 @@ def test_single_head_revision(alembic_runner):
     """
     head_count = alembic_runner.heads
 
-    assert len(head_count) <= 1
+    assert len(head_count) <= 1  # nosec
 
 
 @pytest.mark.alembic
@@ -36,7 +37,7 @@ def test_model_definitions_match_ddl(alembic_runner):
 
     def verify_is_empty_revision(_, __, directives):
         script = directives[0]
-        assert script.upgrade_ops.is_empty(), (
+        assert script.upgrade_ops.is_empty(), (  # nosec
             "The models decribing the DDL of your database are out of sync with the set of "
             "steps described in the revision history. This usually means that someone has "
             "made manual changes to the database's DDL, or some model has been changed "

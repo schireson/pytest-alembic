@@ -1,5 +1,3 @@
-import os
-
 from pytest_alembic.plugin.plugin import collect_all_tests, collect_tests
 
 
