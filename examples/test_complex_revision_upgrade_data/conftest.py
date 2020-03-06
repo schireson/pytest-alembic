@@ -7,7 +7,7 @@ alembic_engine = create_postgres_fixture()
 @pytest.fixture
 def alembic_config():
     return {
-        "revision_upgrade_data": {
+        "before_revision_data": {
             "bbbbbbbbbbbb": [
                 {"__tablename__": "foo", "id": 9},
                 {"__tablename__": "foo", "id": 10},

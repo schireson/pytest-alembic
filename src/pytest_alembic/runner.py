@@ -1,10 +1,11 @@
 import contextlib
 import functools
 from dataclasses import dataclass
-from typing import Optional, Dict, List, Union
+from typing import Optional, Dict, List
 
 from pytest_alembic.executor import CommandExecutor, ConnectionExecutor
 from pytest_alembic.history import AlembicHistory
+from pytest_alembic.revision_data import RevisionData
 
 
 @contextlib.contextmanager
@@ -15,11 +16,12 @@ def runner(config, engine=None):
         `MigrationContext` to the caller.
     """
     command_executor = CommandExecutor.from_config(config)
-    migration_context = MigrationContext.from_config(config, command_executor)
+    migration_context = MigrationContext.from_config(
+        config, command_executor, ConnectionExecutor(engine)
+    )
 
     if engine:
         command_executor.configure(connection=engine)
-        migration_context.connection_executor = ConnectionExecutor(engine)
         yield migration_context
     else:
         yield migration_context
@@ -31,30 +33,21 @@ class MigrationContext:
     """
 
     command_executor: CommandExecutor
-    revision_upgrade_data: Dict[str, Union[Dict, List]]
-    connection_executor: Optional[ConnectionExecutor] = None
+    revision_data: RevisionData
+    connection_executor: ConnectionExecutor
 
     @classmethod
-    def from_config(cls, config, command_executor):
+    def from_config(
+        cls,
+        config: Dict,
+        command_executor: CommandExecutor,
+        connection_executor: ConnectionExecutor,
+    ):
         return cls(
             command_executor=command_executor,
-            revision_upgrade_data=config.get("revision_upgrade_data", {}),
+            revision_data=RevisionData.from_config(config),
+            connection_executor=connection_executor,
         )
-
-    def generate_revision(self, process_revision_directives=None, **kwargs):
-        """Generate a test revision.
-
-        The final act of this process raises a `RevisionSuccess`, which is used as a sentinal
-        to indicate the revision was generated successfully, while not actually finishing the
-        generation of the revision file.
-        """
-        fn = RevisionSuccess.process_revision_directives(process_revision_directives)
-        try:
-            return self.command_executor.run_command(
-                "revision", process_revision_directives=fn, **kwargs
-            )
-        except RevisionSuccess:
-            pass
 
     @property
     def history(self) -> AlembicHistory:
@@ -75,8 +68,23 @@ class MigrationContext:
         """
         current = self.command_executor.run_command("current")
         if current:
-            return current[0].strip()
+            return current[0].strip().split(" ")[0]
         return "base"
+
+    def generate_revision(self, process_revision_directives=None, **kwargs):
+        """Generate a test revision.
+
+        The final act of this process raises a `RevisionSuccess`, which is used as a sentinal
+        to indicate the revision was generated successfully, while not actually finishing the
+        generation of the revision file.
+        """
+        fn = RevisionSuccess.process_revision_directives(process_revision_directives)
+        try:
+            return self.command_executor.run_command(
+                "revision", process_revision_directives=fn, **kwargs
+            )
+        except RevisionSuccess:
+            pass
 
     def raw_command(self, *args, **kwargs):
         """Execute a raw alembic command.
@@ -84,12 +92,17 @@ class MigrationContext:
         return self.command_executor.run_command(*args, **kwargs)
 
     def managed_upgrade(self, dest_revision):
+        """Perform an upgrade, one migration at a time, inserting static data at the given points.
+        """
         current = self.current
-        for next_revision in self.history.revision_range(current, dest_revision):
-            upgrade_data = self.revision_upgrade_data.get(next_revision)
-            if upgrade_data:
-                self.connection_executor.table_insert(next_revision, upgrade_data)
+        for current_revision, next_revision in self.history.revision_window(current, dest_revision):
+            before_upgrade_data = list(self.revision_data.get_before(next_revision))
+            self.connection_executor.table_insert(current_revision, before_upgrade_data)
+
             self.raw_command("upgrade", next_revision)
+
+            at_upgrade_data = list(self.revision_data.get_at(next_revision))
+            self.connection_executor.table_insert(next_revision, at_upgrade_data)
 
     def migrate_up_before(self, revision):
         """Upgrade up to, but not including the given `revision`.

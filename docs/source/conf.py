@@ -19,8 +19,8 @@ extensions = [
     "m2r",
     "sphinx.ext.autosectionlabel",
     "sphinx.ext.autodoc",
+    "sphinx.ext.autodoc.typehints",
     "sphinx.ext.napoleon",
-    "sphinx_autodoc_typehints",
     "sphinx.ext.intersphinx",
 ]
 
@@ -31,6 +31,9 @@ html_theme = "sphinx_rtd_theme"
 html_static_path = ["_static"]
 html_sidebars = {"**": ["globaltoc.html", "relations.html", "sourcelink.html", "searchbox.html"]}
 
-intersphinx_mapping = {"https://docs.python.org/": None}
+intersphinx_mapping = {
+    "python": ("https://docs.python.org/3", None),
+    "sqlalchemy": ("https://docs.sqlalchemy.org/en/13/", None),
+}
 
 autoclass_content = "both"

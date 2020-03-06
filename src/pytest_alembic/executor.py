@@ -1,4 +1,5 @@
 import functools
+import itertools
 from dataclasses import dataclass
 from io import StringIO
 from typing import Dict, List, Union
@@ -73,8 +74,16 @@ class ConnectionExecutor:
         if isinstance(data, dict):
             data = [data]
 
-        for item in data:
-            if tablename is None:
-                tablename = item.pop("__tablename__")
+        def by_tablename(item):
+            _tablename = item.get("__tablename__")
+            return _tablename or tablename
+
+        def filter_non_column(item):
+            return {k: v for k, v in item.items() if k != "__tablename__"}
+
+        grouped_data = itertools.groupby(sorted(data, key=by_tablename), key=by_tablename)
+        per_table_data = {t: [filter_non_column(item) for item in data] for t, data in grouped_data}
+
+        for tablename, data in per_table_data.items():
             table = self.table(revision, tablename, self.connection)
-            self.connection.execute(table.insert().values(item))
+            self.connection.execute(table.insert().values(data))

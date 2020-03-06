@@ -1,9 +1,11 @@
 import functools
+import collections
+import itertools
 import re
 from dataclasses import dataclass
-from typing import Dict, Iterable, List, Optional
+from typing import Dict, Iterable, List, Optional, Tuple
 
-_RE_REVISION_PATTERN = r"-> ([a-zA-Z0-9]*)"
+_RE_REVISION_PATTERN = r"-> ([a-zA-Z0-9]*)[ ,]"
 
 
 @dataclass
@@ -32,8 +34,7 @@ class AlembicHistory:
         return cls(revisions, revision_indices, revisions_by_index)
 
     def validate_revision(self, revision):
-        valid_revision = revision in self.revision_indices
-        if not valid_revision:
+        if revision not in self.revision_indices:
             raise ValueError(f"Revision {revision} is not a valid revision in alembic's history")
 
     def previous_revision(self, revision: str) -> Optional[str]:
@@ -51,4 +52,15 @@ class AlembicHistory:
         self.validate_revision(dest_revision)
         start_index = self.revision_indices[current_revision]
         end_index = self.revision_indices[dest_revision]
-        return [self.revisions[index] for index in range(start_index + 1, end_index)]
+        return [self.revisions[index] for index in range(start_index, end_index + 1)]
+
+    def revision_window(self, current_revision: str, dest_revision: str) -> List[Tuple[str, str]]:
+        revision_range = self.revision_range(current_revision, dest_revision)
+        return list(
+            zip(
+                *(
+                    collections.deque(itertools.islice(it, i), 0) or it
+                    for i, it in enumerate(itertools.tee(revision_range, 2))
+                )
+            )
+        )

@@ -18,3 +18,6 @@ The object yielded into a test from an `alembic_runner` fixture is the :class:`M
 
 .. automodule:: pytest_alembic.history
     :members: AlembicHistory
+
+.. automodule:: pytest_alembic.revision_data
+    :members: RevisionData, RevisionSpec
