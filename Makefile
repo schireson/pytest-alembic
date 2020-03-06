@@ -18,7 +18,7 @@ lint:
 	pydocstyle src tests
 	black --check src tests
 	mypy src tests
-	bandit src
+	bandit -r src
 
 format:
 	isort --recursive src tests
