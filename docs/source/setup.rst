@@ -95,3 +95,24 @@ databases, file an issue!
    from pytest_mock_resources import create_postgres_fixture
 
    alembic_engine = create_postgres_fixture()
+
+
+Git(hub) Settings
+-----------------
+
+.. image:: _static/github_setting.png
+
+We highly recommend you enable "Require branches to be up to date before merging" on repos
+which have alembic migrations!
+
+While this will require that people merging PRs to rebase on top of master before merging
+(which we think is ideal for ensuring your build is always green anyways), it guarantees that
+**our** tests are running against a known up-to-date migration history.
+
+Without this option it is trivially easy to end up with an alembic version history with
+2 or more heads which needs to be manually resolved.
+
+Provider support
+
+* Only GitLab EE supports an approximate option to GitHub's.
+* Only Bitbucket EE supports an approximate option to GitHub's.
