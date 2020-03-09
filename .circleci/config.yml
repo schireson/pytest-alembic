@@ -4,14 +4,29 @@ executors:
   python36:
     docker:
       - image: circleci/python:3.6
+      - image: postgres:9.6.10-alpine
+        environment:
+          POSTGRES_DB: dev
+          POSTGRES_USER: user
+          POSTGRES_PASSWORD: password
 
   python37:
     docker:
       - image: circleci/python:3.7
+      - image: postgres:9.6.10-alpine
+        environment:
+          POSTGRES_DB: dev
+          POSTGRES_USER: user
+          POSTGRES_PASSWORD: password
 
   python38:
     docker:
       - image: circleci/python:3.8
+      - image: postgres:9.6.10-alpine
+        environment:
+          POSTGRES_DB: dev
+          POSTGRES_USER: user
+          POSTGRES_PASSWORD: password
 
   publish:
     docker:
