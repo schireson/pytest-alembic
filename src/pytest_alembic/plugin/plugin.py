@@ -52,8 +52,9 @@ def collect_tests(session, config):
     if not cli_enabled:
         return []
 
+    option = config.option
     raw_included_tests = config.getini("pytest_alembic_include")
-    raw_excluded_tests = config.getini("pytest_alembic_exclude")
+    raw_excluded_tests = option.pytest_alembic_exclude or config.getini("pytest_alembic_exclude")
 
     all_tests = collect_all_tests()
     test_names = enabled_test_names(set(all_tests), raw_included_tests, raw_excluded_tests)

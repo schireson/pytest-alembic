@@ -22,6 +22,12 @@ def pytest_addoption(parser):
         help="Enable pytest-alembic built-in tests",
         dest="pytest_alembic_enabled",
     )
+    group.addoption(
+        "--alembic-exclude",
+        default=None,
+        help=f"List of built-in tests to exclude. Valid options include: {default_tests}",
+        dest="pytest_alembic_exclude",
+    )
 
 
 def pytest_configure(config):
