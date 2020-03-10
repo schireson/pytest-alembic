@@ -62,9 +62,9 @@ def collect_tests(session, config):
     result = []
     for test_name in sorted(test_names):
         test = all_tests[test_name]
-        result.append(
-            PytestAlembicItem(os.path.join("pytest_alembic", "tests", test_name), session, test)
-        )
+
+        # XXX: "tests" should become an ini configurable option.
+        result.append(PytestAlembicItem(f"tests::pytest_alembic::{test.__name__}", session, test))
 
     return result
 
@@ -73,7 +73,7 @@ class PytestAlembicItem(pytest.Item):
     obj = None
 
     def __init__(self, name, parent, test_fn):
-        super().__init__(name, parent)
+        super().__init__(name, parent, nodeid=name)
 
         self.test_fn = test_fn
         self.funcargs = {}

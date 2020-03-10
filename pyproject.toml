@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pytest-alembic"
-version = "0.1.1"
+version = "0.1.2"
 description = "A pytest plugin for verifying alembic migrations."
 authors = [
     "Dan Cardin <ddcardin@gmail.com>",
