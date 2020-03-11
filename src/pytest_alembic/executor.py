@@ -29,7 +29,7 @@ class CommandExecutor:
         alembic_config.set_main_option("script_location", script_location)
 
         alembic_config.attributes["target_metadata"] = target_metadata
-        alembic_config.attributes["process_revi"] = process_revision_directives
+        alembic_config.attributes["process_revision_directives"] = process_revision_directives
         alembic_config.attributes["include_schemas"] = include_schemas
 
         return cls(alembic_config=alembic_config, stdout=stdout, stream_position=0)

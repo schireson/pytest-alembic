@@ -20,11 +20,18 @@ def runner(config, engine=None):
         config, command_executor, ConnectionExecutor(engine)
     )
 
-    if engine:
-        command_executor.configure(connection=engine)
-        yield migration_context
-    else:
-        yield migration_context
+    command_executor.configure(connection=engine)
+    yield migration_context
+
+
+def _sequence_directives(*directives):
+    def directive_wrapper(*args, **kwargs):
+        for directive in directives:
+            if not directive:
+                continue
+            directive(*args, **kwargs)
+
+    return directive_wrapper
 
 
 @dataclass
@@ -78,7 +85,11 @@ class MigrationContext:
         to indicate the revision was generated successfully, while not actually finishing the
         generation of the revision file.
         """
-        fn = RevisionSuccess.process_revision_directives(process_revision_directives)
+        alembic_config = self.command_executor.alembic_config
+        config_directive = alembic_config.attributes["process_revision_directives"]
+        fn = RevisionSuccess.process_revision_directives(
+            _sequence_directives(config_directive, process_revision_directives)
+        )
         try:
             return self.command_executor.run_command(
                 "revision", process_revision_directives=fn, **kwargs
@@ -125,7 +136,7 @@ class MigrationContext:
         """Upgrade down to, but not including the given `revision`.
         """
         next_revision = self.history.next_revision(revision)
-        self.raw_command("downgrade", self.get_hash_before(next_revision))
+        self.migrate_down_to(next_revision)
 
     def migrate_down_to(self, revision):
         """Upgrade down to, and including the given `revision`.
@@ -169,14 +180,13 @@ class RevisionSuccess(Exception):
     """
 
     @classmethod
-    def process_revision_directives(cls, fn=None):
+    def process_revision_directives(cls, fn):
         """Wrap a real `process_revision_directives` function, while preventing it from completing.
         """
 
         @functools.wraps(fn)
         def _process_revision_directives(context, revision, directives):
-            if fn:
-                fn(context, revision, directives)
+            fn(context, revision, directives)
             raise cls()
 
         return _process_revision_directives

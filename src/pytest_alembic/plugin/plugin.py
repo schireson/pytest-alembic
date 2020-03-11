@@ -1,4 +1,3 @@
-import os
 import re
 
 import pytest
@@ -28,7 +27,7 @@ def parse_raw_test_names(raw_test_names):
     return result
 
 
-def enabled_test_names(all_test_names, raw_included_tests, raw_excluded_tests):
+def enabled_test_names(all_test_names, raw_included_tests="", raw_excluded_tests=""):
     if raw_included_tests:
         included_tests = set(parse_raw_test_names(raw_included_tests))
         invalid_tests = included_tests - all_test_names
