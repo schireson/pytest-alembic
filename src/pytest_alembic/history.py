@@ -3,7 +3,7 @@ import functools
 import itertools
 import re
 from dataclasses import dataclass
-from typing import Dict, Iterable, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 _RE_REVISION_PATTERN = r"-> ([a-zA-Z0-9]*)[ ,]"
 
@@ -16,7 +16,7 @@ class AlembicHistory:
 
     @classmethod
     @functools.lru_cache()
-    def parse(cls, raw_history: Iterable[str]) -> "AlembicHistory":
+    def parse(cls, raw_history: Tuple[str]) -> "AlembicHistory":
         """Extract the set of migration revision hashes from the result of an `alembic history` command.
         """
         revision_hashes = ["head"]

@@ -16,7 +16,7 @@ class RevisionSpec:
         if not data:
             return cls({})
 
-        if isinstance(data, RevisionData):
+        if isinstance(data, RevisionSpec):
             return data
 
         return cls(data)
