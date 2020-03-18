@@ -4,4 +4,5 @@ from pytest_alembic.plugin.hooks import (
     pytest_addoption,
     pytest_collection_modifyitems,
     pytest_configure,
+    pytest_itemcollected,
 )

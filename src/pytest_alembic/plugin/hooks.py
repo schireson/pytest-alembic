@@ -31,9 +31,19 @@ def pytest_addoption(parser):
 
 
 def pytest_configure(config):
-    config.addinivalue_line("markers", "alembic: Tests produced by pytest-alembic.")
+    config.addinivalue_line("markers", "alembic: Tests which use pytest-alembic.")
 
 
 def pytest_collection_modifyitems(session, config, items):
     tests = collect_tests(session, config)
     items.extend(tests)
+
+
+def pytest_itemcollected(item):
+    """Attach a marker to each test which uses the alembic fixture.
+    """
+    if not hasattr(item, "fixturenames"):
+        return
+
+    if "alembic_runner" in item.fixturenames:
+        item.add_marker("alembic")

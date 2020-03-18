@@ -74,16 +74,9 @@ class ConnectionExecutor:
         if isinstance(data, dict):
             data = [data]
 
-        def by_tablename(item):
-            _tablename = item.get("__tablename__")
-            return _tablename or tablename
+        for item in data:
+            _tablename = item.pop("__tablename__", None)
+            table = _tablename or tablename
 
-        def filter_non_column(item):
-            return {k: v for k, v in item.items() if k != "__tablename__"}
-
-        grouped_data = itertools.groupby(sorted(data, key=by_tablename), key=by_tablename)
-        per_table_data = {t: [filter_non_column(item) for item in data] for t, data in grouped_data}
-
-        for tablename, data in per_table_data.items():
-            table = self.table(revision, tablename, self.connection)
-            self.connection.execute(table.insert().values(data))
+            table = self.table(revision, table, self.connection)
+            self.connection.execute(table.insert().values(item))
