@@ -37,3 +37,4 @@ intersphinx_mapping = {
 }
 
 autoclass_content = "both"
+master_doc = "index"
