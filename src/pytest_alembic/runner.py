@@ -171,6 +171,16 @@ class MigrationContext:
             revision=self.current, tablename=table, data=data
         )
 
+    def table_at_revision(self, name, *, revision=None, schema=None):
+        """Insert data into a given table.
+
+        Args:
+            name: The name of the table to insert data into
+            revision: The revision of the table to return.
+        """
+        revision = revision or self.current
+        return self.connection_executor.table(revision=revision, name=name, schema=schema)
+
 
 class RevisionSuccess(Exception):
     """Raise when a revision is successfully generated.

@@ -1,8 +1,7 @@
 import functools
-import itertools
 from dataclasses import dataclass
 from io import StringIO
-from typing import Dict, List, Union
+from typing import Dict, List, Optional, Union
 
 import alembic
 from alembic.config import Config
@@ -55,20 +54,18 @@ class CommandExecutor:
         return self.stdout.readlines()
 
 
-@dataclass
+@dataclass(frozen=True)
 class ConnectionExecutor:
     connection: Connection
 
-    @classmethod
     @functools.lru_cache()
-    def metadata(cls, revision: str) -> MetaData:
+    def metadata(self, revision: str) -> MetaData:
         return MetaData()
 
-    @classmethod
     @functools.lru_cache()
-    def table(cls, revision: str, name: str, connection: Connection) -> Table:
-        meta = cls.metadata(revision)
-        return Table(name, meta, autoload=True, autoload_with=connection)
+    def table(self, revision: str, name: str, schema: Optional[str] = None) -> Table:
+        meta = self.metadata(revision)
+        return Table(name, meta, schema=schema, autoload=True, autoload_with=self.connection)
 
     def table_insert(self, revision: str, data: Union[Dict, List], tablename=None):
         if isinstance(data, dict):
@@ -78,5 +75,5 @@ class ConnectionExecutor:
             _tablename = item.pop("__tablename__", None)
             table = _tablename or tablename
 
-            table = self.table(revision, table, self.connection)
+            table = self.table(revision, table)
             self.connection.execute(table.insert().values(item))
