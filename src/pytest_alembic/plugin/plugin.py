@@ -63,7 +63,11 @@ def collect_tests(session, config):
         test = all_tests[test_name]
 
         # XXX: "tests" should become an ini configurable option.
-        result.append(PytestAlembicItem(f"tests::pytest_alembic::{test.__name__}", session, test))
+        result.append(
+            PytestAlembicItem.from_parent(
+                session, name=f"tests::pytest_alembic::{test.__name__}", test_fn=test
+            )
+        )
 
     return result
 
@@ -71,13 +75,17 @@ def collect_tests(session, config):
 class PytestAlembicItem(pytest.Item):
     obj = None
 
-    def __init__(self, name, parent, test_fn):
-        super().__init__(name, parent, nodeid=name)
+    @classmethod
+    def from_parent(cls, parent, *, name, test_fn):
+        if hasattr(super(), "from_parent"):
+            self = super().from_parent(name=name, parent=parent)
+        else:
+            self = cls(name=name, parent=parent)
 
         self.test_fn = test_fn
         self.funcargs = {}
-
         self.add_marker("alembic")
+        return self
 
     def runtest(self):
         fm = self.session._fixturemanager
