@@ -77,10 +77,11 @@ class PytestAlembicItem(pytest.Item):
 
     @classmethod
     def from_parent(cls, parent, *, name, test_fn):
+        kwargs = dict(name=name, parent=parent, nodeid=name)
         if hasattr(super(), "from_parent"):
-            self = super().from_parent(name=name, parent=parent)
+            self = super().from_parent(**kwargs)
         else:
-            self = cls(name=name, parent=parent)
+            self = cls(**kwargs)
 
         self.test_fn = test_fn
         self.funcargs = {}

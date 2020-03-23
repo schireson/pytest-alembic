@@ -67,3 +67,20 @@ class Test_collect_tests:
 
         assert result.ret == 0
         assert "3 passed" in stdout
+
+    def test_included_tests_start_with_tests(self, testdir):
+        testdir.copy_example("test_no_data")
+        result = testdir.runpytest("--test-alembic", "-vv")
+        stdout = result.stdout.str()
+        print(stdout)
+
+        assert result.ret == 0
+        tests = [
+            "test_model_definitions_match_ddl",
+            "test_single_head_revision",
+            "test_up_down_consistency",
+            "test_upgrade",
+        ]
+        for test in tests:
+            assert f"tests::pytest_alembic::{test}" in stdout
+        assert "4 passed" in stdout
