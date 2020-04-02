@@ -1,10 +1,14 @@
+version: 2
+
+sphinx:
+  configuration: docs/source/conf.py
+
 build:
-    image: latest
+  image: latest
+
+formats: all
 
 python:
-    version: 3.6
-    pip_install: true
-
-requirements: docs/requirements.txt
-sphinx:
-  configuration: docs/conf.py
+  version: 3.6
+  install:
+    - requirements: docs/requirements.txt
