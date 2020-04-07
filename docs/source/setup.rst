@@ -32,6 +32,25 @@ above snippet to resemble:
            )
 
 
+Caplog Issues
+~~~~~~~~~~~~~
+
+The default :code:`env.py` file that alembic will autogenerate for you also includes a call to
+:func:`logging.config.fileConfig`. Given that alembic tests invoke the :code:`env.py`, and
+:func:`logging.config.fileConfig` has a default argument of :code:`disable_existing_loggers=True`,
+this can inadvertantly break tests which use pytest's :code:`caplog` fixture.
+
+To fix this, simply provide :code:`disable_existing_loggers=False` to :code:`fileConfig`.
+
+.. warning::
+   Additionally, if you are a user of :func:`logging.basicConfig`, note that :func:`logging.basicConfig`
+   "does nothing if the root logger already has handlers configured", (which is why we generally
+   try to avoid :code:`basicConfig`) and may cause issues for similar reasons.
+
+.. note::
+   Python 3.8 added a :code:`force=True` keyword to :func:`logging.basicConfig`, which makes
+   it somewhat less hazardous to use.
+
 Optional but helpful additions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
