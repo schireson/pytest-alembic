@@ -1,6 +1,8 @@
 import logging
 
 import pytest
+from alembic.autogenerate.api import AutogenContext
+from alembic.autogenerate.render import _render_cmd_body
 
 log = logging.getLogger(__name__)
 
@@ -35,14 +37,23 @@ def test_model_definitions_match_ddl(alembic_runner):
     history) and your models).
     """
 
-    def verify_is_empty_revision(_, __, directives):
+    def verify_is_empty_revision(migration_context, __, directives):
         script = directives[0]
-        assert script.upgrade_ops.is_empty(), (  # nosec
-            "The models decribing the DDL of your database are out of sync with the set of "
-            "steps described in the revision history. This usually means that someone has "
-            "made manual changes to the database's DDL, or some model has been changed "
-            "without also generating a migration to describe that change."
-        )
+
+        migration_is_empty = script.upgrade_ops.is_empty()
+        if not migration_is_empty:
+            autogen_context = AutogenContext(migration_context)
+            rendered_upgrade = _render_cmd_body(script.upgrade_ops, autogen_context)
+
+            assert migration_is_empty, (  # nosec
+                "The models decribing the DDL of your database are out of sync with the set of "
+                "steps described in the revision history. This usually means that someone has "
+                "made manual changes to the database's DDL, or some model has been changed "
+                "without also generating a migration to describe that change.\n\n"
+                "The upgrade which would have been generated would look like:\n\n{}".format(
+                    rendered_upgrade
+                )
+            )
 
     alembic_runner.migrate_up_to("head")
     alembic_runner.generate_revision(
