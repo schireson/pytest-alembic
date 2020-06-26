@@ -3,6 +3,8 @@ import re
 import pytest
 from _pytest import fixtures
 
+from pytest_alembic.plugin.error import AlembicReprError, AlembicTestFailure
+
 
 def collect_all_tests():
     from pytest_alembic import tests
@@ -101,3 +103,8 @@ class PytestAlembicItem(pytest.Item):
 
     def reportinfo(self):
         return (self.fspath, 0, f"[pytest-alembic] {self.name}")
+
+    def repr_failure(self, excinfo):
+        if isinstance(excinfo.value, AlembicTestFailure):
+            return AlembicReprError(excinfo, self)
+        return super().repr_failure(excinfo)

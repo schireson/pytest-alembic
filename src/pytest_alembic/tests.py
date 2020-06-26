@@ -4,6 +4,8 @@ import pytest
 from alembic.autogenerate.api import AutogenContext
 from alembic.autogenerate.render import _render_cmd_body
 
+from pytest_alembic.plugin.error import AlembicTestFailure
+
 log = logging.getLogger(__name__)
 
 
@@ -15,16 +17,28 @@ def test_single_head_revision(alembic_runner):
     have only seen it be the result of uncaught merge conflicts resulting in a diverged history,
     which lazily breaks during deployment.
     """
-    head_count = alembic_runner.heads
+    heads = alembic_runner.heads
+    head_count = len(heads)
 
-    assert len(head_count) <= 1  # nosec
+    if head_count != 1:
+        heads = "\n".join([h.strip() for h in heads])
+        raise AlembicTestFailure(
+            "Expected 1 head revision, found {}".format(head_count), context=[("Heads", heads)],
+        )
 
 
 @pytest.mark.alembic
 def test_upgrade(alembic_runner):
     """Assert that the revision history can be run through from base to head.
     """
-    alembic_runner.migrate_up_to("head")
+    try:
+        alembic_runner.migrate_up_to("head")
+    except RuntimeError as e:
+        raise AlembicTestFailure(
+            "Failed to upgrade to the head revision. This means the historical chain from an "
+            "empty database, to the current revision is not possible.",
+            context=[("Alembic Error", str(e))],
+        )
 
 
 @pytest.mark.alembic
@@ -45,17 +59,21 @@ def test_model_definitions_match_ddl(alembic_runner):
             autogen_context = AutogenContext(migration_context)
             rendered_upgrade = _render_cmd_body(script.upgrade_ops, autogen_context)
 
-            assert migration_is_empty, (  # nosec
-                "The models decribing the DDL of your database are out of sync with the set of "
-                "steps described in the revision history. This usually means that someone has "
-                "made manual changes to the database's DDL, or some model has been changed "
-                "without also generating a migration to describe that change.\n\n"
-                "The upgrade which would have been generated would look like:\n\n{}".format(
-                    rendered_upgrade
+            if not migration_is_empty:
+                raise AlembicTestFailure(
+                    "The models decribing the DDL of your database are out of sync with the set of "
+                    "steps described in the revision history. This usually means that someone has "
+                    "made manual changes to the database's DDL, or some model has been changed "
+                    "without also generating a migration to describe that change.",
+                    context=[
+                        (
+                            "The upgrade which would have been generated would look like",
+                            rendered_upgrade,
+                        )
+                    ],
                 )
-            )
 
-    alembic_runner.migrate_up_to("head")
+    test_upgrade(alembic_runner)
     alembic_runner.generate_revision(
         message="test revision",
         autogenerate=True,
@@ -73,8 +91,20 @@ def test_up_down_consistency(alembic_runner):
 
     Individually upgrade to ensure that it's clear which revision caused the failure.
     """
-    for revision in alembic_runner.history.revisions:
-        alembic_runner.migrate_up_to(revision)
+    try:
+        for revision in alembic_runner.history.revisions:
+            alembic_runner.migrate_up_to(revision)
+    except RuntimeError as e:
+        raise AlembicTestFailure(
+            "Failed to upgrade through each revision individually.",
+            context=[("Failing Revision", revision), ("Alembic Error", str(e))],
+        )
 
-    for revision in reversed(alembic_runner.history.revisions):
-        alembic_runner.migrate_down_to(revision)
+    try:
+        for revision in reversed(alembic_runner.history.revisions):
+            alembic_runner.migrate_down_to(revision)
+    except RuntimeError as e:
+        raise AlembicTestFailure(
+            "Failed to downgrade through each revision individually.",
+            context=[("Failing Revision", revision), ("Alembic Error", str(e))],
+        )

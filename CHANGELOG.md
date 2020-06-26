@@ -1,6 +1,12 @@
 # Changelog
 
-## Unreleased (2020-06-25)
+## 0.2.3 (2020-06-26)
+
+#### New Features
+
+* Reduce the multiple pages of traceback output to a few lines of context that are actually meaningful to a failed test.
+
+## v0.2.2 (2020-06-25)
 
 #### New Features
 
