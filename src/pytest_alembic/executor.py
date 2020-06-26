@@ -1,4 +1,6 @@
+import contextlib
 import functools
+import io
 from dataclasses import dataclass
 from io import StringIO
 from typing import Dict, List, Optional, Union
@@ -46,7 +48,11 @@ class CommandExecutor:
 
         executable_command = getattr(alembic.command, command)
         try:
-            executable_command(self.alembic_config, *args, **kwargs)
+            # Hide the (relatively) worthless logs of the upgrade revision path, it just clogs
+            # up the logs when errors actually occur, but without providing any context.
+            buffer = io.StringIO()
+            with contextlib.redirect_stderr(buffer):
+                executable_command(self.alembic_config, *args, **kwargs)
         except alembic.util.exc.CommandError as e:
             raise RuntimeError(e)
 
