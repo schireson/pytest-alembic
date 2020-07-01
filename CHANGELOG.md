@@ -1,6 +1,12 @@
 # Changelog
 
-## 0.2.3 (2020-06-26)
+## v0.2.4 (2020-07-01)
+
+#### Fixes
+
+* Require dataclasses only below 3.7, as it is included in stdlib 3.7 onward.
+
+## v0.2.3 (2020-06-26)
 
 #### New Features
 
