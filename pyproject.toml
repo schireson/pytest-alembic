@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pytest-alembic"
-version = "0.2.3"
+version = "0.2.4"
 description = "A pytest plugin for verifying alembic migrations."
 authors = [
     "Dan Cardin <ddcardin@gmail.com>",
@@ -23,7 +23,7 @@ python = ">=3.5, <4"
 pytest = {version = ">=1.0"}
 alembic = "*"
 sqlalchemy = "*"
-dataclasses = {version = "*", python = "<=3.7" }
+dataclasses = {version = "*", python = "<3.7" }
 
 [tool.poetry.dev-dependencies]
 black = {version = "=>19.3b0", allow-prereleases = true, python = ">=3.6"}
