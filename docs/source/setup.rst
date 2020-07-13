@@ -86,23 +86,52 @@ Fixtures
 
 We expose 2 explicitly overridable fixtures :code:`alembic_config` and :code:`alembic_engine`.
 
+Overridding the fixtures
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+One should generally put the implementations of :code:`alembic_config` and :code:`alembic_engine`
+in a :code:`conftest.py` (a special file recognized by pytest) at the root of your tests folder,
+typically :code:`tests/conftest.py`.
+
+If your tests are located elsewhere, you should use the pytest config to specify
+:code:`pytest_alembic_tests_folder`, to point at your tests folder root.
+
+Then you can define your own implementations of these fixtures:
+
 :code:`alembic_config` is the primary point of entry for configurable options for the
-alembic runner. See the API docs for a comprehensive list. For now, you can ignore
-this fixture.
+alembic runner. See the API docs for a comprehensive list. This can often be omitted, as
+alembic does not typically require configuration. The default implementation is:
+
+.. code:: python
+
+   @pytest.fixture
+   def alembic_config():
+       """Override this fixture to configure the exact alembic context setup required.
+       """
+       return {}
+
 
 :code:`alembic_engine` is where you specify the engine with which the :code:`alembic_runner`
 should execute your tests.
+
+.. code:: python
+
+   @pytest.fixture
+   def alembic_engine():
+       """Override this fixture to provide pytest-alembic powered tests with a database handle.
+       """
+       return sqlalchemy.create_engine("sqlite:///")
 
 If you have a **very** simple database schema, you may be able to get away with the default
 fixture implementation, which uses an in-memory SQLite engine. In most cases however,
 SQLite will not be able to sufficiently model your migrations.
 
-We generally recommend the below option, but you can also implement your own strategy.
-
 
 Pytest Mock Resources
 ~~~~~~~~~~~~~~~~~~~~~
-Our recommended approach is to use `pytest-mock-resources <http://www.pytest-mock-resources.readthedocs.io/>`_,
+
+Though you can, of course, implement whatever strategy you want, our recommended approach is to use
+`pytest-mock-resources <http://www.pytest-mock-resources.readthedocs.io/>`_,
 another library we have open sourced which uses Docker to manage the lifecycle of an ephemeral
 database instance.
 
