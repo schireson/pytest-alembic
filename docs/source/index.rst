@@ -7,6 +7,7 @@ Welcome to Pytest Alembic's documentation!
 
    Quickstart <quickstart>
    Setup <setup>
+   Running Tests <running>
    Custom Data Hooks <custom_data>
    Custom Tests <custom_tests>
    API <api>

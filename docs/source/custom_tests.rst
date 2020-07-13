@@ -1,5 +1,5 @@
-Custom Tests
-============
+Writing Custom Tests
+====================
 
 Honestly, there's not much to it by this point!
 
@@ -22,3 +22,4 @@ for altering the state of the database for your test:
 
 .. autoclass:: pytest_alembic.runner.MigrationContext
     :members:
+    :noindex:

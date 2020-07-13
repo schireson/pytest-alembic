@@ -13,6 +13,15 @@ def pytest_addoption(parser):
         "List of built-in tests to exclude. Ignored if 'pytest_alembic_include' is specified."
         f"Valid options include: {default_tests}",
     )
+    parser.addini(
+        "pytest_alembic_tests_folder",
+        "The location under which the built-in tests will be bound. This defaults to 'tests/' "
+        "(the tests themselves then being executed from tests/pytest_alembic/*), the typical test "
+        "location. However this can be customized if pytest is, for example, invoked from a parent "
+        "directory like `pytest folder/tests`, or the tests are otherwise located at a different "
+        "location, relative to `pytest`s invocation.",
+        default="tests",
+    )
 
     group = parser.getgroup("collect")
     group.addoption(
