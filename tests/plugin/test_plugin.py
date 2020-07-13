@@ -1,5 +1,6 @@
 import pytest
-from pytest_alembic.plugin.plugin import parse_raw_test_names, enabled_test_names
+
+from pytest_alembic.plugin.plugin import enabled_test_names, parse_raw_test_names
 
 
 def test_parse_raw_test_names_empty_skips():
@@ -83,4 +84,22 @@ class Test_collect_tests:
         ]
         for test in tests:
             assert f"tests::pytest_alembic::{test}" in stdout
+        assert "4 passed" in stdout
+
+    def test_alternative_test_folter(self, testdir):
+        testdir.copy_example("test_no_data")
+        testdir.makefile(".ini", pytest="[pytest]\npytest_alembic_tests_folder=foo\n")
+        result = testdir.runpytest("--test-alembic", "-vv")
+        stdout = result.stdout.str()
+        print(stdout)
+
+        assert result.ret == 0
+        tests = [
+            "test_model_definitions_match_ddl",
+            "test_single_head_revision",
+            "test_up_down_consistency",
+            "test_upgrade",
+        ]
+        for test in tests:
+            assert f"foo::pytest_alembic::{test}" in stdout
         assert "4 passed" in stdout

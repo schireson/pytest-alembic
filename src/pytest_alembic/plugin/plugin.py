@@ -60,14 +60,15 @@ def collect_tests(session, config):
     all_tests = collect_all_tests()
     test_names = enabled_test_names(set(all_tests), raw_included_tests, raw_excluded_tests)
 
+    tests_folder = config.getini("pytest_alembic_tests_folder")
+
     result = []
     for test_name in sorted(test_names):
         test = all_tests[test_name]
 
-        # XXX: "tests" should become an ini configurable option.
         result.append(
             PytestAlembicItem.from_parent(
-                session, name=f"tests::pytest_alembic::{test.__name__}", test_fn=test
+                session, name=f"{tests_folder}::pytest_alembic::{test.__name__}", test_fn=test
             )
         )
 
