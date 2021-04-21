@@ -16,7 +16,7 @@ release = "0.1.2"
 version = "0.1.2"
 
 extensions = [
-    "m2r",
+    "m2r2",
     "sphinx.ext.autosectionlabel",
     "sphinx.ext.autodoc",
     "sphinx.ext.napoleon",
@@ -26,6 +26,7 @@ extensions = [
 
 templates_path = ["_templates"]
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
+source_suffix = ['.rst', '.md']
 
 html_theme = "sphinx_rtd_theme"
 html_static_path = ["_static"]
