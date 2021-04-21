@@ -30,6 +30,11 @@ def test_complex_revision_upgrade_data(testdir):
     successful_test_run(testdir)
 
 
+def test_schema_revision_data(testdir):
+    """Assert that revision data handles schema names included in the table name."""
+    successful_test_run(testdir, num_tests=3)
+
+
 def test_migrate_up_to(testdir):
     result = successful_test_run(testdir, num_tests=5)
     assert "test_migrate_up_to_specific_revision" in result

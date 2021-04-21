@@ -15,8 +15,7 @@ class AlembicReprError:
         self.item = item
 
     def toterminal(self, tw):
-        """Print out a custom error message to the terminal.
-        """
+        """Print out a custom error message to the terminal."""
         exc = self.exce.value
         context = exc.context
 
