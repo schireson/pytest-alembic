@@ -73,7 +73,13 @@ class ConnectionExecutor:
         meta = self.metadata(revision)
         return Table(name, meta, schema=schema, autoload=True, autoload_with=self.connection)
 
-    def table_insert(self, revision: str, data: Union[Dict, List], tablename=None):
+    def table_insert(
+        self,
+        revision: str,
+        data: Union[Dict, List],
+        tablename: Optional[str] = None,
+        schema: Optional[str] = None,
+    ):
         if isinstance(data, dict):
             data = [data]
 
@@ -81,5 +87,17 @@ class ConnectionExecutor:
             _tablename = item.pop("__tablename__", None)
             table = _tablename or tablename
 
-            table = self.table(revision, table)
+            if table is None:
+                raise ValueError(
+                    "No table name provided as either `table` argument, or '__tablename__' key in `data`."
+                )
+
+            try:
+                # Attempt to parse the schema out of the tablename
+                schema, table = table.split(".", 1)
+            except ValueError:
+                # However, if it doesn't work, both `table` and `schema` are in scope, so failure is fine.
+                pass
+
+            table = self.table(revision, table, schema=schema)
             self.connection.execute(table.insert().values(item))

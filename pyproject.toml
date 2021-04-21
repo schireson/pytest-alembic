@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pytest-alembic"
-version = "0.2.5"
+version = "0.2.6"
 description = "A pytest plugin for verifying alembic migrations."
 authors = [
     "Dan Cardin <ddcardin@gmail.com>",
@@ -32,7 +32,8 @@ flake8 = "*"
 isort = "*"
 mypy = {version = "*", python = ">=3.5"}
 pydocstyle = {version = "*", python = ">=3.5"}
-pytest-mock-resources = {version = "*", extras = ["postgres"]}
+pytest-mock-resources = {version = "*"}
+psycopg2-binary = "*"
 
 [tool.poetry.plugins.pytest11]
 pytest_alembic = "pytest_alembic.plugin"

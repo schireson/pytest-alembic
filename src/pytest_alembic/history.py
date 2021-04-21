@@ -17,8 +17,7 @@ class AlembicHistory:
     @classmethod
     @functools.lru_cache()
     def parse(cls, raw_history: Tuple[str]) -> "AlembicHistory":
-        """Extract the set of migration revision hashes from the result of an `alembic history` command.
-        """
+        """Extract the set of migration revision hashes from the result of an `alembic history` command."""
         revision_hashes = ["head"]
         for line in raw_history:
             match = re.search(_RE_REVISION_PATTERN, line)
