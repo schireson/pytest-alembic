@@ -49,8 +49,7 @@ def pytest_collection_modifyitems(session, config, items):
 
 
 def pytest_itemcollected(item):
-    """Attach a marker to each test which uses the alembic fixture.
-    """
+    """Attach a marker to each test which uses the alembic fixture."""
     if not hasattr(item, "fixturenames"):
         return
 

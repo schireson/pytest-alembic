@@ -23,14 +23,14 @@ def test_single_head_revision(alembic_runner):
     if head_count != 1:
         heads = "\n".join([h.strip() for h in heads])
         raise AlembicTestFailure(
-            "Expected 1 head revision, found {}".format(head_count), context=[("Heads", heads)],
+            "Expected 1 head revision, found {}".format(head_count),
+            context=[("Heads", heads)],
         )
 
 
 @pytest.mark.alembic
 def test_upgrade(alembic_runner):
-    """Assert that the revision history can be run through from base to head.
-    """
+    """Assert that the revision history can be run through from base to head."""
     try:
         alembic_runner.migrate_up_to("head")
     except RuntimeError as e:

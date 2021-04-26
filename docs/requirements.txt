@@ -1,4 +1,4 @@
-m2r
+m2r2
 sphinx
 sphinx_rtd_theme
 sphinx_autodoc_typehints

@@ -4,15 +4,13 @@ from typing import Dict, List, Union
 
 @dataclass
 class RevisionSpec:
-    """Describe a set of valid database data at a set of revisions.
-    """
+    """Describe a set of valid database data at a set of revisions."""
 
     data: Dict[str, Union[Dict, List[Dict]]]
 
     @classmethod
-    def parse(cls, data: Union[None, "RevisionData", Dict[str, Union[Dict, List[Dict]]]]):
-        """Parse a raw dict structure into a `RevisionSpec`.
-        """
+    def parse(cls, data: Union[None, "RevisionSpec", Dict[str, Union[Dict, List[Dict]]]]):
+        """Parse a raw dict structure into a `RevisionSpec`."""
         if not data:
             return cls({})
 
@@ -22,23 +20,20 @@ class RevisionSpec:
         return cls(data)
 
     def get(self, revision: str) -> Union[Dict, List[Dict]]:
-        """Get the database data described at a particular revision.
-        """
+        """Get the database data described at a particular revision."""
         return self.data.get(revision, [])
 
 
 @dataclass
 class RevisionData:
-    """Describe the data which should exist at given revisions when performing upgrades.
-    """
+    """Describe the data which should exist at given revisions when performing upgrades."""
 
     before_revision_data: RevisionSpec
     at_revision_data: RevisionSpec
 
     @classmethod
     def from_config(cls, config: Dict):
-        """Produce a `RevisionData` from raw configuration from :func:`alembic_config`.
-        """
+        """Produce a `RevisionData` from raw configuration from :func:`alembic_config`."""
         return cls(
             before_revision_data=RevisionSpec.parse(config.get("before_revision_data")),
             at_revision_data=RevisionSpec.parse(config.get("at_revision_data")),
@@ -52,13 +47,11 @@ class RevisionData:
                 yield item
 
     def get_before(self, revision: str) -> Union[Dict, List[Dict]]:
-        """Yield the individual data insertions which should occur before the given revision.
-        """
+        """Yield the individual data insertions which should occur before the given revision."""
         before_revision_data = self.before_revision_data.get(revision)
         return self.get(revision, before_revision_data)
 
     def get_at(self, revision: str) -> Union[Dict, List[Dict]]:
-        """Yield the individual data insertions which should occur upon reaching the given revision.
-        """
+        """Yield the individual data insertions which should occur upon reaching the given revision."""
         at_revision_data = self.at_revision_data.get(revision)
         return self.get(revision, at_revision_data)
