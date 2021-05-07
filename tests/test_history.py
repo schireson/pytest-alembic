@@ -6,14 +6,14 @@ from pytest_alembic.history import AlembicHistory
 def test_parse_head_revision():
     alembic_history = AlembicHistory.parse(("bax -> baz (head),", "bar -> bax,", "<base> -> bar,"))
 
-    expected_result = ["base", "bar", "bax", "baz", "head"]
+    expected_result = ["base", "bar", "bax", "baz", "heads"]
     assert alembic_history.revisions == expected_result
 
 
 def test_parse_head_skip_invalid():
     alembic_history = AlembicHistory.parse(("bax -> baz,", "wtf", "<base> -> bax,"))
 
-    expected_result = ["base", "bax", "baz", "head"]
+    expected_result = ["base", "bax", "baz", "heads"]
     assert alembic_history.revisions == expected_result
 
 
@@ -48,7 +48,7 @@ def test_next_revision():
 
 def test_next_revision_head():
     alembic_history = AlembicHistory.parse(("bax -> baz (head),", "bar -> bax,", "<base> -> bar,"))
-    result = alembic_history.next_revision("head")
+    result = alembic_history.next_revision("heads")
 
     assert result is None
 
@@ -57,7 +57,7 @@ def test_revision_range_to_head():
     alembic_history = AlembicHistory.parse(("bax -> baz (head),", "bar -> bax,", "<base> -> bar,"))
     result = alembic_history.revision_range("bar", "head")
 
-    expected_result = ["bar", "bax", "baz", "head"]
+    expected_result = ["bar", "bax", "baz", "heads"]
     assert expected_result == result
 
 

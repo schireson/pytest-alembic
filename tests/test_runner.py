@@ -35,6 +35,16 @@ def test_schema_revision_data(testdir):
     successful_test_run(testdir, num_tests=3)
 
 
+def test_branched_history(testdir):
+    """Branched history can be navigated, when there's no mergepoint present."""
+    successful_test_run(testdir, num_tests=4)
+
+
+def test_branched_history_with_mergepoint(testdir):
+    """Branched history can be navigated, when there's a mergepoint present."""
+    successful_test_run(testdir, num_tests=5)
+
+
 def test_migrate_up_to(testdir):
     result = successful_test_run(testdir, num_tests=5)
     assert "test_migrate_up_to_specific_revision" in result
