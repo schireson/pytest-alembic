@@ -32,7 +32,7 @@ def test_single_head_revision(alembic_runner):
 def test_upgrade(alembic_runner):
     """Assert that the revision history can be run through from base to head."""
     try:
-        alembic_runner.migrate_up_to("head")
+        alembic_runner.migrate_up_to("heads")
     except RuntimeError as e:
         raise AlembicTestFailure(
             "Failed to upgrade to the head revision. This means the historical chain from an "
