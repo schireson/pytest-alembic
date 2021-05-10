@@ -60,6 +60,10 @@ def collect_tests(session, config):
     all_tests = collect_all_tests()
     test_names = enabled_test_names(set(all_tests), raw_included_tests, raw_excluded_tests)
 
+    # The tests folder field is important because we cannot predict the test location
+    # of user tests. And so if someone invokes pytest like `pytest mytests/`, the user
+    # would need to attach **these** tests to the `mytests/` namespace, or else run
+    # `pytest mytests tests`.
     tests_folder = config.getini("pytest_alembic_tests_folder")
 
     result = []
@@ -76,6 +80,16 @@ def collect_tests(session, config):
 
 
 class PytestAlembicItem(pytest.Item):
+    """Pytest representation of each built-in test.
+
+    Tests such as these are more complex because they are not represented in the
+    users' source, which means we need to act as pytest does when producing tests
+    normally.
+
+    In particular, fixture resolution is the main complicating factor, and seemingly
+    not an external detail for which pytest has an officially recommended public API.
+    """
+
     obj = None
 
     @classmethod
@@ -95,7 +109,22 @@ class PytestAlembicItem(pytest.Item):
         fm = self.session._fixturemanager
         self._fixtureinfo = fm.getfixtureinfo(node=self, func=self.test_fn, cls=None)
 
-        fixture_request = fixtures.FixtureRequest(self)
+        try:
+            # Pytest deprecated direct construction of this, but there doesn't appear to
+            # be an obvious non-deprecated way to produce `pytest.Item`s (i.e. tests)
+            # which fullfill fixtures depended on by this plugin.
+            fixture_request = fixtures.FixtureRequest(self, _ispytest=True)
+        except TypeError:
+            # For backwards compatibility, attempt to make the `fixture_request` in the interface
+            # shape pre pytest's addition of this warning-producing parameter.
+            fixture_request = fixtures.FixtureRequest(self)
+        except Exception:
+            # Just to avoid a NameError in an unforeseen error constructing the `fixture_request`.
+            raise NotImplementedError(
+                "Failed to fill the fixtures. "
+                "This is almost certainly a pytest version incompatibility, please submit a bug report!"
+            )
+
         fixture_request._fillfixtures()
 
         params = {arg: self.funcargs[arg] for arg in self._fixtureinfo.argnames}
