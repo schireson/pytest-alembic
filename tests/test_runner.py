@@ -26,6 +26,14 @@ def test_empty_history(testdir):
     successful_test_run(testdir, num_tests=3)
 
 
+def test_alternative_script_location(testdir):
+    successful_test_run(testdir)
+
+
+def test_default_script_location(testdir):
+    successful_test_run(testdir)
+
+
 def test_basic_revision_upgrade_data(testdir):
     successful_test_run(testdir)
 
