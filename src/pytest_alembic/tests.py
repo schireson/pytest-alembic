@@ -91,20 +91,20 @@ def test_up_down_consistency(alembic_runner):
 
     Individually upgrade to ensure that it's clear which revision caused the failure.
     """
-    try:
-        for revision in alembic_runner.history.revisions:
+    for revision in alembic_runner.history.revisions:
+        try:
             alembic_runner.migrate_up_to(revision)
-    except RuntimeError as e:
-        raise AlembicTestFailure(
-            "Failed to upgrade through each revision individually.",
-            context=[("Failing Revision", revision), ("Alembic Error", str(e))],
-        )
+        except RuntimeError as e:
+            raise AlembicTestFailure(
+                "Failed to upgrade through each revision individually.",
+                context=[("Failing Revision", revision), ("Alembic Error", str(e))],
+            )
 
-    try:
-        for revision in reversed(alembic_runner.history.revisions):
+    for revision in reversed(alembic_runner.history.revisions):
+        try:
             alembic_runner.migrate_down_to(revision)
-    except RuntimeError as e:
-        raise AlembicTestFailure(
-            "Failed to downgrade through each revision individually.",
-            context=[("Failing Revision", revision), ("Alembic Error", str(e))],
-        )
+        except RuntimeError as e:
+            raise AlembicTestFailure(
+                "Failed to downgrade through each revision individually.",
+                context=[("Failing Revision", revision), ("Alembic Error", str(e))],
+            )
