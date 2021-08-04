@@ -22,6 +22,10 @@ def test_no_data(testdir):
     successful_test_run(testdir)
 
 
+def test_empty_history(testdir):
+    successful_test_run(testdir, num_tests=3)
+
+
 def test_basic_revision_upgrade_data(testdir):
     successful_test_run(testdir)
 
