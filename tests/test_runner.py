@@ -1,17 +1,21 @@
 import pytest
 
 
-def run_test(testdir):
+def run_test(testdir, test_alembic=True):
+    args = ["--test-alembic", "-vv"]
+    if not test_alembic:
+        args = ["-vv", "conftest.py"]
+
     testdir.copy_example()
-    result = testdir.runpytest("--test-alembic", "-vv")
+    result = testdir.runpytest(*args)
 
     stdout = result.stdout.str()
     print(stdout)
     return result, stdout
 
 
-def successful_test_run(testdir, num_tests=4):
-    result, stdout = run_test(testdir)
+def successful_test_run(testdir, num_tests=4, test_alembic=True):
+    result, stdout = run_test(testdir, test_alembic=test_alembic)
 
     assert result.ret == 0
     assert f"{num_tests} passed" in stdout
@@ -44,6 +48,16 @@ def test_basic_revision_upgrade_data(testdir):
 
 def test_complex_revision_upgrade_data(testdir):
     successful_test_run(testdir)
+
+
+def test_multiple_schemata(testdir):
+    """Assert support for multi-history projects.
+
+    Given the way pytest fixtures and test collection seem to work, for this
+    test, we cannot automatically collect the tests and run them against a given
+    "runner" fixture. Therefore, we wont use the "--test-alembic" flag.
+    """
+    successful_test_run(testdir, num_tests=8, test_alembic=False)
 
 
 def test_schema_revision_data(testdir):

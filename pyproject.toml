@@ -66,6 +66,22 @@ exclude_lines = [
 source = ["src"]
 branch = true
 
+[tool.pytest.ini_options]
+doctest_optionflags = "NORMALIZE_WHITESPACE IGNORE_EXCEPTION_DETAIL ELLIPSIS"
+addopts = "--doctest-modules -vv --ff --strict-markers"
+pytest_alembic_exclude = 'up_down_consistency'
+norecursedirs = ".* build dist *.egg"
+pytester_example_dir = "examples"
+filterwarnings = [
+  "ignore:.*testdir.copy_example"
+]
+
+[tool.mypy]
+strict_optional = true
+ignore_missing_imports = true
+warn_unused_ignores = true
+incremental = true
+
 [build-system]
 requires = ["poetry>=0.12"]
 build-backend = "poetry.masonry.api"

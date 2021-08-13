@@ -22,7 +22,10 @@ class Config:
     at_revision_data: Optional[Union[Dict, "RevisionSpec"]] = None
 
     @classmethod
-    def from_raw_config(cls, raw_config: Union[Dict[str, Any], alembic.config.Config]):
+    def from_raw_config(cls, raw_config: Union[Dict[str, Any], alembic.config.Config, None] = None):
+        if raw_config is None:
+            return cls()
+
         if isinstance(raw_config, alembic.config.Config):
             return cls(alembic_config=raw_config)
 
