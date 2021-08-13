@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pytest-alembic"
-version = "0.3.3"
+version = "0.4.0"
 description = "A pytest plugin for verifying alembic migrations."
 authors = [
     "Dan Cardin <ddcardin@gmail.com>",
@@ -28,7 +28,7 @@ dataclasses = {version = "*", python = "<3.7" }
 [tool.poetry.dev-dependencies]
 bandit = "*"
 black = {version = "=>19.3b0", allow-prereleases = true, python = ">=3.6"}
-coverage = "*"
+coverage = ">=5"
 flake8 = "*"
 isort = "*"
 mypy = {version = "*", python = ">=3.5"}
@@ -52,6 +52,19 @@ use_parentheses = true
 
 [tool.black]
 line_length = 100
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
+exclude_lines = [
+  "pragma: no cover",
+  "if TYPE_CHECKING:",
+  "if __name__ == .__main__.:",
+]
+
+[tool.coverage.run]
+source = ["src"]
+branch = true
 
 [build-system]
 requires = ["poetry>=0.12"]
