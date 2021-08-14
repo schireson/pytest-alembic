@@ -1,15 +1,16 @@
 import contextlib
 import functools
 from dataclasses import dataclass
-from typing import Dict, List, Optional
+from typing import List, Optional
 
+from pytest_alembic.config import Config
 from pytest_alembic.executor import CommandExecutor, ConnectionExecutor
 from pytest_alembic.history import AlembicHistory
 from pytest_alembic.revision_data import RevisionData
 
 
 @contextlib.contextmanager
-def runner(config, engine=None):
+def runner(config: Config, engine=None):
     """Manage the alembic execution context, in a given context.
 
     Yields:
@@ -45,7 +46,7 @@ class MigrationContext:
     @classmethod
     def from_config(
         cls,
-        config: Dict,
+        config: Config,
         command_executor: CommandExecutor,
         connection_executor: ConnectionExecutor,
     ):

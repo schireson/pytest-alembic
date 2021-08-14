@@ -6,39 +6,23 @@ from io import StringIO
 from typing import Dict, List, Optional, Union
 
 import alembic
-from alembic.config import Config
+import alembic.config
 from sqlalchemy import MetaData, Table
 from sqlalchemy.engine import Connection
+
+from pytest_alembic.config import Config
 
 
 @dataclass
 class CommandExecutor:
-    alembic_config: Config
+    alembic_config: alembic.config.Config
     stdout: StringIO
     stream_position: int
 
     @classmethod
-    def from_config(cls, config):
-        file = config.get("file", "alembic.ini")
-        script_location = config.get("script_location")
-        target_metadata = config.get("target_metadata")
-        process_revision_directives = config.get("process_revision_directives")
-        include_schemas = config.get("include_schemas", True)
-
+    def from_config(cls, config: Config):
         stdout = StringIO()
-        alembic_config = Config(file, stdout=stdout)
-
-        # Only set script_location if set.
-        if script_location:
-            alembic_config.set_section_option('alembic', "script_location", script_location)
-        elif not alembic_config.get_section_option('alembic', 'script_location'):
-            # Or in the event that it's not set after already having loaded the config.
-            alembic_config.set_main_option("script_location", 'migrations')
-
-        alembic_config.attributes["target_metadata"] = target_metadata
-        alembic_config.attributes["process_revision_directives"] = process_revision_directives
-        alembic_config.attributes["include_schemas"] = include_schemas
-
+        alembic_config = config.make_alembic_config(stdout)
         return cls(alembic_config=alembic_config, stdout=stdout, stream_position=0)
 
     def configure(self, **kwargs):

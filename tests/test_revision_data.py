@@ -1,15 +1,22 @@
+from pytest_alembic.config import Config
 from pytest_alembic.revision_data import RevisionData, RevisionSpec
 
 
 def test_from_config_empty():
-    RevisionData.from_config({})
-    RevisionData.from_config({"before_revision_data": {}, "at_revision_data": {}})
+    config = Config()
+    RevisionData.from_config(config)
+
+
+def test_from_config_empty_data():
+    config = Config({"before_revision_data": {}, "at_revision_data": {}})
+    RevisionData.from_config(config)
 
 
 def test_revision_spec_input():
-    RevisionData.from_config(
+    config = Config(
         {"before_revision_data": RevisionSpec({}), "at_revision_data": RevisionSpec({})}
     )
+    RevisionData.from_config(config)
 
 
 def test_get_before_single_item():

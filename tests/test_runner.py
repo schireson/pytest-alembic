@@ -30,6 +30,10 @@ def test_alternative_script_location(testdir):
     successful_test_run(testdir)
 
 
+def test_manual_alembic_config(testdir):
+    successful_test_run(testdir)
+
+
 def test_default_script_location(testdir):
     successful_test_run(testdir)
 

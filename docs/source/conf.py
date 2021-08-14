@@ -12,21 +12,22 @@ import sys
 sys.path.insert(0, os.path.abspath(".."))
 
 project = "Pytest Alembic"
-release = "0.1.2"
-version = "0.1.2"
+release = "0.4.0"
+version = "0.4.0"
 
 extensions = [
     "m2r2",
-    "sphinx.ext.autosectionlabel",
     "sphinx.ext.autodoc",
+    "sphinx.ext.autosectionlabel",
+    "sphinx.ext.intersphinx",
     "sphinx.ext.napoleon",
     "sphinx_autodoc_typehints",
-    "sphinx.ext.intersphinx",
+    "sphinx_rtd_theme",
 ]
 
 templates_path = ["_templates"]
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
-source_suffix = ['.rst', '.md']
+source_suffix = [".rst", ".md"]
 
 html_theme = "sphinx_rtd_theme"
 html_static_path = ["_static"]
