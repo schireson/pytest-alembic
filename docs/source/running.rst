@@ -58,6 +58,59 @@ run twice (since they'd be considered unique tests with different paths). So gen
 methods should be considered mutually exclusive.
 
 
+Multiple Alembic Histories
+--------------------------
+
+It may be the case that you have the histories for two separate databases (or schemas)
+in a single project. How should you structure your tests?
+
+This is likely one of the times you want to avoid the use of the :code:`--test-alembic`
+flag and the automatic insertion of tests.
+
+Instead, you'll likely want to want to make use of :func:`create_alembic_fixture`.
+
+.. code-block:: python
+
+  from pytest_alembic import tests, create_alembic_fixture
+
+  # The argument here represents the equivalent to `alembic_config`. Depending
+  # on your setup, this may be configuring the "file" argument, "script_location",
+  # or some other way of configuring one or the other of your histories.
+  history_1 = create_alembic_fixture({"file": "alembic.ini"})
+
+  def test_single_head_revision_history_1(history_1):
+      tests.test_single_head_revision(history_1)
+
+  def test_upgrade_history_1(history_1):
+      tests.test_upgrade(history_1)
+
+  def test_model_definitions_match_ddl_history_1(history_1):
+      tests.test_model_definitions_match_ddl(history_1)
+
+  def test_up_down_consistency_history_1(history_1):
+      tests.test_up_down_consistency(history_1)
+
+  # The 2nd fixture, and the 2nd set of tests.
+  history_2 = create_alembic_fixture({"file": "history_2.ini"})
+
+  def test_single_head_revision_history_2(history_2):
+      tests.test_single_head_revision(history_2)
+
+  def test_upgrade_history_2(history_2):
+      tests.test_upgrade(history_2)
+
+  def test_model_definitions_match_ddl_history_2(history_2):
+      tests.test_model_definitions_match_ddl(history_2)
+
+  def test_up_down_consistency_history_2(history_2):
+      tests.test_up_down_consistency(history_2)
+
+
+Due to limitations of how pytest test collection occurs, there's currently no
+obvious way to automatically set up and define these tests to occur against
+different fixtures.
+
+
 Pytest Marks
 ------------
 

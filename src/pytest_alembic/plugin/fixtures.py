@@ -4,14 +4,63 @@ import alembic.config
 import pytest
 import sqlalchemy
 
+import pytest_alembic
 from pytest_alembic.config import Config
+
+
+def create_alembic_fixture(raw_config=None):
+    """Create a new fixture `alembic_runner`-like fixture.
+
+    In many cases, this function should not be strictly necessary. You **can**
+    generally rely solely on the :code:`--test-alembic` flag, automatic insertion
+    of tests, and the :func:`alembic_runner` fixture.
+
+    However this may be useful in some situations:
+
+    - If you would generally prefer to avoid the :code:`--test-alembic` flag and
+      automatic test insertion, this is the function for you!
+    - If you have multiple alembic histories and therefore require more than one
+      fixture, you will **minimally** need to use this for the 2nd history (if
+      not both)
+
+    Examples:
+        >>> from pytest_alembic import tests
+        >>>
+        >>> alembic = create_alembic_fixture()
+        >>>
+        >>> def test_upgrade_head(alembic):
+        ...     tests.test_upgrade_head(alembic)
+        >>>
+        >>> def test_specific_migration(alembic):
+        ...     alembic_runner.migrate_up_to('xxxxxxx')
+        ...     assert ...
+
+        Config can also be supplied similarly to the :func:`alembic_config` fixture.
+
+        >>> alembic = create_alembic_fixture({'file': 'migrations.ini'})
+    """
+
+    @pytest.fixture
+    def _(alembic_engine):
+        config = Config.from_raw_config(raw_config)
+        with pytest_alembic.runner(config=config, engine=alembic_engine) as runner:
+            yield runner
+
+    return _
 
 
 @pytest.fixture
 def alembic_runner(alembic_config, alembic_engine):
-    """Produce an alembic migration context in which to execute alembic tests."""
-    import pytest_alembic
+    """Produce the primary alembic migration context in which to execute alembic tests.
 
+    This fixture allows authoring custom tests which are specific to your particular
+    migration history.
+
+    Examples:
+        >>> def test_specific_migration(alembic_runner):
+        ...     alembic_runner.migrate_up_to('xxxxxxx')
+        ...     assert ...
+    """
     config = Config.from_raw_config(alembic_config)
     with pytest_alembic.runner(config=config, engine=alembic_engine) as runner:
         yield runner

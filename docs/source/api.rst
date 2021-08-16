@@ -5,7 +5,7 @@ Fixture Functions
 -----------------
 
 .. automodule:: pytest_alembic.plugin.fixtures
-    :members: alembic_runner, alembic_config, alembic_engine
+    :members: alembic_runner, alembic_config, alembic_engine, create_alembic_fixture
 
 
 Alembic Runner
