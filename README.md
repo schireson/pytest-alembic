@@ -75,6 +75,12 @@ itself.
   existence for a database should be able to go from an entirely blank
   schema to the finished product, and back again.
 
+- [Experimental tests
+tests](http://pytest-alembic.readthedocs.io/en/latest/experimental_tests.html)
+
+  These tests are will need to be manually enabled because their semantics or API are
+  not yet guaranteed to stay the same. See the linked docs for more details!
+
 Let us know if you have any ideas for more built-in tests which would be
 generally useful for most alembic histories!
 

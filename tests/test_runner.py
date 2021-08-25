@@ -95,3 +95,42 @@ def test_process_revision_directives(testdir):
     assert result.ret == pytest.ExitCode.TESTS_FAILED
     assert "1 failed, 3 passed" in stdout
     assert "Exception: foo" in stdout
+
+
+def test_experimental_all_models_register(testdir):
+    """Assert the all-models-register test works when loading from a Base directly."""
+    result = successful_test_run(testdir, num_tests=1, test_alembic=False)
+    assert "test_all_models_register_on_metadata" in result
+
+
+def test_experimental_all_models_register_metadata(testdir):
+    """Assert the all-models-register test works when loading from a metadata directly."""
+    result = successful_test_run(testdir, num_tests=1, test_alembic=False)
+    assert "test_all_models_register_on_metadata" in result
+
+
+def test_experimental_all_models_register_failure(testdir):
+    """Assert the all-models-register test fails when there are missing models."""
+    result, stdout = run_test(testdir, test_alembic=False)
+    assert result.ret == pytest.ExitCode.TESTS_FAILED
+    assert "1 failed" in stdout
+    assert "test_all_models_register_on_metadata" in stdout
+    assert "'models'" in stdout
+    assert ": bar" in stdout
+
+
+def test_experimental_all_models_register_no_metadata(testdir):
+    """Assert the all-models-register test fails when there is no metadata in-context."""
+    result, stdout = run_test(testdir, test_alembic=False)
+    assert result.ret == pytest.ExitCode.TESTS_FAILED
+    assert "Unable to locate a MetaData" in stdout
+
+
+def test_experimental_all_models_register_automatic(testdir):
+    """Assert the all-models-register test is collected when included through automatic test insertion.
+
+    I.e. through use of pytest_alembic_include_experimental, rather than a manually
+    written test.
+    """
+    result = successful_test_run(testdir, num_tests=5, test_alembic=True)
+    assert "test_all_models_register_on_metadata" in result

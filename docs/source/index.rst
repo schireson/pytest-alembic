@@ -10,6 +10,7 @@ Welcome to Pytest Alembic's documentation!
    Running Tests <running>
    Custom Data Hooks <custom_data>
    Custom Tests <custom_tests>
+   Experimental Tests <experimental_tests>
    API <api>
    Contributing <contributing>
 
