@@ -127,6 +127,7 @@ jobs:
 workflows:
   build_all:
     jobs:
+      - lint
       - test-python36
       - test-python37
       - test-python38
