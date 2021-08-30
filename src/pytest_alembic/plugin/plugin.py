@@ -1,4 +1,6 @@
 import re
+from dataclasses import dataclass
+from typing import Callable, Dict, List, Optional
 
 import pytest
 from _pytest import fixtures
@@ -6,46 +8,117 @@ from _pytest import fixtures
 from pytest_alembic.plugin.error import AlembicReprError, AlembicTestFailure
 
 
-def collect_all_tests():
-    from pytest_alembic import tests
+@dataclass(frozen=True)
+class PytestAlembicTest:
+    raw_name: str
+    function: Callable
+    is_experimental: bool
 
-    all_tests = {}
-    for name in dir(tests):
-        if name.startswith("test_"):
-            all_tests[name[5:]] = getattr(tests, name)
-
-    return all_tests
-
-
-def parse_raw_test_names(raw_test_names):
-    test_names = re.split(r"[,\n]", raw_test_names)
-
-    result = []
-    for test_name in test_names:
-        test_name = test_name.strip()
-        if not test_name:
-            continue
-        result.append(test_name)
-    return result
+    @property
+    def name(self):
+        # Chop off the "test_" prefix.
+        return self.raw_name[5:]
 
 
-def enabled_test_names(all_test_names, raw_included_tests="", raw_excluded_tests=""):
-    if raw_included_tests:
-        included_tests = set(parse_raw_test_names(raw_included_tests))
-        invalid_tests = included_tests - all_test_names
+@dataclass
+class _TestCollector:
+    available_tests: Dict[str, PytestAlembicTest]
+
+    included_tests: Optional[List[str]] = None
+    included_experimental_tests: Optional[List[str]] = None
+    excluded_tests: Optional[List[str]] = None
+
+    @classmethod
+    def collect(cls, default=True, experimental=True):
+        import pytest_alembic.tests
+        import pytest_alembic.tests.experimental
+
+        test_groups = [(pytest_alembic.tests, False)]
+        if experimental:
+            test_groups.append((pytest_alembic.tests.experimental, True))
+
+        all_tests = {}
+        for test_group, is_experimental in test_groups:
+            for name in dir(test_group):
+                if name.startswith("test_"):
+                    pytest_alembic_test = PytestAlembicTest(
+                        name, getattr(test_group, name), is_experimental
+                    )
+                    all_tests[pytest_alembic_test.name] = pytest_alembic_test
+
+        return cls(all_tests)
+
+    def include(self, *tests):
+        if tests:
+            if self.included_tests is None:
+                self.included_tests = []
+
+            self.included_tests.extend(tests)
+        return self
+
+    def include_experimental(self, *tests):
+        if tests:
+            if self.included_experimental_tests is None:
+                self.included_experimental_tests = []
+
+            self.included_experimental_tests.extend(tests)
+        return self
+
+    def exclude(self, *tests):
+        if tests:
+            if self.excluded_tests is None:
+                self.excluded_tests = []
+
+            self.excluded_tests.extend(tests)
+        return self
+
+    def sorted_tests(self):
+        return sorted(self.tests(), key=lambda t: t.raw_name)
+
+    def tests(self):
+        selected_tests = []
+        invalid_tests = []
+
+        excluded_set = set(self.excluded_tests or [])
+        for excluded_test in excluded_set:
+            if excluded_test not in self.available_tests:
+                invalid_tests.append(excluded_test)
+
+        if self.included_tests is None:
+            included_tests = [
+                t.name for t in self.available_tests.values() if t.is_experimental is False
+            ]
+        else:
+            included_tests = self.included_tests
+
+        for test_group in [included_tests, self.included_experimental_tests or []]:
+            for included_test in test_group:
+                if included_test in excluded_set:
+                    continue
+
+                if included_test not in self.available_tests:
+                    invalid_tests.append(included_test)
+                    continue
+
+                selected_tests.append(included_test)
+
         if invalid_tests:
             invalid_str = ", ".join(sorted(invalid_tests))
             raise ValueError(f"The following tests were unrecognized: {invalid_str}")
 
-        return included_tests
+        return [self.available_tests[t] for t in selected_tests]
 
-    excluded_tests = set(parse_raw_test_names(raw_excluded_tests))
-    invalid_tests = excluded_tests - all_test_names
-    if invalid_tests:
-        invalid_str = ", ".join(sorted(invalid_tests))
-        raise ValueError(f"The following tests were unrecognized: {invalid_str}")
 
-    return all_test_names - excluded_tests
+def parse_test_names(raw_test_names):
+    test_names = re.split(r"[,\n]", raw_test_names)
+
+    result = set()
+    for test_name in test_names:
+        test_name = test_name.strip()
+        if not test_name:
+            continue
+        result.add(test_name)
+    return result
 
 
 def collect_tests(session, config):
@@ -54,11 +127,13 @@ def collect_tests(session, config):
         return []
 
     option = config.option
-    raw_included_tests = config.getini("pytest_alembic_include")
-    raw_excluded_tests = option.pytest_alembic_exclude or config.getini("pytest_alembic_exclude")
-
-    all_tests = collect_all_tests()
-    test_names = enabled_test_names(set(all_tests), raw_included_tests, raw_excluded_tests)
+    raw_included_tests = parse_test_names(config.getini("pytest_alembic_include"))
+    raw_experimental_included_tests = parse_test_names(
+        config.getini("pytest_alembic_include_experimental")
+    )
+    raw_excluded_tests = parse_test_names(
+        option.pytest_alembic_exclude or config.getini("pytest_alembic_exclude")
+    )
 
     # The tests folder field is important because we cannot predict the test location
     # of user tests. And so if someone invokes pytest like `pytest mytests/`, the user
@@ -66,13 +141,20 @@ def collect_tests(session, config):
     # `pytest mytests tests`.
     tests_folder = config.getini("pytest_alembic_tests_folder")
 
-    result = []
-    for test_name in sorted(test_names):
-        test = all_tests[test_name]
+    test_collector = (
+        _TestCollector.collect(default=True, experimental=True)
+        .include(*raw_included_tests)
+        .include_experimental(*raw_experimental_included_tests)
+        .exclude(*raw_excluded_tests)
+    )
 
+    result = []
+    for test in test_collector.sorted_tests():
         result.append(
             PytestAlembicItem.from_parent(
-                session, name=f"{tests_folder}::pytest_alembic::{test.__name__}", test_fn=test
+                session,
+                name=f"{tests_folder}::pytest_alembic::{test.raw_name}",
+                test_fn=test.function,
             )
         )
 

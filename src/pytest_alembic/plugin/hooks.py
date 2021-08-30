@@ -1,8 +1,13 @@
-from pytest_alembic.plugin.plugin import collect_all_tests, collect_tests
+from pytest_alembic.plugin.plugin import _TestCollector, collect_tests
 
 
 def pytest_addoption(parser):
-    default_tests = ", ".join(collect_all_tests().keys())
+    default_collector = _TestCollector.collect(default=True, experimental=False)
+    default_tests = ", ".join(t.name for t in default_collector.available_tests.values())
+
+    experimental_collector = _TestCollector.collect(default=False, experimental=True)
+    experimental_tests = ", ".join(t.name for t in experimental_collector.available_tests.values())
+
     parser.addini(
         "pytest_alembic_include",
         "List of built-in tests to include. If specified, 'pytest_alembic_exclude' is ignored. "
@@ -12,6 +17,11 @@ def pytest_addoption(parser):
         "pytest_alembic_exclude",
         "List of built-in tests to exclude. Ignored if 'pytest_alembic_include' is specified."
         f"Valid options include: {default_tests}",
+    )
+    parser.addini(
+        "pytest_alembic_include_experimental",
+        "List of built-in experimental tests to include. Experimental tests must be explicitly "
+        f"included. Valid options include: {experimental_tests}",
     )
     parser.addini(
         "pytest_alembic_tests_folder",

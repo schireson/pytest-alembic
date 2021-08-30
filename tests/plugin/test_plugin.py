@@ -1,42 +1,78 @@
 import pytest
 
-from pytest_alembic.plugin.plugin import enabled_test_names, parse_raw_test_names
+from pytest_alembic.plugin.plugin import _TestCollector, parse_test_names
 
 
 def test_parse_raw_test_names_empty_skips():
-    result = parse_raw_test_names("up_down_consistency,foo\n\n\nbar\n")
+    result = sorted(parse_test_names("up_down_consistency,foo\n\n\nbar\n"))
 
-    expected_result = ["up_down_consistency", "foo", "bar"]
+    expected_result = ["bar", "foo", "up_down_consistency"]
     assert expected_result == result
 
 
-class Test_enabled_test_names:
+class Test__TestCollector:
     def test_all_enabled(self):
-        result = enabled_test_names({"foo", "bar", "baz"})
+        test_collector = _TestCollector.collect()
+        result = [t.name for t in test_collector.tests()]
 
-        expected_result = {"foo", "bar", "baz"}
+        expected_result = [
+            "model_definitions_match_ddl",
+            "single_head_revision",
+            "up_down_consistency",
+            "upgrade",
+        ]
         assert expected_result == result
 
     def test_include_specified_invalid(self):
+        test_collector = _TestCollector.collect()
+        test_collector.include("foo", "bar")
+
         with pytest.raises(ValueError) as e:
-            enabled_test_names({"foo", "bar", "baz"}, "what,the")
-        assert "the, what" in str(e.value)
+            test_collector.tests()
+        assert "bar, foo" in str(e.value)
 
     def test_include_specified(self):
-        result = enabled_test_names({"foo", "bar", "baz"}, "bar,baz")
+        test_collector = _TestCollector.collect()
+        test_collector.include("single_head_revision", "upgrade")
 
-        expected_result = {"bar", "baz"}
+        result = [t.name for t in test_collector.tests()]
+
+        expected_result = ["single_head_revision", "upgrade"]
         assert expected_result == result
 
     def test_exclude_specified_invalid(self):
+        test_collector = _TestCollector.collect()
+        test_collector.exclude("foo", "bar")
+
         with pytest.raises(ValueError) as e:
-            enabled_test_names({"foo", "bar", "baz"}, None, "what,the")
-        assert "the, what" in str(e.value)
+            test_collector.tests()
+        assert "bar, foo" in str(e.value)
 
     def test_exclude_specified(self):
-        result = enabled_test_names({"foo", "bar", "baz"}, None, "bar,baz")
+        test_collector = _TestCollector.collect()
+        test_collector.exclude("single_head_revision", "upgrade")
 
-        expected_result = {"foo"}
+        result = [t.name for t in test_collector.tests()]
+
+        expected_result = [
+            "model_definitions_match_ddl",
+            "up_down_consistency",
+        ]
+        assert expected_result == result
+
+    def test_include_experimental(self):
+        test_collector = _TestCollector.collect().include_experimental(
+            "all_models_register_on_metadata"
+        )
+        test_collector.exclude("single_head_revision", "upgrade")
+
+        result = [t.name for t in test_collector.tests()]
+
+        expected_result = [
+            "model_definitions_match_ddl",
+            "up_down_consistency",
+            "all_models_register_on_metadata",
+        ]
         assert expected_result == result
 
 
