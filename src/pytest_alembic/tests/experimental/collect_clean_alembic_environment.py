@@ -20,7 +20,12 @@ except ImportError:  # pragma: no cover
     from sqlalchemy.declarative import DeclarativeMeta
 
 
-def run():
+def run():  # pragma: no cover
+    """Execute alembic in order to spin up the alembic environment.
+
+    Cannot be covered with coverage due to the subprocess environment in which it's
+    executed.
+    """
     _, url = sys.argv
 
     config = Config("alembic.ini")
@@ -32,6 +37,7 @@ def run():
 
 
 def environment_context_fn(_, migration_context):
+    """Print out the alembic environment context (given an alembic migration context)."""
     target_metadata = migration_context.opts["target_metadata"]
     if target_metadata:
         tables = list(target_metadata.tables)
@@ -52,6 +58,7 @@ def environment_context_fn(_, migration_context):
 
 
 def identify_modules(target_metadata):
+    """Find all model referrers of the alembic `target_metadata`."""
     for referrer in gc.get_referrers(target_metadata):
         dict_referrer = isinstance(referrer, dict)
         if not dict_referrer:
@@ -66,6 +73,7 @@ def identify_modules(target_metadata):
 
 
 def get_model_base(referrer, target_metadata):
+    """Find all model referrers of any model base referents of the `target_metadata`."""
     metadata = referrer.get("metadata")
     if not metadata or metadata is not target_metadata:
         return
@@ -76,6 +84,10 @@ def get_model_base(referrer, target_metadata):
 
 
 def get_referrer_module(referrer):
+    """Distinguish actual candidate modules from those which cannot be modules.
+
+    Namely: non-modules, alembic-related things, scripts and such.
+    """
     dict_referrer = isinstance(referrer, dict)
 
     loader = dict_referrer and referrer.get("__loader__")

@@ -29,12 +29,13 @@ dataclasses = {version = "*", python = "<3.7" }
 bandit = "*"
 black = {version = "=>19.3b0", allow-prereleases = true, python = ">=3.6"}
 coverage = ">=5"
-flake8 = "*"
+flake8 = ">=3.9"
 isort = "*"
 mypy = {version = "*", python = ">=3.5"}
 psycopg2-binary = "*"
 pydocstyle = {version = "*", python = ">=3.5"}
 pytest-mock-resources = {version = "*"}
+types-dataclasses = "^0.1.7"
 
 [tool.poetry.plugins.pytest11]
 pytest_alembic = "pytest_alembic.plugin"
