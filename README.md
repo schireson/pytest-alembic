@@ -78,7 +78,7 @@ itself.
 - [Experimental tests
 tests](http://pytest-alembic.readthedocs.io/en/latest/experimental_tests.html)
 
-  These tests are will need to be manually enabled because their semantics or API are
+  These tests will need to be enabled manually because their semantics or API are
   not yet guaranteed to stay the same. See the linked docs for more details!
 
 Let us know if you have any ideas for more built-in tests which would be

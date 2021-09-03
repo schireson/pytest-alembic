@@ -4,14 +4,14 @@
 
 ### Features
 
-* Add experimental test to identify tables which alembic will not recognize. b9fa09e
+* Add experimental test which will identify tables that alembic did not recognize. b9fa09e
 
 
 ## [v0.4.0](https://github.com/schireson/pytest-alembic/compare/v0.3.3...v0.4.0) (2021-08-16)
 
 ### Features
 
-* Create a mechanism in which to create multiple alembic runner fixtures. ef1d5da
+* Create a mechanism which allows the creation of multiple alembic runner fixtures. ef1d5da
 * Allow alembic Config to be used directly in alembic_config fixture. 3b00103
 
 ### Fixes
