@@ -1,7 +1,6 @@
 ![CircleCI](https://img.shields.io/circleci/build/gh/schireson/pytest-alembic/master)
 [![codecov](https://codecov.io/gh/schireson/pytest-alembic/branch/master/graph/badge.svg)](https://codecov.io/gh/schireson/pytest-alembic)
-[![Documentation
-Status](https://readthedocs.org/projects/pytest-alembic/badge/?version=latest)](https://pytest-alembic.readthedocs.io/en/latest/?badge=latest)
+[![Documentation Status](https://readthedocs.org/projects/pytest-alembic/badge/?version=latest)](https://pytest-alembic.readthedocs.io/en/latest/?badge=latest)
 
 ## Introduction
 
@@ -75,8 +74,8 @@ itself.
   existence for a database should be able to go from an entirely blank
   schema to the finished product, and back again.
 
-- [Experimental tests
-tests](http://pytest-alembic.readthedocs.io/en/latest/experimental_tests.html)
+- [Experimental
+  tests](http://pytest-alembic.readthedocs.io/en/latest/experimental_tests.html)
 
   These tests will need to be enabled manually because their semantics or API are
   not yet guaranteed to stay the same. See the linked docs for more details!
