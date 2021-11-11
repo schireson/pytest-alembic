@@ -74,7 +74,7 @@ class ConnectionExecutor:
             data = [data]
 
         for item in data:
-            _tablename = item.pop("__tablename__", None)
+            _tablename = item.get("__tablename__", None)
             table = _tablename or tablename
 
             if table is None:
@@ -90,4 +90,5 @@ class ConnectionExecutor:
                 pass
 
             table = self.table(revision, table, schema=schema)
-            self.connection.execute(table.insert().values(item))
+            values = {k: v for k, v in item.items() if k != "__tablename__"}
+            self.connection.execute(table.insert().values(values))

@@ -91,6 +91,9 @@ def test_up_down_consistency(alembic_runner):
 
     Individually upgrade to ensure that it's clear which revision caused the failure.
     """
+    # XXX: This impl is getting kind of unfortunate. It should probably be using
+    #      something like `roundtrip_next_revision` instead, but that currently
+    #      fails for unrelated reasons.
     for revision in alembic_runner.history.revisions:
         try:
             alembic_runner.migrate_up_to(revision)
@@ -106,5 +109,17 @@ def test_up_down_consistency(alembic_runner):
         except RuntimeError as e:
             raise AlembicTestFailure(
                 "Failed to downgrade through each revision individually.",
+                context=[("Failing Revision", revision), ("Alembic Error", str(e))],
+            )
+
+    for revision in alembic_runner.history.revisions:
+        try:
+            alembic_runner.migrate_up_to(revision)
+        except Exception as e:
+            raise AlembicTestFailure(
+                (
+                    "Failed to upgrade through each revision individually after performing a "
+                    "roundtrip upgrade -> downgrade -> upgrade cycle."
+                ),
                 context=[("Failing Revision", revision), ("Alembic Error", str(e))],
             )
