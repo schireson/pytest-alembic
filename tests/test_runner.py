@@ -134,3 +134,11 @@ def test_experimental_all_models_register_automatic(testdir):
     """
     result = successful_test_run(testdir, num_tests=5, test_alembic=True)
     assert "test_all_models_register_on_metadata" in result
+
+
+def test_consistency_doesnt_roundtrip(testdir):
+    """Assert a up/down consistency fails if a migration cannot rountrip up -> down -> up."""
+    result, stdout = run_test(testdir)
+    assert result.ret == pytest.ExitCode.TESTS_FAILED
+    assert "1 failed, 3 passed" in stdout
+    assert "after performing a roundtrip" in stdout
