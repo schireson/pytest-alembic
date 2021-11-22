@@ -2,7 +2,10 @@ import pytest
 
 
 def run_test(pytester, test_alembic=True):
-    args = ["--test-alembic", "-vv", "-W", "error"]
+    args = [
+        "--test-alembic",
+        "-vv",
+    ]
     if not test_alembic:
         args = ["-vv", "conftest.py"]
 

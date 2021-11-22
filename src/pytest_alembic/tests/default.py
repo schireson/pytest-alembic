@@ -3,6 +3,7 @@ import logging
 import pytest
 from alembic.autogenerate.api import AutogenContext
 from alembic.autogenerate.render import _render_cmd_body
+
 from pytest_alembic.plugin.error import AlembicTestFailure
 
 log = logging.getLogger(__name__)

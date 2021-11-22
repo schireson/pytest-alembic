@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pytest-alembic"
-version = "0.5.0"
+version = "0.5.1"
 description = "A pytest plugin for verifying alembic migrations."
 authors = [
     "Dan Cardin <ddcardin@gmail.com>",
@@ -18,7 +18,7 @@ include = [
 ]
 
 [tool.poetry.dependencies]
-python = ">=3.5, <4"
+python = ">=3.6, <4"
 
 pytest = {version = ">=1.0"}
 alembic = "*"
@@ -27,13 +27,14 @@ dataclasses = {version = "*", python = "<3.7" }
 
 [tool.poetry.dev-dependencies]
 bandit = "*"
-black = {version = "=>19.3b0", allow-prereleases = true, python = ">=3.6"}
-coverage = ">=5"
+black = {version = "=>21.8b0", allow-prereleases = true, python = ">=3.6"}
+coverage = {version = ">=5", extras = ["toml"]}
 flake8 = ">=3.9"
-isort = "*"
-mypy = {version = "*", python = ">=3.5"}
+isort = ">=5"
+mypy = {version = ">=0.900", python = ">=3.5"}
 psycopg2-binary = "*"
 pydocstyle = {version = "*", python = ">=3.5"}
+pytest = {version = ">=6.2"}
 pytest-mock-resources = {version = "*"}
 types-dataclasses = "^0.1.7"
 
@@ -41,14 +42,11 @@ types-dataclasses = "^0.1.7"
 pytest_alembic = "pytest_alembic.plugin"
 
 [tool.isort]
-default_section = 'FIRSTPARTY'
-include_trailing_comma = true
-indent = '    '
-length_sort = false
+profile = 'black'
+known_first_party = 'pytest_alembic,tests'
 line_length = 100
-multi_line_output = 3
+float_to_top = true
 order_by_type = false
-known_first_party = 'tests'
 use_parentheses = true
 
 [tool.black]
@@ -74,9 +72,6 @@ addopts = "--doctest-modules -vv --ff --strict-markers"
 pytest_alembic_exclude = 'up_down_consistency'
 norecursedirs = ".* build dist *.egg"
 pytester_example_dir = "examples"
-filterwarnings = [
-  "ignore:.*testdir.copy_example"
-]
 
 [tool.mypy]
 strict_optional = true
