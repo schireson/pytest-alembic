@@ -1,10 +1,17 @@
 # Changelog
 
+## [Unreleased](https://github.com/schireson/pytest-alembic/compare/v0.5.1...HEAD) (2021-11-23)
+
+### Fixes
+
+* Run pytest tests inline (faster and easier coverage). b71205e
+
+
 ### [v0.5.1](https://github.com/schireson/pytest-alembic/compare/v0.5.0...v0.5.1) (2021-11-23)
 
 #### Fixes
 
-* Increase minimum python version to 3.6+ (this was already true!). 56f2ec2
+* Increase minimum python version to 3.6+ (this was already true!). e6bdfe6
 * Incompatibility of branched history downgrade strategy with alembic 1.6+. 192686b
 * ensure the up-down consistency test actually verifies migrations a2e9d13
 
