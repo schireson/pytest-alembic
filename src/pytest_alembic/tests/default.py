@@ -103,7 +103,10 @@ def test_up_down_consistency(alembic_runner):
                 context=[("Failing Revision", revision), ("Alembic Error", str(e))],
             )
 
-    for revision in reversed(alembic_runner.history.revisions):
+    # Skip the `heads` revision. Caused by new alembic warning in 1.6.x.
+    down_revisions = reversed(alembic_runner.history.revisions[:-1])
+
+    for revision in down_revisions:
         try:
             alembic_runner.migrate_down_to(revision)
         except RuntimeError as e:

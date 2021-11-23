@@ -136,7 +136,8 @@ class MigrationContext:
 
     def migrate_down_one(self):
         """Upgrade down by exactly one revision."""
-        self.raw_command("downgrade", "-1")
+        previous_revision = self.history.previous_revision(self.current)
+        self.raw_command("downgrade", previous_revision)
 
     def roundtrip_next_revision(self):
         """Upgrade, downgrade then upgrade.

@@ -1,17 +1,30 @@
 # Changelog
 
-## [v0.5.0](https://github.com/schireson/pytest-alembic/compare/v0.4.0...v0.5.0) (2021-08-25)
+### [v0.5.1](https://github.com/schireson/pytest-alembic/compare/v0.5.0...v0.5.1) (2021-11-23)
+
+#### Fixes
+
+* Increase minimum python version to 3.6+ (this was already true!). 56f2ec2
+* Incompatibility of branched history downgrade strategy with alembic 1.6+. 192686b
+* ensure the up-down consistency test actually verifies migrations a2e9d13
+
+
+## [v0.5.0](https://github.com/schireson/pytest-alembic/compare/v0.4.0...v0.5.0) (2021-09-03)
 
 ### Features
 
-* Add experimental test which will identify tables that alembic did not recognize. b9fa09e
+* Add experimental test to identify tables which alembic will not recognize. d12e342
+
+### Fixes
+
+* Add back missing lint job. 80242f3
 
 
 ## [v0.4.0](https://github.com/schireson/pytest-alembic/compare/v0.3.3...v0.4.0) (2021-08-16)
 
 ### Features
 
-* Create a mechanism which allows the creation of multiple alembic runner fixtures. ef1d5da
+* Create a mechanism in which to create multiple alembic runner fixtures. ef1d5da
 * Allow alembic Config to be used directly in alembic_config fixture. 3b00103
 
 ### Fixes

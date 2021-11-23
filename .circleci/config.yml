@@ -3,7 +3,7 @@ version: 2.1
 executors:
   python36:
     docker:
-      - image: circleci/python:3.6
+      - image: cimg/python:3.6
       - image: postgres:9.6.10-alpine
         environment:
           POSTGRES_DB: dev
@@ -12,7 +12,7 @@ executors:
 
   python37:
     docker:
-      - image: circleci/python:3.7
+      - image: cimg/python:3.7
       - image: postgres:9.6.10-alpine
         environment:
           POSTGRES_DB: dev
@@ -21,7 +21,7 @@ executors:
 
   python38:
     docker:
-      - image: circleci/python:3.8
+      - image: cimg/python:3.8
       - image: postgres:9.6.10-alpine
         environment:
           POSTGRES_DB: dev
@@ -30,7 +30,7 @@ executors:
 
   publish:
     docker:
-      - image: circleci/python:3.6
+      - image: cimg/python:3.6
 
 commands:
   setup:
@@ -122,7 +122,6 @@ jobs:
     steps:
       - setup-python
       - publish
-
 
 workflows:
   build_all:
