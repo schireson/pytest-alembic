@@ -6,6 +6,12 @@ Base = declarative_base()
 
 
 class CreatedAt(Base):
+    __tablename__ = "ignore"
+
+    id = Column(types.Integer(), autoincrement=True, primary_key=True)
+
+
+class CreatedAt(Base):
     __tablename__ = "foo"
 
     id = Column(types.Integer(), autoincrement=True, primary_key=True)

@@ -77,6 +77,9 @@ itself.
 - [Experimental
   tests](http://pytest-alembic.readthedocs.io/en/latest/experimental_tests.html)
 
+  - all_models_register_on_metadata
+  - downgrade_leaves_no_trace
+
   These tests will need to be enabled manually because their semantics or API are
   not yet guaranteed to stay the same. See the linked docs for more details!
 
@@ -91,7 +94,7 @@ tests](http://pytest-alembic.readthedocs.io/en/latest/custom_tests.html)
 data](http://pytest-alembic.readthedocs.io/en/latest/custom_data.html)
 (to be inserted automatically before a given revision).
 
-Sometimes when writing a particularly knarly data migration, it helps to
+Sometimes when writing a particularly gnarly data migration, it helps to
 be able to practice a little timely TDD, since there’s always the
 potential you’ll trash your actual production data.
 
@@ -100,7 +103,7 @@ that you would normally, through the use of the `alembic_runner`
 fixture.
 
 ``` python
-def test_knarly_migration_xyz123(alembic_engine, alembic_runner):
+def test_gnarly_migration_xyz123(alembic_engine, alembic_runner):
     # Migrate up to, but not including this new migration
     alembic_runner.migrate_up_before('xyz123')
 

@@ -1,19 +1,19 @@
 import sqlalchemy as sa
 from alembic import op
 
-revision = "aaaaaaaaaaaa"
-down_revision = None
+revision = "bbbbbbbbbbbb"
+down_revision = "aaaaaaaaaaaa"
 branch_labels = None
 depends_on = None
 
 
 def upgrade():
     op.create_table(
-        "ignore",
+        "foo",
         sa.Column("id", sa.Integer(), autoincrement=True, nullable=False),
         sa.PrimaryKeyConstraint("id"),
     )
 
 
 def downgrade():
-    op.drop_table("ignore")
+    op.rename_table("foo", "bar")
