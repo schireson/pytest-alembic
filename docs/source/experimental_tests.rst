@@ -143,7 +143,7 @@ course of executing the :code:`env.py` through alembic.
    our equivalent of ``package.models``.
 
    This immediately resulted in an ``--autogenerate`` suggesting that the table
-   be droped, since it was alembic assumes you've deleted the model entirely!
+   be dropped, since it was alembic assumes you've deleted the model entirely!
 
 
 test_downgrade_leaves_no_trace
@@ -206,4 +206,4 @@ performed the migration at all.
    This isn't perfect! Alembic autogeneration will not detect many
    kinds of changes! If you encounter some scenario in which this does not
    detect a change you'd expect it to, alembic already has extensive ability
-   to customize aand extend the autogeneration capabilities.
+   to customize and extend the autogeneration capabilities.
