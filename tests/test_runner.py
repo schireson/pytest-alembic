@@ -12,7 +12,11 @@ def run_pytest(pytester, *, success=True, passed=4, skipped=0, failed=0, test_al
     pytester.copy_example()
     result = pytester.inline_run(*args)
 
-    expected_return = pytest.ExitCode.OK if success else pytest.ExitCode.TESTS_FAILED
+    expected_return = (
+        (pytest.ExitCode.OK if passed or skipped or failed else pytest.ExitCode.NO_TESTS_COLLECTED)
+        if success
+        else pytest.ExitCode.TESTS_FAILED
+    )
     assert result.ret == expected_return
 
     result.assertoutcome(passed=passed, skipped=skipped, failed=failed)
@@ -37,7 +41,7 @@ def test_no_data(pytester):
 
 
 def test_empty_history(pytester):
-    run_pytest(pytester, passed=3)
+    run_pytest(pytester, passed=5)
 
 
 def test_alternative_script_location(pytester):
@@ -154,4 +158,24 @@ def test_consistency_doesnt_roundtrip(pytester):
     result = run_pytest(pytester, success=False, passed=3, failed=1)
     assert_failed_test_has_content(
         result, test="test_up_down_consistency", content="after performing a roundtrip"
+    )
+
+
+def test_downgrade_leaves_no_trace_success(pytester):
+    """Assert the all-models-register test is collected when included through automatic test insertion.
+
+    I.e. through use of pytest_alembic_include_experimental, rather than a manually
+    written test.
+    """
+    result = run_pytest(pytester, passed=5)
+    assert_has_test(result, "test_downgrade_leaves_no_trace")
+
+
+def test_downgrade_leaves_no_trace_failure(pytester):
+    """Assert the all-models-register test is collected when included through automatic test insertion."""
+    result = run_pytest(pytester, success=False, passed=0, failed=1)
+    assert_failed_test_has_content(
+        result,
+        test="test_downgrade_leaves_no_trace",
+        content="difference between the pre-'bbbbbbbbbbbb'-upgrade `MetaData`",
     )

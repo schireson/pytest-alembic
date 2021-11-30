@@ -5,7 +5,7 @@ Honestly, there's not much to it by this point!
 
 .. code-block:: python
 
-   def test_knarly_migration_xyz123(alembic_runner):
+   def test_gnarly_migration_xyz123(alembic_runner):
        # Migrate up to, but not including this new migration
        alembic_runner.migrate_up_before('xyz123')
 
