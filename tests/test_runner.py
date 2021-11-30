@@ -179,3 +179,38 @@ def test_downgrade_leaves_no_trace_failure(pytester):
         test="test_downgrade_leaves_no_trace",
         content="difference between the pre-'bbbbbbbbbbbb'-upgrade `MetaData`",
     )
+
+
+def test_minimum_downgrade_revision(pytester):
+    """Assert the minimum_downgrade_revision config option is abided."""
+    run_pytest(pytester, passed=5)
+
+
+def test_unimplemented_downgrade_warning(pytester):
+    """Assert `NotImplementedError` raised during downgrade passes but emits a warning."""
+    result = run_pytest(pytester, passed=5)
+
+    warnings = result.getcalls("pytest_warning_recorded")
+    assert len(warnings) == 2
+
+    for warning in warnings:
+        assert warning.warning_message.category == UserWarning
+
+        warning_str = str(warning.warning_message.message)
+        assert "NotImplementedError" in warning_str
+        assert "minimum_downgrade_revision" in warning_str
+
+
+def test_failing_downgrade(pytester):
+    """Assert failing downgrade, fails test."""
+    result = run_pytest(pytester, passed=3, failed=2, success=False)
+    assert_failed_test_has_content(
+        result,
+        test="test_up_down_consistency",
+        content="Failed to downgrade through each revision",
+    )
+    assert_failed_test_has_content(
+        result,
+        test="test_downgrade_leaves_no_trace",
+        content="Something went wrong",
+    )

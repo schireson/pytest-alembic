@@ -1,8 +1,6 @@
 from dataclasses import dataclass
 from typing import Dict, List, Union
 
-from pytest_alembic.config import Config
-
 
 @dataclass
 class RevisionSpec:
@@ -34,7 +32,7 @@ class RevisionData:
     at_revision_data: RevisionSpec
 
     @classmethod
-    def from_config(cls, config: Config):
+    def from_config(cls, config: "Config"):
         """Produce a `RevisionData` from raw configuration from :func:`alembic_config`."""
         return cls(
             before_revision_data=RevisionSpec.parse(config.before_revision_data),
@@ -57,3 +55,7 @@ class RevisionData:
         """Yield the individual data insertions which should occur upon reaching the given revision."""
         at_revision_data = self.at_revision_data.get(revision)
         return self.get(revision, at_revision_data)
+
+
+# isort: split
+from pytest_alembic.config import Config  # noqa

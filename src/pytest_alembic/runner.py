@@ -42,6 +42,7 @@ class MigrationContext:
     command_executor: CommandExecutor
     revision_data: RevisionData
     connection_executor: ConnectionExecutor
+    config: Config
 
     @classmethod
     def from_config(
@@ -54,6 +55,7 @@ class MigrationContext:
             command_executor=command_executor,
             revision_data=RevisionData.from_config(config),
             connection_executor=connection_executor,
+            config=config,
         )
 
     @property
@@ -110,43 +112,54 @@ class MigrationContext:
             at_upgrade_data = list(self.revision_data.get_at(next_revision))
             self.connection_executor.table_insert(next_revision, at_upgrade_data)
 
+        current = self.current
+        return current
+
     def migrate_up_before(self, revision):
-        """Upgrade up to, but not including the given `revision`."""
+        """Migrate up to, but not including the given `revision`."""
         preceeding_revision = self.history.previous_revision(revision)
-        self.managed_upgrade(preceeding_revision)
+        return self.managed_upgrade(preceeding_revision)
 
     def migrate_up_to(self, revision):
-        """Upgrade up to, and including the given `revision`."""
-        self.managed_upgrade(revision)
+        """Migrate up to, and including the given `revision`."""
+        return self.managed_upgrade(revision)
 
     def migrate_up_one(self):
-        """Upgrade up by exactly one revision."""
-        revision = self.history.next_revision(self.current)
-        self.managed_upgrade(revision)
+        """Migrate up by exactly one revision."""
+        current = self.current
+        next_revision = self.history.next_revision(current)
+        new_revision = self.managed_upgrade(next_revision)
+        if current == new_revision:
+            return None
+        return new_revision
 
     def migrate_down_before(self, revision):
-        """Upgrade down to, but not including the given `revision`."""
+        """Migrate down to, but not including the given `revision`."""
         next_revision = self.history.next_revision(revision)
-        self.migrate_down_to(next_revision)
+        return self.migrate_down_to(next_revision)
 
     def migrate_down_to(self, revision):
-        """Upgrade down to, and including the given `revision`."""
+        """Migrate down to, and including the given `revision`."""
         self.history.validate_revision(revision)
         self.raw_command("downgrade", revision)
+        return revision
 
     def migrate_down_one(self):
-        """Upgrade down by exactly one revision."""
+        """Migrate down by exactly one revision."""
         previous_revision = self.history.previous_revision(self.current)
         self.raw_command("downgrade", previous_revision)
+        return previous_revision
 
     def roundtrip_next_revision(self):
         """Upgrade, downgrade then upgrade.
 
         This is meant to ensure that the given revision is idempotent.
         """
-        self.migrate_up_one()
-        self.migrate_down_one()
-        self.migrate_up_one()
+        next_revision = self.migrate_up_one()
+        if next_revision:
+            self.migrate_down_one()
+            return self.migrate_up_one()
+        return None
 
     def insert_into(self, table, data):
         """Insert data into a given table.
