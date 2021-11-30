@@ -89,16 +89,16 @@ We expose 2 explicitly overridable fixtures :code:`alembic_config` and :code:`al
 Overridding the fixtures
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-One should generally put the implementations of :code:`alembic_config` and :code:`alembic_engine`
+One should generally put the implementations of :ref:`alembic_config` and :ref:`alembic_engine`
 in a :code:`conftest.py` (a special file recognized by pytest) at the root of your tests folder,
 typically :code:`tests/conftest.py`.
 
-If your tests are located elsewhere, you should use the pytest config to specify
+If your tests are located elsewhere, you should use the :ref:`pytest config <Pytest Config>` to specify
 :code:`pytest_alembic_tests_folder`, to point at your tests folder root.
 
 Then you can define your own implementations of these fixtures:
 
-:code:`alembic_config` is the primary point of entry for configurable options for the
+:ref:`alembic_config` is the primary point of entry for configurable options for the
 alembic runner. See the API docs for a comprehensive list. This can often be omitted, as
 alembic does not typically require configuration. The default implementation is:
 
@@ -111,7 +111,7 @@ alembic does not typically require configuration. The default implementation is:
        return {}
 
 
-:code:`alembic_engine` is where you specify the engine with which the :code:`alembic_runner`
+:ref:`alembic_engine` is where you specify the engine with which the :ref:`alembic_runner`
 should execute your tests.
 
 .. code:: python

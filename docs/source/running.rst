@@ -4,8 +4,14 @@ Running Tests
 :code:`Pytest Alembic` automatically adds a flag, :code:`pytest --test-alembic`, which will
 automatically invoke the baked-in tests.
 
-Config
-------
+Configuration
+-------------
+
+Pytest Config
+~~~~~~~~~~~~~
+In any of the pytest config locations (``pytest.ini``, ``setup.cfg``, ``pyproject.toml``),
+you can set any of the following configuration options to alter global pytest-alembic
+behavior.
 
 * :code:`pytest_alembic_include`
 
@@ -25,6 +31,11 @@ Config
   location. However this can be customized if pytest is, for example, invoked from a parent
   directory like :code:`pytest folder/tests`, or the tests are otherwise located at a different
   location, relative to the :code:`pytest` invocation.
+
+
+Alembic Config
+~~~~~~~~~~~~~~
+See the :ref:`Config` fixture for more detail.
 
 
 Alternative to :code:`--test-alembic`

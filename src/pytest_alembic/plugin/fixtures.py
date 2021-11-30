@@ -67,27 +67,41 @@ def alembic_runner(alembic_config, alembic_engine):
 
 
 @pytest.fixture
-def alembic_config() -> Union[Dict[str, Any], alembic.config.Config]:
+def alembic_config() -> Union[Dict[str, Any], alembic.config.Config, Config]:
     """Override this fixture to configure the exact alembic context setup required.
 
-    The return value of this fixture can be a literal :class:`alembic.config.Config`
-    object. If you, have a lot of options to set, or feel more comfortable setting
-    alembic config, this might be the way to go.
+    The return value of this fixture can be one of a few types.
 
-    It can also be a `Dict` containing the common set of kwargs one might use
-    to configure an alembic Config object, such as:
+    - If you're only configuring alembic-native configuration, a :class:`alembic.config.Config`
+      object is accepted as configuration. This largely leaves pytest-alembic out
+      of the setup, so depending on your settings, might be the way to go.
+
+    - If you only have a couple of options to set, you might choose to return
+      a ``Dict``.
+
+      The following common alembic config options are accepted as keys.
 
         - script_location
         - target_metadata
         - process_revision_directives
         - include_schemas
 
-    Note that values here, represent net-additive options on top of what you might
-    already have configured in your `env.py`. You should generally prefer to
-    configure your `env.py` however you like it and omit such options here.
+      Additionally you can send a `file` key (akin to `alembic -c`), should your
+      `alembic.ini` be otherwise named.
 
-    Additionally you can send a `file` key (akin to `alembic -c`), should your
-    `alembic.ini` be otherwise named.
+      Note that values here, represent net-additive options on top of what you might
+      already have configured in your `env.py`. You should generally prefer to
+      configure your `env.py` however you like it and omit such options here.
+
+      You may also use this dict to set pytest-alembic specific features:
+
+        - before_revision_data
+        - at_revision_data
+        - minimum_downgrade_revision
+
+    - You can also directly return a :ref:`Config` class instance.
+      This is your only option if you want to use both pytest-alembic specific features
+      **and** construct your own :class:`alembic.config.Config`.
 
     Examples:
         >>> @pytest.fixture

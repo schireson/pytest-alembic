@@ -1,4 +1,5 @@
 import logging
+import warnings
 
 import pytest
 from alembic.autogenerate.api import AutogenContext
@@ -7,6 +8,13 @@ from alembic.autogenerate.render import _render_cmd_body
 from pytest_alembic.plugin.error import AlembicTestFailure
 
 log = logging.getLogger(__name__)
+
+
+NOT_IMPLEMENTED_WARNING = (
+    "The {revision} downgrade raised `NotImplementedError`, which short-circuited the downgrade "
+    "operation and may have passed the test. If intended, and downgrades can not safely be performed "
+    "below this migration, see 'minimum_downgrade_revision' configuration to avoid this warning."
+)
 
 
 @pytest.mark.alembic
@@ -91,31 +99,43 @@ def test_up_down_consistency(alembic_runner):
 
     Individually upgrade to ensure that it's clear which revision caused the failure.
     """
-    # XXX: This impl is getting kind of unfortunate. It should probably be using
-    #      something like `roundtrip_next_revision` instead, but that currently
-    #      fails for unrelated reasons.
     for revision in alembic_runner.history.revisions:
         try:
             alembic_runner.migrate_up_to(revision)
-        except RuntimeError as e:
+        except Exception as e:
             raise AlembicTestFailure(
                 "Failed to upgrade through each revision individually.",
                 context=[("Failing Revision", revision), ("Alembic Error", str(e))],
             )
 
     # Skip the `heads` revision. Caused by new alembic warning in 1.6.x.
-    down_revisions = reversed(alembic_runner.history.revisions[:-1])
+    down_revisions = list(reversed(alembic_runner.history.revisions[:-1]))
 
-    for revision in down_revisions:
+    index = 0
+    for index, revision in enumerate(down_revisions):
+        if alembic_runner.config.minimum_downgrade_revision == revision:
+            # If there is a minimum_downgrade_revision, stop downgrading here.
+            break
+
         try:
             alembic_runner.migrate_down_to(revision)
-        except RuntimeError as e:
+        except NotImplementedError:
+            # In the event of a `NotImplementedError`, we should have the same semantics,
+            # as-if `minimum_downgrade_revision` was specified, but we'll emit a warning
+            # to suggest that feature is used instead.
+            warnings.warn(NOT_IMPLEMENTED_WARNING.format(revision=revision))
+            break
+
+        except Exception as e:
             raise AlembicTestFailure(
                 "Failed to downgrade through each revision individually.",
                 context=[("Failing Revision", revision), ("Alembic Error", str(e))],
             )
 
-    for revision in alembic_runner.history.revisions:
+    # We should only upgrade as far as we successfully downgraded.
+    down_revisions = down_revisions[:index]
+
+    for revision in reversed(down_revisions):
         try:
             alembic_runner.migrate_up_to(revision)
         except Exception as e:

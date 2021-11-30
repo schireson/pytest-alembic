@@ -1,10 +1,16 @@
 # Changelog
 
-## [Unreleased](https://github.com/schireson/pytest-alembic/compare/v0.5.1...HEAD) (2021-11-23)
+## [Unreleased](https://github.com/schireson/pytest-alembic/compare/v0.5.1...HEAD) (2021-11-30)
+
+### Features
+
+* Add ability to set a minimum bound downgrade migration 4149bfe
+* Add new test which asserts parity between upgrade and downgrade detectable effects. ab9b645
+* Add new test for roundtrip downgrade isolation. 2fb20d0
 
 ### Fixes
 
-* Run pytest tests inline (faster and easier coverage). b71205e
+* Run pytest tests inline (faster and easier coverage). ea9b59d
 
 
 ### [v0.5.1](https://github.com/schireson/pytest-alembic/compare/v0.5.0...v0.5.1) (2021-11-23)

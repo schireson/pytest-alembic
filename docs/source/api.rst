@@ -1,11 +1,29 @@
 API
 ===
 
-Fixture Functions
------------------
+Fixtures
+--------
 
-.. automodule:: pytest_alembic.plugin.fixtures
-    :members: alembic_runner, alembic_config, alembic_engine, create_alembic_fixture
+alembic_runner
+~~~~~~~~~~~~~~
+.. autofunction:: pytest_alembic.plugin.fixtures.alembic_runner
+
+alembic_config
+~~~~~~~~~~~~~~
+.. autofunction:: pytest_alembic.plugin.fixtures.alembic_config
+
+Config
+++++++
+.. autoclass:: pytest_alembic.config.Config
+   :members: from_raw_config
+
+alembic_engine
+~~~~~~~~~~~~~~
+.. autofunction:: pytest_alembic.plugin.fixtures.alembic_engine
+
+create_alembic_fixture
+~~~~~~~~~~~~~~~~~~~~~~
+.. autofunction:: pytest_alembic.plugin.fixtures.create_alembic_fixture
 
 
 Alembic Runner

@@ -1,18 +1,35 @@
 from dataclasses import dataclass, field
-from typing import Any, Dict, Optional, TYPE_CHECKING, Union
+from typing import Any, Dict, Optional, Union
 
 import alembic.config
-
-if TYPE_CHECKING:
-    from pytest_alembic.revision_data import RevisionSpec
 
 
 @dataclass
 class Config:
-    """Adapt between pre-produced alembic config and raw config options.
+    """Pytest-alembic configuration options.
 
-    Allows one to specify raw pytest-alembic config options through raw dictionary,
-    as well as being flexible enough to allow a literal alembic Config object.
+    - Both `before_revision_data` and `at_revision_data` are described in detail
+      in :ref:`Custom data`.
+
+    - :code:`minimum_downgrade_revision` can be used to set a lower bound on the
+      **downgrade** migrations which are run built-in tests like ``test_up_down_consistency``
+      and ``test_downgrade_leaves_no_trace``.
+
+      For example:
+          >>> import pytest
+
+          >>> @pytest.fixture
+          ... def alembic_config():
+          ...    return Config(minimum_downgrade_revision='abcde12345')
+
+          This would essentially short-circuit and avoid running the downgrade
+          migrations **including and below** this migration.
+
+      .. note::
+
+         If a downgrade raises a ``NotImplementedError``, it will have the same effect
+         as a ``minimum_downgrade_revision``, but will emit a warning suggesting
+         the use of this feature instead.
     """
 
     config_options: Dict[str, Any] = field(default_factory=dict)
@@ -21,21 +38,45 @@ class Config:
     before_revision_data: Optional[Union[Dict, "RevisionSpec"]] = None
     at_revision_data: Optional[Union[Dict, "RevisionSpec"]] = None
 
+    minimum_downgrade_revision: Optional[str] = None
+
     @classmethod
-    def from_raw_config(cls, raw_config: Union[Dict[str, Any], alembic.config.Config, None] = None):
+    def from_raw_config(
+        cls, raw_config: Union[Dict[str, Any], alembic.config.Config, "Config", None] = None
+    ):
+        """Adapt between pre-produced alembic config and raw config options.
+
+        Allows one to specify raw pytest-alembic config options through raw dictionary,
+        as well as being flexible enough to allow a literal alembic Config object.
+
+        Examples:
+            >>> Config.from_raw_config()
+            Config(config_options={}, alembic_config=None, before_revision_data=None, at_revision_data=None, minimum_downgrade_revision=None)
+
+            >>> Config.from_raw_config({'minimum_downgrade_revision': 'abc123'})
+            Config(config_options={}, alembic_config=None, before_revision_data=None, at_revision_data=None, minimum_downgrade_revision='abc123')
+
+            >>> Config.from_raw_config(Config(minimum_downgrade_revision='abc123'))
+            Config(config_options={}, alembic_config=None, before_revision_data=None, at_revision_data=None, minimum_downgrade_revision='abc123')
+        """
         if raw_config is None:
             return cls()
 
         if isinstance(raw_config, alembic.config.Config):
             return cls(alembic_config=raw_config)
 
+        if isinstance(raw_config, Config):
+            return raw_config
+
         before_data = raw_config.pop("before_revision_data", None)
         at_data = raw_config.pop("at_revision_data", None)
+        minimum_downgrade_revision = raw_config.pop("minimum_downgrade_revision", None)
         return cls(
             config_options=raw_config,
             alembic_config=None,
             before_revision_data=before_data,
             at_revision_data=at_data,
+            minimum_downgrade_revision=minimum_downgrade_revision,
         )
 
     def make_alembic_config(self, stdout):
@@ -64,3 +105,7 @@ class Config:
         alembic_config.attributes["process_revision_directives"] = process_revision_directives
         alembic_config.attributes["include_schemas"] = include_schemas
         return alembic_config
+
+
+# isort: split
+from pytest_alembic.revision_data import RevisionSpec  # noqa
