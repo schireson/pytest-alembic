@@ -81,7 +81,9 @@ def alembic_config() -> Union[Dict[str, Any], alembic.config.Config, Config]:
 
       The following common alembic config options are accepted as keys.
 
+        - file/config_file_name (commonly alembic.ini)
         - script_location
+        - sqlalchemy.url
         - target_metadata
         - process_revision_directives
         - include_schemas

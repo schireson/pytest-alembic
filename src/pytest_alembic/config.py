@@ -8,6 +8,17 @@ import alembic.config
 class Config:
     """Pytest-alembic configuration options.
 
+    Arguments:
+    - `config_options`: Meant to simplify the creation of ``alembic.config.Config``
+       objects. Supply keys common to customization in alembic configuration. For
+       example:
+        - file/config_file_name (commonly alembic.ini)
+        - script_location
+        - sqlalchemy.url
+        - target_metadata
+        - process_revision_directives
+        - include_schemas
+
     - Both `before_revision_data` and `at_revision_data` are described in detail
       in :ref:`Custom data`.
 
@@ -80,7 +91,12 @@ class Config:
         )
 
     def make_alembic_config(self, stdout):
-        file = self.config_options.get("file", "alembic.ini")
+        file = (
+            self.config_options.get("file")
+            or self.config_options.get("config_file_name")
+            or "alembic.ini"
+        )
+
         alembic_config = self.config_options.get("alembic_config")
 
         if not alembic_config and self.alembic_config:
@@ -89,21 +105,27 @@ class Config:
         else:
             alembic_config = alembic.config.Config(file, stdout=stdout)
 
-        script_location = self.config_options.get("script_location")
-        target_metadata = self.config_options.get("target_metadata")
-        process_revision_directives = self.config_options.get("process_revision_directives")
-        include_schemas = self.config_options.get("include_schemas", True)
+        sqlalchemy_url = self.config_options.get("sqlalchemy.url")
+        if sqlalchemy_url:
+            alembic_config.set_main_option("sqlalchemy.url", sqlalchemy_url)
 
         # Only set script_location if set.
+        script_location = self.config_options.get("script_location")
         if script_location:
             alembic_config.set_section_option("alembic", "script_location", script_location)
         elif not alembic_config.get_section_option("alembic", "script_location"):
             # Or in the event that it's not set after already having loaded the config.
             alembic_config.set_main_option("script_location", "migrations")
 
+        target_metadata = self.config_options.get("target_metadata")
         alembic_config.attributes["target_metadata"] = target_metadata
+
+        process_revision_directives = self.config_options.get("process_revision_directives")
         alembic_config.attributes["process_revision_directives"] = process_revision_directives
+
+        include_schemas = self.config_options.get("include_schemas", True)
         alembic_config.attributes["include_schemas"] = include_schemas
+
         return alembic_config
 
 
