@@ -39,7 +39,7 @@ def test_downgrade_leaves_no_trace(alembic_runner: MigrationContext):
     to customize and extend the autogeneration capabilities.
     """
     command_executor = alembic_runner.command_executor
-    engine = command_executor.connection
+    engine = alembic_runner.connection
 
     # Swap the original engine for a connection to enable us to rollback the transaction
     # midway through.

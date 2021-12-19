@@ -57,7 +57,7 @@ def test_all_models_register_on_metadata(
     """
 
     modules, bare_tables = get_bare_import_tableset(
-        str(alembic_runner.connection_executor.connection.url),
+        str(alembic_runner.connection.url),
     )
     if model_package:
         modules = [model_package]

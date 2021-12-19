@@ -1,12 +1,13 @@
 import contextlib
 import functools
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import Dict, List, Optional, Union
 
 from pytest_alembic.config import Config
 from pytest_alembic.executor import CommandExecutor, ConnectionExecutor
 from pytest_alembic.history import AlembicHistory
 from pytest_alembic.revision_data import RevisionData
+from sqlalchemy.engine import Engine
 
 
 @contextlib.contextmanager
@@ -18,21 +19,11 @@ def runner(config: Config, engine=None):
     """
     command_executor = CommandExecutor.from_config(config)
     migration_context = MigrationContext.from_config(
-        config, command_executor, ConnectionExecutor(engine)
+        config, command_executor, ConnectionExecutor(), engine
     )
 
     command_executor.configure(connection=engine)
     yield migration_context
-
-
-def _sequence_directives(*directives):
-    def directive_wrapper(*args, **kwargs):
-        for directive in directives:
-            if not directive:
-                continue
-            directive(*args, **kwargs)
-
-    return directive_wrapper
 
 
 @dataclass
@@ -43,6 +34,7 @@ class MigrationContext:
     revision_data: RevisionData
     connection_executor: ConnectionExecutor
     config: Config
+    connection: Optional[Union[Engine]] = None
 
     @classmethod
     def from_config(
@@ -50,12 +42,14 @@ class MigrationContext:
         config: Config,
         command_executor: CommandExecutor,
         connection_executor: ConnectionExecutor,
+        connection: Optional[Union[Engine]],
     ):
         return cls(
             command_executor=command_executor,
             revision_data=RevisionData.from_config(config),
             connection_executor=connection_executor,
             config=config,
+            connection=connection,
         )
 
     @property
@@ -70,7 +64,7 @@ class MigrationContext:
         return self.command_executor.run_command("heads")
 
     @property
-    def current(self) -> Optional[str]:
+    def current(self) -> str:
         """Get the list of revision heads."""
         current = self.command_executor.run_command("current")
         if current:
@@ -105,12 +99,12 @@ class MigrationContext:
         current = self.current
         for current_revision, next_revision in self.history.revision_window(current, dest_revision):
             before_upgrade_data = list(self.revision_data.get_before(next_revision))
-            self.connection_executor.table_insert(current_revision, before_upgrade_data)
+            self.insert_into(data=before_upgrade_data, revision=current_revision)
 
             self.raw_command("upgrade", next_revision)
 
             at_upgrade_data = list(self.revision_data.get_at(next_revision))
-            self.connection_executor.table_insert(next_revision, at_upgrade_data)
+            self.insert_into(data=at_upgrade_data, revision=next_revision)
 
         current = self.current
         return current
@@ -161,7 +155,9 @@ class MigrationContext:
             return self.migrate_up_one()
         return None
 
-    def insert_into(self, table, data):
+    def insert_into(
+        self, table: Optional[str] = None, data: Optional[Union[Dict, List]] = None, revision=None
+    ):
         """Insert data into a given table.
 
         Args:
@@ -169,9 +165,20 @@ class MigrationContext:
             data: The data to insert. This is eventually passed through to SQLAlchemy's
                 Table class `values` method, and so should accept either a list of
                 `dict`s representing a list of rows, or a `dict` representing one row.
+            revision: The revision of MetaData to use as the table definition for the insert.
         """
-        return self.connection_executor.table_insert(
-            revision=self.current, tablename=table, data=data
+        if revision is None:
+            revision = self.current
+
+        if data is None:
+            data = []
+
+        return run_connection_task(
+            self.connection_executor.table_insert,
+            self.connection,
+            revision=revision,
+            tablename=table,
+            data=data,
         )
 
     def table_at_revision(self, name, *, revision=None, schema=None):
@@ -203,3 +210,45 @@ class RevisionSuccess(Exception):
             raise cls()
 
         return _process_revision_directives
+
+
+def _sequence_directives(*directives):
+    def directive_wrapper(*args, **kwargs):
+        for directive in directives:
+            if not directive:
+                continue
+            directive(*args, **kwargs)
+
+    return directive_wrapper
+
+
+def run_connection_task(fn, engine, *args, **kwargs):
+    """Run a given task on the provided connect, with the correct async/sync context.
+
+    Given an async engine, we need to run the task in an async execution context,
+    even though all internals are sychronous. This is how alembic suggests
+    running the migrations themselves, so this matches that style.
+    """
+    # The user may not have sqlalchemy 1.4+, and therefore may not even be able to
+    # use async engines.
+    try:
+        from sqlalchemy.ext.asyncio import AsyncEngine
+    except ImportError:
+        AsyncEngine = None
+
+    if AsyncEngine and isinstance(engine, AsyncEngine):
+
+        async def run(engine):
+            async with engine.connect() as connection:
+                result = await connection.run_sync(fn, *args, **kwargs)
+
+            await engine.dispose()
+            return result
+
+        # Apparently importing asyncio is expensive, scope the import, in the event
+        # this isn't even used.
+        import asyncio
+
+        return asyncio.run(run(engine))
+    else:
+        return fn(*args, **kwargs)
