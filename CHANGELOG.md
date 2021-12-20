@@ -1,10 +1,32 @@
 # Changelog
 
-## [Unreleased](https://github.com/schireson/pytest-alembic/compare/v0.5.1...HEAD) (2021-11-30)
+## [v0.7.0](https://github.com/schireson/pytest-alembic/compare/v0.6.1...v0.7.0) (2021-12-21)
+
+### ⚠ BREAKING CHANGE
+
+* Starting with this release, python 3.6 will no longer be tested or officially supported. In this specific release, only the new official support for asyncio-based engine with alembic and pytest-alembic is incompatible with 3.6. Any existing usage should remain at least provisionally compatible until later releases which may or may not further break compatibility.
 
 ### Features
 
-* Add ability to set a minimum bound downgrade migration 4149bfe
+* Enable in-test insertion of data in async contexts. e9f8d97
+
+### Fixes
+
+* asynchronous engine tests which perform transaction manipulation. 245f9ef
+
+
+### [v0.6.1](https://github.com/schireson/pytest-alembic/compare/v0.6.0...v0.6.1) (2021-12-02)
+
+#### Fixes
+
+* Add missing alembic Config options. c3cab87
+
+
+## [v0.6.0](https://github.com/schireson/pytest-alembic/compare/v0.5.1...v0.6.0) (2021-11-30)
+
+### Features
+
+* Add ability to set a minimum bound downgrade migration cda6937
 * Add new test which asserts parity between upgrade and downgrade detectable effects. ab9b645
 * Add new test for roundtrip downgrade isolation. 2fb20d0
 

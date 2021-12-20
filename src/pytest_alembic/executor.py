@@ -28,10 +28,6 @@ class CommandExecutor:
         for key, value in kwargs.items():
             self.alembic_config.attributes[key] = value
 
-    @property
-    def connection(self):
-        return self.alembic_config.attributes["connection"]
-
     def run_command(self, command, *args, **kwargs):
         self.stream_position = self.stdout.tell()
 

@@ -100,12 +100,12 @@ class MigrationContext:
         current = self.current
         for current_revision, next_revision in self.history.revision_window(current, dest_revision):
             before_upgrade_data = list(self.revision_data.get_before(next_revision))
-            self.insert_into(data=before_upgrade_data, revision=current_revision)
+            self.insert_into(data=before_upgrade_data, revision=current_revision, table=None)
 
             self.raw_command("upgrade", next_revision)
 
             at_upgrade_data = list(self.revision_data.get_at(next_revision))
-            self.insert_into(data=at_upgrade_data, revision=next_revision)
+            self.insert_into(data=at_upgrade_data, revision=next_revision, table=None)
 
         current = self.current
         return current
@@ -156,9 +156,7 @@ class MigrationContext:
             return self.migrate_up_one()
         return None
 
-    def insert_into(
-        self, table: Optional[str] = None, data: Optional[Union[Dict, List]] = None, revision=None
-    ):
+    def insert_into(self, table: Optional[str], data: Union[Dict, List] = None, revision=None):
         """Insert data into a given table.
 
         Args:
@@ -170,9 +168,6 @@ class MigrationContext:
         """
         if revision is None:
             revision = self.current
-
-        if data is None:
-            data = []
 
         return run_connection_task(
             self.connection,
@@ -234,7 +229,7 @@ def run_connection_task(engine, fn, *args, **kwargs):
     # use async engines.
     try:
         from sqlalchemy.ext.asyncio import AsyncEngine
-    except ImportError:
+    except ImportError:  # pragma: no cover
         AsyncEngine = None
 
     if AsyncEngine and isinstance(engine, AsyncEngine):
