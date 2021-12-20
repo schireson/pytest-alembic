@@ -8,16 +8,16 @@ import alembic.config
 class Config:
     """Pytest-alembic configuration options.
 
-    Arguments:
     - `config_options`: Meant to simplify the creation of ``alembic.config.Config``
        objects. Supply keys common to customization in alembic configuration. For
        example:
-        - file/config_file_name (commonly alembic.ini)
-        - script_location
-        - sqlalchemy.url
-        - target_metadata
-        - process_revision_directives
-        - include_schemas
+
+       - file/config_file_name (commonly alembic.ini)
+       - script_location
+       - sqlalchemy.url
+       - target_metadata
+       - process_revision_directives
+       - include_schemas
 
     - Both `before_revision_data` and `at_revision_data` are described in detail
       in :ref:`Custom data`.
@@ -26,21 +26,21 @@ class Config:
       **downgrade** migrations which are run built-in tests like ``test_up_down_consistency``
       and ``test_downgrade_leaves_no_trace``.
 
-      For example:
-          >>> import pytest
+    For example:
+        >>> import pytest
 
-          >>> @pytest.fixture
-          ... def alembic_config():
-          ...    return Config(minimum_downgrade_revision='abcde12345')
+        >>> @pytest.fixture
+        ... def alembic_config():
+        ...    return Config(minimum_downgrade_revision='abcde12345')
 
-          This would essentially short-circuit and avoid running the downgrade
-          migrations **including and below** this migration.
+        This would essentially short-circuit and avoid running the downgrade
+        migrations **including and below** this migration.
 
-      .. note::
+    .. note::
 
-         If a downgrade raises a ``NotImplementedError``, it will have the same effect
-         as a ``minimum_downgrade_revision``, but will emit a warning suggesting
-         the use of this feature instead.
+       If a downgrade raises a ``NotImplementedError``, it will have the same effect
+       as a ``minimum_downgrade_revision``, but will emit a warning suggesting
+       the use of this feature instead.
     """
 
     config_options: Dict[str, Any] = field(default_factory=dict)
@@ -127,6 +127,18 @@ class Config:
         alembic_config.attributes["include_schemas"] = include_schemas
 
         return alembic_config
+
+
+def duplicate_alembic_config(config: alembic.config.Config):
+    return alembic.config.Config(
+        config.config_file_name,
+        ini_section=config.config_ini_section,
+        output_buffer=config.output_buffer,
+        stdout=config.stdout,
+        cmd_opts=config.cmd_opts,
+        config_args=config.config_args,
+        attributes=config.attributes,
+    )
 
 
 # isort: split

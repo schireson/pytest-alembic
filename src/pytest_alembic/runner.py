@@ -3,11 +3,12 @@ import functools
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Union
 
+from sqlalchemy.engine import Engine
+
 from pytest_alembic.config import Config
 from pytest_alembic.executor import CommandExecutor, ConnectionExecutor
 from pytest_alembic.history import AlembicHistory
 from pytest_alembic.revision_data import RevisionData
-from sqlalchemy.engine import Engine
 
 
 @contextlib.contextmanager
@@ -34,7 +35,7 @@ class MigrationContext:
     revision_data: RevisionData
     connection_executor: ConnectionExecutor
     config: Config
-    connection: Optional[Union[Engine]] = None
+    connection: Engine = None
 
     @classmethod
     def from_config(
@@ -42,7 +43,7 @@ class MigrationContext:
         config: Config,
         command_executor: CommandExecutor,
         connection_executor: ConnectionExecutor,
-        connection: Optional[Union[Engine]],
+        connection: Engine,
     ):
         return cls(
             command_executor=command_executor,
@@ -174,8 +175,8 @@ class MigrationContext:
             data = []
 
         return run_connection_task(
-            self.connection_executor.table_insert,
             self.connection,
+            self.connection_executor.table_insert,
             revision=revision,
             tablename=table,
             data=data,
@@ -222,7 +223,7 @@ def _sequence_directives(*directives):
     return directive_wrapper
 
 
-def run_connection_task(fn, engine, *args, **kwargs):
+def run_connection_task(engine, fn, *args, **kwargs):
     """Run a given task on the provided connect, with the correct async/sync context.
 
     Given an async engine, we need to run the task in an async execution context,
@@ -237,18 +238,22 @@ def run_connection_task(fn, engine, *args, **kwargs):
         AsyncEngine = None
 
     if AsyncEngine and isinstance(engine, AsyncEngine):
+        import asyncio
 
         async def run(engine):
             async with engine.connect() as connection:
                 result = await connection.run_sync(fn, *args, **kwargs)
+                await connection.commit()
 
             await engine.dispose()
             return result
 
-        # Apparently importing asyncio is expensive, scope the import, in the event
-        # this isn't even used.
-        import asyncio
-
         return asyncio.run(run(engine))
     else:
-        return fn(*args, **kwargs)
+        if isinstance(engine, Engine):
+            with engine.connect() as connection:
+                result = fn(connection, *args, **kwargs)
+        else:
+            result = fn(engine, *args, **kwargs)
+
+        return result

@@ -1,11 +1,13 @@
+import dataclasses
 import warnings
 
 import alembic.migration
 from alembic.autogenerate import produce_migrations, render_python_code
 from sqlalchemy import MetaData
 
+from pytest_alembic.config import duplicate_alembic_config
 from pytest_alembic.plugin.error import AlembicTestFailure
-from pytest_alembic.runner import MigrationContext
+from pytest_alembic.runner import MigrationContext, run_connection_task
 from pytest_alembic.tests.default import NOT_IMPLEMENTED_WARNING
 
 
@@ -38,15 +40,27 @@ def test_downgrade_leaves_no_trace(alembic_runner: MigrationContext):
     detect a change you'd expect it to, alembic already has extensive ability
     to customize and extend the autogeneration capabilities.
     """
-    command_executor = alembic_runner.command_executor
-    engine = alembic_runner.connection
+    run_connection_task(
+        alembic_runner.connection, _test_downgrade_leaves_no_trace, alembic_runner=alembic_runner
+    )
 
+
+def _test_downgrade_leaves_no_trace(connection, alembic_runner: MigrationContext):
     # Swap the original engine for a connection to enable us to rollback the transaction
     # midway through.
-    connection = engine.connect()
-    command_executor.alembic_config.attributes["connection"] = connection
+    alembic_config = duplicate_alembic_config(alembic_runner.command_executor.alembic_config)
+    alembic_config.attributes["connection"] = connection
 
-    revisions = alembic_runner.history.revisions[:-1]
+    alembic_runner = dataclasses.replace(
+        alembic_runner,
+        connection=connection,
+        command_executor=dataclasses.replace(
+            alembic_runner.command_executor, alembic_config=alembic_config
+        ),
+    )
+
+    history = alembic_runner.history
+    revisions = history.revisions[:-1]
     if len(revisions) == 1:
         return
 

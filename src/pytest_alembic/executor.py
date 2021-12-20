@@ -1,7 +1,6 @@
 import contextlib
-import functools
 import io
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from io import StringIO
 from typing import Dict, List, Optional, Union
 
@@ -50,11 +49,17 @@ class CommandExecutor:
         return self.stdout.readlines()
 
 
-@dataclass(frozen=True)
+@dataclass
 class ConnectionExecutor:
-    @functools.lru_cache()
+    metadatas: Dict[str, MetaData] = field(default_factory=dict)
+
     def metadata(self, revision: str) -> MetaData:
-        return MetaData()
+        metadata = self.metadatas.get(revision)
+        if metadata is None:
+            metadata = MetaData()
+            self.metadatas[revision] = metadata
+
+        return metadata
 
     def table(self, connection, revision: str, name: str, schema: Optional[str] = None) -> Table:
         meta = self.metadata(revision)
