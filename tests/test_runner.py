@@ -214,3 +214,17 @@ def test_failing_downgrade(pytester):
         test="test_downgrade_leaves_no_trace",
         content="Something went wrong",
     )
+
+
+def test_async_sqlalchemy(pytester):
+    """Assert pytest-alembic works with async manually adapted sqlalchemy engine."""
+    run_pytest(pytester, passed=4)
+
+
+def test_async_sqlalchemy_native(pytester):
+    """Assert pytest-alembic works with native async sqlalchemy engine.
+
+    Additionally includes the experimental tests which perform in-test data
+    insertion, to ensure the whole plugin API works with asyncio.
+    """
+    run_pytest(pytester, passed=6)

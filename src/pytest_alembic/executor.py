@@ -1,7 +1,6 @@
 import contextlib
-import functools
 import io
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from io import StringIO
 from typing import Dict, List, Optional, Union
 
@@ -29,10 +28,6 @@ class CommandExecutor:
         for key, value in kwargs.items():
             self.alembic_config.attributes[key] = value
 
-    @property
-    def connection(self):
-        return self.alembic_config.attributes["connection"]
-
     def run_command(self, command, *args, **kwargs):
         self.stream_position = self.stdout.tell()
 
@@ -50,21 +45,28 @@ class CommandExecutor:
         return self.stdout.readlines()
 
 
-@dataclass(frozen=True)
+@dataclass
 class ConnectionExecutor:
-    connection: Connection
+    metadatas: Dict[str, MetaData] = field(default_factory=dict)
 
-    @functools.lru_cache()
     def metadata(self, revision: str) -> MetaData:
-        return MetaData()
+        metadata = self.metadatas.get(revision)
+        if metadata is None:
+            metadata = MetaData()
+            self.metadatas[revision] = metadata
 
-    @functools.lru_cache()
-    def table(self, revision: str, name: str, schema: Optional[str] = None) -> Table:
+        return metadata
+
+    def table(self, connection, revision: str, name: str, schema: Optional[str] = None) -> Table:
         meta = self.metadata(revision)
-        return Table(name, meta, schema=schema, autoload=True, autoload_with=self.connection)
+        if name in meta.tables:
+            return meta.tables[name]
+
+        return Table(name, meta, schema=schema, autoload_with=connection)
 
     def table_insert(
         self,
+        connection: Connection,
         revision: str,
         data: Union[Dict, List],
         tablename: Optional[str] = None,
@@ -89,6 +91,6 @@ class ConnectionExecutor:
                 # However, if it doesn't work, both `table` and `schema` are in scope, so failure is fine.
                 pass
 
-            table = self.table(revision, table, schema=schema)
+            table = self.table(connection, revision, table, schema=schema)
             values = {k: v for k, v in item.items() if k != "__tablename__"}
-            self.connection.execute(table.insert().values(values))
+            connection.execute(table.insert().values(values))

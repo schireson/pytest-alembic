@@ -7,7 +7,7 @@
 A pytest plugin to test alembic migrations (with default tests) and
 which enables you to write tests specific to your migrations.
 
-``` bash
+```bash
 $ pip install pytest-alembic
 $ pytest --test-alembic
 
@@ -41,7 +41,7 @@ itself.
 
 ### Built-in Tests
 
-- **test\_single\_head\_revision**
+- **test_single_head_revision**
 
   Assert that there only exists one head revision.
 
@@ -50,11 +50,11 @@ itself.
   conflicts resulting in a diverged history, which lazily breaks during
   deployment.
 
-- **test\_upgrade**
+- **test_upgrade**
 
   Assert that the revision history can be run through from base to head.
 
-- **test\_model\_definitions\_match\_ddl**
+- **test_model_definitions_match_ddl**
 
   Assert that the state of the migrations matches the state of the
   models describing the DDL.
@@ -65,7 +65,7 @@ itself.
   (e.g. find no difference between your database (i.e. migrations
   history) and your models).
 
-- **test\_up\_down\_consistency**
+- **test_up_down_consistency**
 
   Assert that all downgrades succeed.
 
@@ -78,7 +78,20 @@ itself.
   tests](http://pytest-alembic.readthedocs.io/en/latest/experimental_tests.html)
 
   - all_models_register_on_metadata
+
+    Assert that all defined models are imported statically.
+
+    Prevents scenarios in which the minimal import of your models in your `env.py`
+    does not import all extant models, leading alembic to not autogenerate all
+    your models, or (worse!) suggest the deletion of tables which should still exist.
+
   - downgrade_leaves_no_trace
+
+    Assert that there is no difference between the state of the database pre/post downgrade.
+
+    In essence this is a much more strict version of `test_up_down_consistency`,
+    where the state of a MetaData before and after a downgrade are identical as
+    far as alembic (autogenerate) is concerned.
 
   These tests will need to be enabled manually because their semantics or API are
   not yet guaranteed to stay the same. See the linked docs for more details!
@@ -102,7 +115,7 @@ With `pytest-alembic`, you can write tests directly, in the same way
 that you would normally, through the use of the `alembic_runner`
 fixture.
 
-``` python
+```python
 def test_gnarly_migration_xyz123(alembic_engine, alembic_runner):
     # Migrate up to, but not including this new migration
     alembic_runner.migrate_up_before('xyz123')
@@ -119,6 +132,6 @@ to change the state of your database up, down, and all around.
 
 ## Installing
 
-``` bash
+```bash
 pip install "pytest-alembic"
 ```

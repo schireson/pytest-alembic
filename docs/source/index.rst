@@ -11,6 +11,7 @@ Welcome to Pytest Alembic's documentation!
    Custom Data Hooks <custom_data>
    Custom Tests <custom_tests>
    Experimental Tests <experimental_tests>
+   Asyncio <asyncio>
    API <api>
    Contributing <contributing>
 
