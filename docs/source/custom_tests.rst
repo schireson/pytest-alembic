@@ -5,7 +5,9 @@ Honestly, there's not much to it by this point!
 
 .. code-block:: python
 
-   def test_gnarly_migration_xyz123(alembic_runner):
+   from sqlalchemy import text
+
+   def test_gnarly_migration_xyz123(alembic_runner, alembic_engine):
        # Migrate up to, but not including this new migration
        alembic_runner.migrate_up_before('xyz123')
 
@@ -16,6 +18,11 @@ Honestly, there's not much to it by this point!
        # sqlalchemy engine object, with which you can do whatever setup you'd like.
 
        alembic_runner.migrate_up_one()
+
+       with alembic_engine.connect() as conn:
+           rows = conn.execute(text("SELECT id from foo")).fetchall()
+
+       assert rows == [(1,)]
 
 :class:`alembic_runner <pytest_alembic.MigrationContext>` has all sorts of convenience methods
 for altering the state of the database for your test:

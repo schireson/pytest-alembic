@@ -81,13 +81,10 @@ Consider enabling the following options:
 * :code:`include_schemas=True`: If True, autogenerate will scan across all schemas located by the SQLAlchemy get_schema_names() method, and include all differences in tables found across all those schemas. This may only be useful if you make use of schemas.
 
 
-Fixtures
---------
+Setting up Fixtures
+-------------------
 
 We expose 2 explicitly overridable fixtures :code:`alembic_config` and :code:`alembic_engine`.
-
-Overridding the fixtures
-~~~~~~~~~~~~~~~~~~~~~~~~
 
 One should generally put the implementations of :ref:`alembic_config` and :ref:`alembic_engine`
 in a :code:`conftest.py` (a special file recognized by pytest) at the root of your tests folder,
@@ -96,23 +93,35 @@ typically :code:`tests/conftest.py`.
 If your tests are located elsewhere, you should use the :ref:`pytest config <Pytest Config>` to specify
 :code:`pytest_alembic_tests_folder`, to point at your tests folder root.
 
-Then you can define your own implementations of these fixtures:
+Then you can define your own implementations of these fixtures
 
+Setting up ``alembic_config``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 :ref:`alembic_config` is the primary point of entry for configurable options for the
-alembic runner. See the API docs for a comprehensive list. This can often be omitted, as
-alembic does not typically require configuration. The default implementation is:
+alembic runner. See the :ref:`API` reference for a comprehensive list. This fixture can
+often be omitted though, if your use of alembic is straightforward and/or uses alembic defaults.
+
+The default implementation is:
 
 .. code:: python
+
+   from pytest_alembic.config import Config
 
    @pytest.fixture
    def alembic_config():
        """Override this fixture to configure the exact alembic context setup required.
        """
-       return {}
+       return Config()
+
+See :ref:`Config` for more details about the sort of options available on our config.
 
 
+Setting up ``alembic_engine``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 :ref:`alembic_engine` is where you specify the engine with which the :ref:`alembic_runner`
 should execute your tests.
+
+The default ``alembic_engine`` implementation is:
 
 .. code:: python
 
@@ -122,27 +131,84 @@ should execute your tests.
        """
        return sqlalchemy.create_engine("sqlite:///")
 
-If you have a **very** simple database schema, you may be able to get away with the default
+If you have a **very** simple database schema, you **may** be able to get away with the default
 fixture implementation, which uses an in-memory SQLite engine. In most cases however,
-SQLite will not be able to sufficiently model your migrations.
+SQLite will not be able to sufficiently model your migrations. Typically, DDL is where features
+of databases tend to differ the most, and so the **actual** database you, should likely be
+what your ``alembic_engine`` is.
 
 
 Pytest Mock Resources
 ~~~~~~~~~~~~~~~~~~~~~
-
-Though you can, of course, implement whatever strategy you want, our recommended approach is to use
+Our recommended approach is to use
 `pytest-mock-resources <http://www.pytest-mock-resources.readthedocs.io/>`_,
 another library we have open sourced which uses Docker to manage the lifecycle of an ephemeral
 database instance.
 
-If you use Postgres or Redshift, we can support your usecase today. For other alembic-supported
-databases, file an issue!
+This library is what ``pytest-alembic`` internally uses, so it's the strategy we can most
+easily guarantee should work.
+
+If you use Postgres, MySQL, Redshift, or SQLite (or a database which reacts sufficiently closely)
+``pytest-mock-resources`` can support your usecase today. For other alembic-supported databases, file an issue!
 
 .. code-block:: python
 
    from pytest_mock_resources import create_postgres_fixture
 
    alembic_engine = create_postgres_fixture()
+
+
+``alembic_engine`` Invariants
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. note::
+
+   Depending on what you want, and how your code internally produces/consumes engines there is
+   plenty of flexibility in how ``pytest-alembic`` test engines interact with your own.
+
+   For example (using ``pytest-mock-resources``), you can ensure that there's no interdependence
+   between this engine and the one used by your own tests:
+
+   .. code-block:: python
+
+      from pytest_mock_resources import create_postgres_fixture
+
+      pg = create_postgres_fixture()
+      alembic_engine = create_postgres_fixture()
+
+      def test_foo(pg, alembic_engine):  # two unique databases
+          ...
+
+   Or if you would **prefer** them to be the same, you could instead do:
+
+   .. code-block:: python
+
+      import pytest
+      from pytest_mock_resources import create_postgres_fixture
+
+      pg = create_postgres_fixture()
+
+      @pytest.fixture
+      def alembic_engine(pg):
+          return pg
+
+      def test_foo(pg, alembic_engine):
+          assert pg is alembic_engine  # they're literally the same
+          ...
+
+Of course, you can implement whatever strategy you want. However there are a few invariants
+that an ``alembic_engine`` fixture should follow, to ensure that tests reliably pass and to avoid
+inter-test state issues.
+
+1. The engine should point to a database that must be empty. It is out of scope for pytest-alembic
+   to manage the database state.
+
+2. You should not expect to be able to roll back changes made by these tests. Alembic will internally
+   perform commits, as do certain ``pytest-alembic`` features. Alembic is **literally** being
+   invoked in the same way you would normally run migrations, so it's exactly as permanent.
+
+3. The yielded engine should not be inside a (manually created) transaction. The engine is configured
+   into Alembic itself, Alembic internals perform commits, and it will almost certainly not work
+   if you try to manage transactional state around Alembic.
 
 
 Git(hub) Settings

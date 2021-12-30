@@ -36,7 +36,7 @@ inlined here for posterity:
        async with connectable.connect() as connection:
            await connection.run_sync(do_run_migrations)
 
-       await connectable.run_sync(do_run_migrations)
+       await connectable.dispose()
    
    
    if context.is_offline_mode():
