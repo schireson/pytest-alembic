@@ -13,7 +13,7 @@ Honestly, there's not much to it by this point!
 
        # Perform some very specific data setup, because this migration is sooooo complex.
        # ...
-       alembic_runner.insert_into(dict(id=1, name='foo'), tablename='tablename'))
+       alembic_runner.insert_into('tablename', dict(id=1, name='foo'))
        # Or you can optionally accept the `alembic_engine` fixture, which is a
        # sqlalchemy engine object, with which you can do whatever setup you'd like.
 
