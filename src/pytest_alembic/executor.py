@@ -6,6 +6,8 @@ from typing import Dict, List, Optional, Union
 
 import alembic
 import alembic.config
+from alembic.runtime.environment import EnvironmentContext
+from alembic.script.base import ScriptDirectory
 from sqlalchemy import MetaData, Table
 from sqlalchemy.engine import Connection
 
@@ -17,12 +19,18 @@ class CommandExecutor:
     alembic_config: alembic.config.Config
     stdout: StringIO
     stream_position: int
+    script: ScriptDirectory
 
     @classmethod
     def from_config(cls, config: Config):
         stdout = StringIO()
         alembic_config = config.make_alembic_config(stdout)
-        return cls(alembic_config=alembic_config, stdout=stdout, stream_position=0)
+        return cls(
+            alembic_config=alembic_config,
+            stdout=stdout,
+            stream_position=0,
+            script=ScriptDirectory.from_config(alembic_config),
+        )
 
     def configure(self, **kwargs):
         for key, value in kwargs.items():
@@ -43,6 +51,37 @@ class CommandExecutor:
 
         self.stdout.seek(self.stream_position)
         return self.stdout.readlines()
+
+    def heads(self):
+        return [rev.revision for rev in self.script.get_revisions("heads")]
+
+    def upgrade(self, revision):
+        """Upgrade to the given `revision`."""
+
+        def upgrade(rev, _):
+            return self.script._upgrade_revs(revision, rev)
+
+        self._run_env(upgrade, revision)
+
+    def downgrade(self, revision):
+        """Downgrade to the given `revision`."""
+
+        def downgrade(rev, _):
+            return self.script._downgrade_revs(revision, rev)
+
+        self._run_env(downgrade, revision)
+
+    def _run_env(self, fn, revision=None):
+        """Execute the migrations' env.py, given some function to execute."""
+        dont_mutate = revision is None
+        with EnvironmentContext(
+            self.alembic_config,
+            self.script,
+            fn=fn,
+            destination_rev=revision,
+            dont_mutate=dont_mutate,
+        ):
+            self.script.run_env()
 
 
 @dataclass

@@ -1,5 +1,12 @@
 # Changelog
 
+## [Unreleased](https://github.com/schireson/pytest-alembic/compare/v0.7.0...HEAD) (2022-02-08)
+
+### Fixes
+
+* (Huge speed optimization) Avoid the use of the high-level alembic command interface in most cases. 1ae311f
+
+
 ## [v0.7.0](https://github.com/schireson/pytest-alembic/compare/v0.6.1...v0.7.0) (2021-12-21)
 
 ### ⚠ BREAKING CHANGE
