@@ -3,6 +3,8 @@ import functools
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Union
 
+import alembic.command
+import alembic.migration
 from sqlalchemy.engine import Engine
 
 from pytest_alembic.config import Config
@@ -35,6 +37,7 @@ class MigrationContext:
     revision_data: RevisionData
     connection_executor: ConnectionExecutor
     config: Config
+    history: AlembicHistory
     connection: Engine = None
 
     @classmethod
@@ -45,31 +48,44 @@ class MigrationContext:
         connection_executor: ConnectionExecutor,
         connection: Engine,
     ):
+        # XXX:  Perhaps we can avoid this parsing and `AlembicHistory` entirely
+        #       and use whatever alembic uses internally. All `raw_command`
+        #       invocations will be slow; although at least this specific one
+        #       only happens once per test, so it's less important to optimize.
+        raw_history = command_executor.run_command("history")
+        history = AlembicHistory.parse(tuple(raw_history))
+
         return cls(
             command_executor=command_executor,
             revision_data=RevisionData.from_config(config),
             connection_executor=connection_executor,
             config=config,
+            history=history,
             connection=connection,
         )
 
     @property
-    def history(self) -> AlembicHistory:
-        """Get the revision history."""
-        raw_history = self.command_executor.run_command("history")
-        return AlembicHistory.parse(tuple(raw_history))
-
-    @property
     def heads(self) -> List[str]:
-        """Get the list of revision heads."""
-        return self.command_executor.run_command("heads")
+        """Get the list of revision heads.
+
+        Result is cached for the lifetime of the `MigrationContext`.
+        """
+        return self.command_executor.heads()
 
     @property
     def current(self) -> str:
         """Get the list of revision heads."""
-        current = self.command_executor.run_command("current")
+
+        def get_current(conn):
+            context = alembic.migration.MigrationContext.configure(conn)
+            heads = context.get_current_heads()
+            if heads:
+                return heads[0]
+            return None
+
+        current = run_connection_task(self.connection, get_current)
         if current:
-            return current[0].strip().split(" ")[0]
+            return current
         return "base"
 
     def generate_revision(self, process_revision_directives=None, **kwargs):
@@ -102,7 +118,7 @@ class MigrationContext:
             before_upgrade_data = list(self.revision_data.get_before(next_revision))
             self.insert_into(data=before_upgrade_data, revision=current_revision, table=None)
 
-            self.raw_command("upgrade", next_revision)
+            self.command_executor.upgrade(next_revision)
 
             at_upgrade_data = list(self.revision_data.get_at(next_revision))
             self.insert_into(data=at_upgrade_data, revision=next_revision, table=None)
@@ -136,13 +152,13 @@ class MigrationContext:
     def migrate_down_to(self, revision):
         """Migrate down to, and including the given `revision`."""
         self.history.validate_revision(revision)
-        self.raw_command("downgrade", revision)
+        self.command_executor.downgrade(revision)
         return revision
 
     def migrate_down_one(self):
         """Migrate down by exactly one revision."""
         previous_revision = self.history.previous_revision(self.current)
-        self.raw_command("downgrade", previous_revision)
+        self.command_executor.downgrade(previous_revision)
         return previous_revision
 
     def roundtrip_next_revision(self):

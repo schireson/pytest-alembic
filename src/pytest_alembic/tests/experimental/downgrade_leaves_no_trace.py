@@ -78,6 +78,9 @@ def _test_downgrade_leaves_no_trace(connection, alembic_runner: MigrationContext
         # So we need to proceed by one.
         alembic_runner.migrate_up_to(revision)
 
+        if hasattr(connection, "commit"):
+            connection.commit()
+
 
 def check_revision_cycle(alembic_runner, connection, original_revision):
     migration_context = alembic.migration.MigrationContext.configure(connection)
