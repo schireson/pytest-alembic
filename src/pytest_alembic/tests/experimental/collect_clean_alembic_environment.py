@@ -26,14 +26,34 @@ def run():  # pragma: no cover
     Cannot be covered with coverage due to the subprocess environment in which it's
     executed.
     """
-    _, url = sys.argv
+    _, url, offline_str, async_str = sys.argv
+    offline = bool(int(offline_str))
+    async_ = bool(int(async_str))
 
     config = Config("alembic.ini")
     config.set_section_option(config.config_ini_section, "sqlalchemy.url", url)
+
+    try:
+        config.attributes["connection"] = create_connectable(url, async_)
+    except Exception:  # nosec
+        pass
+
     script = ScriptDirectory.from_config(config)
 
-    with EnvironmentContext(config, script, fn=environment_context_fn):
+    with EnvironmentContext(config, script, fn=environment_context_fn, as_sql=offline):
         script.run_env()
+
+
+def create_connectable(url, async_=False):
+    if async_:
+        from sqlalchemy.ext.asyncio import create_async_engine
+
+        connectable = create_async_engine(url)
+    else:
+        from sqlalchemy import create_engine
+
+        connectable = create_engine(url).connect()
+    return connectable
 
 
 def environment_context_fn(_, migration_context):
@@ -52,7 +72,8 @@ def environment_context_fn(_, migration_context):
     }
 
     # Remember, given that we're in a subprocess, `print` is our output mechanism.
-    print(json.dumps(result))
+    output = json.dumps(result)
+    print(f"<pytest-alembic>{output}</pytest-alembic>")
 
     return []
 

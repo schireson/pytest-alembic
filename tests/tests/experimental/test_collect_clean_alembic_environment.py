@@ -1,10 +1,12 @@
-import json
 from dataclasses import dataclass
 
 import pytest
 from sqlalchemy import MetaData
 from sqlalchemy.ext.declarative import declarative_base
 
+from pytest_alembic.tests.experimental.all_models_register_on_metadata import (
+    parse_collection_output,
+)
 from pytest_alembic.tests.experimental.collect_clean_alembic_environment import (
     environment_context_fn,
     get_referrer_module,
@@ -23,7 +25,7 @@ class Test_environment_context_fn:
         environment_context_fn(None, context)
         output = capsys.readouterr().out
 
-        result = json.loads(output)
+        result = parse_collection_output(output)
         assert result == {
             "modules": [],
             "tables": [],
@@ -37,7 +39,7 @@ class Test_environment_context_fn:
         environment_context_fn(None, context)
         output = capsys.readouterr().out
 
-        result = json.loads(output)
+        result = parse_collection_output(output)
         assert result == {
             "modules": [],
             "tables": ["t1"],
