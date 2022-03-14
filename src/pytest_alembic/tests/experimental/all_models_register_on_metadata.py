@@ -2,6 +2,7 @@ import importlib
 import json
 import logging
 import pkgutil
+import re
 import subprocess  # nosec
 from typing import List, Optional, Set, Tuple
 
@@ -15,12 +16,20 @@ try:
 except ImportError:  # pragma: no cover
     from sqlalchemy.declarative import DeclarativeMeta
 
+try:
+    from sqlalchemy.ext.asyncio import AsyncEngine
+except ImportError:
+    AsyncEngine = None
+
 
 log = logging.getLogger(__name__)
 
 
 def test_all_models_register_on_metadata(
-    alembic_runner: MigrationContext, model_package: Optional[str] = None
+    alembic_runner: MigrationContext,
+    model_package: Optional[str] = None,
+    offline: bool = False,
+    async_: bool = None,
 ):
     """Assert that all tables defined on your `MetaData`, are imported in the `env.py`.
 
@@ -54,10 +63,32 @@ def test_all_models_register_on_metadata(
     Therefore this test goes to lengths to collect a clean python interpreter
     which **only** imports the portion of code which would have been imported by
     the `env.py` itself.
+
+    Arguments:
+        alembic_runner: The alembic runner instance used to run the test.
+        model_package: An optional way to explicitly the package in which models
+            reside, in the event that automatic detection fails.
+        offline: Whether to run the internal migration step as offline. This can
+            be useful, depending on how your env.py is set up, to avoid executing
+            certain portions of your env.py, if they're incompatible with execution
+            in the context of this test.
+        async_: Whether to produce an async engine in the internal engine creation
+            step. Defaults to `None` (i.e. automatic detection).
     """
+    # If `async_` is None, then we should automatically detect whether to run in
+    # async mode. If `AsyncEngine` is None, then we're not running on a version
+    # of sqlalchemy which supports it.
+    if (
+        async_ is None
+        and AsyncEngine is not None
+        and isinstance(alembic_runner.connection, AsyncEngine)
+    ):
+        async_ = True
 
     modules, bare_tables = get_bare_import_tableset(
         str(alembic_runner.connection.url),
+        async_=bool(async_),
+        offline=offline,
     )
     if model_package:
         modules = [model_package]
@@ -82,7 +113,9 @@ def test_all_models_register_on_metadata(
         )
 
 
-def get_bare_import_tableset(url: str) -> Tuple[List[str], Set[str]]:
+def get_bare_import_tableset(
+    url: str, offline: bool = False, async_: bool = False
+) -> Tuple[List[str], Set[str]]:
     """Get the set of tables which would have been added to the metadata on a bare ma.models import.
 
     Importantly, this cannot simply import the MetaData directly, as that may have already
@@ -98,6 +131,8 @@ def get_bare_import_tableset(url: str) -> Tuple[List[str], Set[str]]:
         "-m",
         "pytest_alembic.tests.experimental.collect_clean_alembic_environment",
         url,
+        str(offline.real),
+        str(async_.real),
     ]
     try:
         result = subprocess.run(  # nosec
@@ -110,10 +145,22 @@ def get_bare_import_tableset(url: str) -> Tuple[List[str], Set[str]]:
     except subprocess.CalledProcessError as e:  # pragma: no cover
         raise AlembicTestFailure(e.stderr)
 
-    parsed_result = json.loads(result.stdout)
+    parsed_result = parse_collection_output(result.stdout)
     tablenames = set(parsed_result["tables"])
     modules = sorted(parsed_result["modules"])
     return modules, tablenames
+
+
+def parse_collection_output(raw_output: str):
+    # The default env.py offline execution mode, emits extra output that is
+    # irrelevant to the expected output that a script execution would normally
+    # produce, so we surround it with sentinel content.
+    match = re.match(r"<pytest-alembic>(.*)</pytest-alembic>", raw_output)
+    if match:
+        return json.loads(match.group(1))
+
+    # Indicative of a bug in the implementation of the subprocess code!
+    raise RuntimeError(raw_output)
 
 
 def get_full_tableset(*module_names: str) -> Set[str]:

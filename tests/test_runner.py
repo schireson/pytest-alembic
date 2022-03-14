@@ -228,3 +228,13 @@ def test_async_sqlalchemy_native(pytester):
     insertion, to ensure the whole plugin API works with asyncio.
     """
     run_pytest(pytester, passed=6)
+
+
+def test_experimental_all_models_register_async(pytester):
+    """Assert all_models_register_on_metadata runs with async_ param."""
+    run_pytest(pytester, passed=1, test_alembic=False)
+
+
+def test_experimental_all_models_register_offline(pytester):
+    """Assert all_models_register_on_metadata runs with offline param."""
+    run_pytest(pytester, passed=1, test_alembic=False)
