@@ -1,4 +1,4 @@
-![CircleCI](https://img.shields.io/circleci/build/gh/schireson/pytest-alembic/master)
+![CircleCI](https://img.shields.io/circleci/build/gh/schireson/pytest-alembic/main)
 [![codecov](https://codecov.io/gh/schireson/pytest-alembic/branch/master/graph/badge.svg)](https://codecov.io/gh/schireson/pytest-alembic)
 [![Documentation Status](https://readthedocs.org/projects/pytest-alembic/badge/?version=latest)](https://pytest-alembic.readthedocs.io/en/latest/?badge=latest)
 
