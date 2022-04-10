@@ -194,15 +194,17 @@ class MigrationContext:
         )
 
     def table_at_revision(self, name, *, revision=None, schema=None):
-        """Insert data into a given table.
+        """Return a reference to a `sqlalchemy.Table` at the given revision.
 
         Args:
-            name: The name of the table to insert data into
+            name: The name of the table to produce a `sqlalchemy.Table` for.
             revision: The revision of the table to return.
             schema: The schema of the table.
         """
         revision = revision or self.current
-        return self.connection_executor.table(revision=revision, name=name, schema=schema)
+        return self.connection_executor.table(
+            self.connection, revision=revision, name=name, schema=schema
+        )
 
 
 class RevisionSuccess(Exception):
