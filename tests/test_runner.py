@@ -5,6 +5,7 @@ def run_pytest(pytester, *, success=True, passed=4, skipped=0, failed=0, test_al
     args = [
         "--test-alembic",
         "-vv",
+        "-s",
     ]
     if not test_alembic:
         args = ["-vv", "conftest.py"]
@@ -87,6 +88,11 @@ def test_branched_history(pytester):
 def test_branched_history_with_mergepoint(pytester):
     """Branched history can be navigated, when there's a mergepoint present."""
     run_pytest(pytester, passed=5)
+
+
+def test_ambiguous_downgrade_history(pytester):
+    """Branched history with ambiguous relative downgrades runs through default tests."""
+    run_pytest(pytester, passed=4)
 
 
 def test_migrate_up_to(pytester):

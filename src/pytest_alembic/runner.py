@@ -48,12 +48,8 @@ class MigrationContext:
         connection_executor: ConnectionExecutor,
         connection: Engine,
     ):
-        # XXX:  Perhaps we can avoid this parsing and `AlembicHistory` entirely
-        #       and use whatever alembic uses internally. All `raw_command`
-        #       invocations will be slow; although at least this specific one
-        #       only happens once per test, so it's less important to optimize.
-        raw_history = command_executor.run_command("history")
-        history = AlembicHistory.parse(tuple(raw_history))
+        raw_history = command_executor.script.revision_map
+        history = AlembicHistory.parse(raw_history)
 
         return cls(
             command_executor=command_executor,
