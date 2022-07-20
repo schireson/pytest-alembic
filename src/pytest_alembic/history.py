@@ -1,36 +1,38 @@
 import collections
-import functools
 import itertools
-import re
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Tuple
 
-_RE_REVISION_PATTERN = r"-> ([a-zA-Z0-9]*)[ ,]"
+from alembic.script.revision import RevisionMap
 
 
 @dataclass
 class AlembicHistory:
+    map: RevisionMap
     revisions: List[str]
     revision_indices: Dict[str, int]
     revisions_by_index: Dict[int, str]
 
     @classmethod
-    @functools.lru_cache()
-    def parse(cls, raw_history: Tuple[str]) -> "AlembicHistory":
-        """Extract the set of migration revision hashes from the result of an `alembic history` command."""
+    def parse(cls, revision_map: RevisionMap) -> "AlembicHistory":
+        """Extract the set of migration revision hashes from alembic's notion of the history."""
         revision_hashes = ["heads"]
-        for line in raw_history:
-            match = re.search(_RE_REVISION_PATTERN, line)
-            if not match:
-                continue
 
-            revision_hashes.append(match.group(1))
+        history = revision_map.iterate_revisions("heads", "base")
+        for script in history:
+            revision = script.revision
+            revision_hashes.append(revision)
         revision_hashes.append("base")
 
         revisions = list(reversed(revision_hashes))
         revision_indices = {revision: i for i, revision in enumerate(revisions)}
         revisions_by_index = {v: k for k, v in revision_indices.items()}
-        return cls(revisions, revision_indices, revisions_by_index)
+        return cls(
+            map=revision_map,
+            revisions=revisions,
+            revision_indices=revision_indices,
+            revisions_by_index=revisions_by_index,
+        )
 
     def validate_revision(self, revision):
         # Given that 'heads' seems to be strictly more powerful, coerce singular 'head'
