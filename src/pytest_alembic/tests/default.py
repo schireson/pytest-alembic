@@ -69,7 +69,7 @@ def test_model_definitions_match_ddl(alembic_runner):
 
             if not migration_is_empty:
                 raise AlembicTestFailure(
-                    "The models decribing the DDL of your database are out of sync with the set of "
+                    "The models describing the DDL of your database are out of sync with the set of "
                     "steps described in the revision history. This usually means that someone has "
                     "made manual changes to the database's DDL, or some model has been changed "
                     "without also generating a migration to describe that change.",

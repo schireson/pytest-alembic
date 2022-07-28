@@ -2,7 +2,7 @@
 
 This module is executed within a subprocess in order to maintain a clean
 python import state. Thus the `print` statements are the mechanism through
-through which this script communicates the environment state back to the
+which this script communicates the environment state back to the
 parent process.
 """
 import gc

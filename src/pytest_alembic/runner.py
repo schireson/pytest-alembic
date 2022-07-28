@@ -236,7 +236,7 @@ def run_connection_task(engine, fn, *args, **kwargs):
     """Run a given task on the provided connect, with the correct async/sync context.
 
     Given an async engine, we need to run the task in an async execution context,
-    even though all internals are sychronous. This is how alembic suggests
+    even though all internals are synchronous. This is how alembic suggests
     running the migrations themselves, so this matches that style.
     """
     # The user may not have sqlalchemy 1.4+, and therefore may not even be able to
