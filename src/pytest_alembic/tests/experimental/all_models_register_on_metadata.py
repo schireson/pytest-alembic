@@ -219,6 +219,8 @@ def traverse_modules(
         if not hasattr(package, "__path__"):
             return
 
+        yield package
+
         package_path = package.__path__
         for _, name, is_package in walk_packages(package_path):
             full_name = f"{package.__name__}.{name}"
