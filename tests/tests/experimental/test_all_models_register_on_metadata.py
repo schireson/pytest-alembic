@@ -64,11 +64,10 @@ class Test_traverse_modules:
         result = list(
             traverse_modules("asdf", import_module=import_module, walk_packages=walk_packages)
         )
-        assert result == [child]
+        assert result == [module, child]
 
     def test_package_child_import_error(self):
         module = make_module("name", package="name", path="name")
-        # child = make_module("child", package="name.child", path="name")
         import_module = yield_per_call(module, ImportError("name.child"))
 
         walk_packages = yield_per_call([(None, "child", False)], [])
@@ -76,7 +75,7 @@ class Test_traverse_modules:
         result = list(
             traverse_modules("asdf", import_module=import_module, walk_packages=walk_packages)
         )
-        assert result == []
+        assert result == [module]
 
     def test_package_child_is_package(self):
         module = make_module("name", package="name", path="name")
@@ -89,7 +88,7 @@ class Test_traverse_modules:
         result = list(
             traverse_modules("asdf", import_module=import_module, walk_packages=walk_packages)
         )
-        assert result == [child]
+        assert result == [module, child]
 
 
 class Test_get_full_tableset:

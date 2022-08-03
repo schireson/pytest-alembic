@@ -244,3 +244,9 @@ def test_experimental_all_models_register_async(pytester):
 def test_experimental_all_models_register_offline(pytester):
     """Assert all_models_register_on_metadata runs with offline param."""
     run_pytest(pytester, passed=1, test_alembic=False)
+
+
+def test_experimental_all_models_register_namespace_package(pytester):
+    """Assert all_models_register_on_metadata with namespace packages."""
+    pytester.syspathinsert(pytester.path)
+    run_pytest(pytester, passed=5)
