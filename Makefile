@@ -9,7 +9,7 @@ build:
 
 test:
 	COVERAGE_PROCESS_START="$(PWD)/pyproject.toml" \
-	coverage run -m py.test src tests -vv
+	coverage run -m pytest src tests -vv
 	coverage combine
 	coverage report -i
 	coverage xml

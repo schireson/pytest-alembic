@@ -32,6 +32,12 @@ behavior.
   directory like :code:`pytest folder/tests`, or the tests are otherwise located at a different
   location, relative to the :code:`pytest` invocation.
 
+  .. note::
+
+     As of pytest-alembic version 0.8.5, this option is ignored. Tests will be registered
+     at the top level, and `--test-alembic` will automatically include the tests regardless
+     of the provided path.
+
 
 Alembic Config
 ~~~~~~~~~~~~~~
@@ -60,9 +66,6 @@ Simply import the tests at whatever location you want tests to be included:
    from pytest_alembic.tests import test_model_definitions_match_ddl
    from pytest_alembic.tests import test_up_down_consistency
 
-
-It should be noted, that this obviates the need specify the :code:`pytest_alembic_tests_folder`
-config option, as they will be run from the location of your import by pytest automatically.
 
 Furthermore, doing this as well as using :code:`--test-alembic` will cause the tests to be
 run twice (since they'd be considered unique tests with different paths). So generally, these

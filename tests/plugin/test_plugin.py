@@ -1,6 +1,6 @@
 import pytest
 
-from pytest_alembic.plugin.plugin import _TestCollector, parse_test_names
+from pytest_alembic.plugin.plugin import parse_test_names, TestOptionResolver
 
 
 def test_parse_raw_test_names_empty_skips():
@@ -10,9 +10,9 @@ def test_parse_raw_test_names_empty_skips():
     assert expected_result == result
 
 
-class Test__TestCollector:
+class Test__TestOptionResolver:
     def test_all_enabled(self):
-        test_collector = _TestCollector.collect()
+        test_collector = TestOptionResolver.collect_test_definitions()
         result = [t.name for t in test_collector.tests()]
 
         expected_result = [
@@ -24,7 +24,7 @@ class Test__TestCollector:
         assert expected_result == result
 
     def test_include_specified_invalid(self):
-        test_collector = _TestCollector.collect()
+        test_collector = TestOptionResolver.collect_test_definitions()
         test_collector.include("foo", "bar")
 
         with pytest.raises(ValueError) as e:
@@ -32,7 +32,7 @@ class Test__TestCollector:
         assert "bar, foo" in str(e.value)
 
     def test_include_specified(self):
-        test_collector = _TestCollector.collect()
+        test_collector = TestOptionResolver.collect_test_definitions()
         test_collector.include("single_head_revision", "upgrade")
 
         result = [t.name for t in test_collector.tests()]
@@ -41,7 +41,7 @@ class Test__TestCollector:
         assert expected_result == result
 
     def test_exclude_specified_invalid(self):
-        test_collector = _TestCollector.collect()
+        test_collector = TestOptionResolver.collect_test_definitions()
         test_collector.exclude("foo", "bar")
 
         with pytest.raises(ValueError) as e:
@@ -49,7 +49,7 @@ class Test__TestCollector:
         assert "bar, foo" in str(e.value)
 
     def test_exclude_specified(self):
-        test_collector = _TestCollector.collect()
+        test_collector = TestOptionResolver.collect_test_definitions()
         test_collector.exclude("single_head_revision", "upgrade")
 
         result = [t.name for t in test_collector.tests()]
@@ -61,7 +61,7 @@ class Test__TestCollector:
         assert expected_result == result
 
     def test_include_experimental(self):
-        test_collector = _TestCollector.collect().include_experimental(
+        test_collector = TestOptionResolver.collect_test_definitions().include_experimental(
             "all_models_register_on_metadata"
         )
         test_collector.exclude("single_head_revision", "upgrade")
@@ -119,23 +119,5 @@ class Test_collect_tests:
             "test_upgrade",
         ]
         for test in tests:
-            assert f"tests::pytest_alembic::{test}" in stdout
-        assert "4 passed" in stdout
-
-    def test_alternative_test_folter(self, testdir):
-        testdir.copy_example("test_no_data")
-        testdir.makefile(".ini", pytest="[pytest]\npytest_alembic_tests_folder=foo\n")
-        result = testdir.runpytest("--test-alembic", "-vv")
-        stdout = result.stdout.str()
-        print(stdout)
-
-        assert result.ret == 0
-        tests = [
-            "test_model_definitions_match_ddl",
-            "test_single_head_revision",
-            "test_up_down_consistency",
-            "test_upgrade",
-        ]
-        for test in tests:
-            assert f"foo::pytest_alembic::{test}" in stdout
+            assert f"::pytest-alembic::{test}" in stdout
         assert "4 passed" in stdout
