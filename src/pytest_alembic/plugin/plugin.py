@@ -3,9 +3,141 @@ from dataclasses import dataclass
 from typing import Callable, Dict, List, Optional
 
 import pytest
-from _pytest import fixtures
+from _pytest import config, fixtures
 
 from pytest_alembic.plugin.error import AlembicReprError, AlembicTestFailure
+
+
+@dataclass(eq=False)
+class PytestAlembicPlugin:
+    config: config.Config
+    calls = 0
+
+    def pytest_collect_file(self, path, parent):
+        if path.ext != '.py':
+            return
+
+        self.calls += 1
+
+        print(path)
+        # if self.calls > 1:
+        #     return
+        # if self.calls != 4:
+        #     return
+        if self.calls == 1 or self.calls > 2:
+            return
+
+        return TestCollector.from_parent(parent, fspath=path)
+        return TestCollector.from_parent(parent, path=file_path)
+
+    def pytest_itemcollected(self, item):
+        """Attach a marker to each test which uses the alembic fixture."""
+        if not hasattr(item, "fixturenames"):
+            return
+
+        if "alembic_runner" in item.fixturenames:
+            item.add_marker("alembic")
+
+
+class TestCollector(pytest.Module):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self._nodeid += "::pytest-alembic"
+        self.add_marker("alembic")
+
+    def collect(self):
+        config = self.parent.config
+
+        cli_enabled = config.option.pytest_alembic_enabled
+        if not cli_enabled:
+            return None
+
+        option = config.option
+
+        raw_included_tests = parse_test_names(config.getini("pytest_alembic_include"))
+        raw_experimental_included_tests = parse_test_names(
+            config.getini("pytest_alembic_include_experimental")
+        )
+        raw_excluded_tests = parse_test_names(
+            option.pytest_alembic_exclude or config.getini("pytest_alembic_exclude")
+        )
+
+        test_collector = (
+            TestOptionResolver.collect_test_definitions(default=True, experimental=True)
+            .include(*raw_included_tests)
+            .include_experimental(*raw_experimental_included_tests)
+            .exclude(*raw_excluded_tests)
+        )
+
+        result = []
+        for test in test_collector.sorted_tests():
+            # name = f"tests::pytest_alembic::{test.raw_name}"
+            name = test.raw_name
+            item = self.ihook.pytest_pycollect_makeitem(collector=self, name=name, obj=test)
+            result.append(
+                PytestAlembicItem.from_parent(
+                    self,
+                    name=name,
+                    callobj=test.function,
+                )
+            )
+        return result
+
+
+class PytestAlembicItem(pytest.Function):
+    # @classmethod
+    # def from_parent(cls, parent, *, name, callobj, **kwargs):
+    #     self = super().from_parent(parent=parent, name=name, callobj=callobj, **kwargs)
+    #     return self
+
+    # obj = None
+
+    # @classmethod
+    # def from_parent(cls, parent, *, name, callobj):
+    #     kwargs = dict(name=name, parent=parent, nodeid=name)
+    #     if hasattr(super(), "from_parent"):
+    #         self = super().from_parent(**kwargs)
+    #     else:
+    #         self = cls(**kwargs)
+
+    #     self.callobj = callobj
+    #     self.funcargs = {}
+    #     self.add_marker("alembic")
+    #     return self
+
+    # def runtest(self):
+    #     fm = self.config.pluginmanager.get_plugin("funcmanage")
+    #     self._fixtureinfo = fm.getfixtureinfo(node=self, func=self.callobj, cls=None)
+
+    #     try:
+    #         # Pytest deprecated direct construction of this, but there doesn't appear to
+    #         # be an obvious non-deprecated way to produce `pytest.Item`s (i.e. tests)
+    #         # which fullfill fixtures depended on by this plugin.
+    #         fixture_request = fixtures.FixtureRequest(self, _ispytest=True)
+    #     except TypeError:
+    #         # For backwards compatibility, attempt to make the `fixture_request` in the interface
+    #         # shape pre pytest's addition of this warning-producing parameter.
+    #         fixture_request = fixtures.FixtureRequest(self)
+    #     except Exception:
+    #         # Just to avoid a NameError in an unforeseen error constructing the `fixture_request`.
+    #         raise NotImplementedError(
+    #             "Failed to fill the fixtures. "
+    #             "This is almost certainly a pytest version incompatibility, please submit a bug report!"
+    #         )
+
+    #     fixture_request._fillfixtures()
+
+    #     params = {arg: self.funcargs[arg] for arg in self._fixtureinfo.argnames}
+
+    #     self.callobj(**params)
+
+    def reportinfo(self):
+        return (self.fspath, 0, f"[pytest-alembic] {self.name}")
+
+    def repr_failure(self, excinfo):
+        if isinstance(excinfo.value, AlembicTestFailure):
+            return AlembicReprError(excinfo, self)
+        return super().repr_failure(excinfo)
 
 
 @dataclass(frozen=True)
@@ -21,7 +153,7 @@ class PytestAlembicTest:
 
 
 @dataclass
-class _TestCollector:
+class TestOptionResolver:
     available_tests: Dict[str, PytestAlembicTest]
 
     included_tests: Optional[List[str]] = None
@@ -29,7 +161,7 @@ class _TestCollector:
     excluded_tests: Optional[List[str]] = None
 
     @classmethod
-    def collect(cls, default=True, experimental=True):
+    def collect_test_definitions(cls, default=True, experimental=True):
         import pytest_alembic.tests
         import pytest_alembic.tests.experimental
 
@@ -119,104 +251,3 @@ def parse_test_names(raw_test_names):
             continue
         result.add(test_name)
     return result
-
-
-def collect_tests(session, config):
-    cli_enabled = config.option.pytest_alembic_enabled
-    if not cli_enabled:
-        return []
-
-    option = config.option
-    raw_included_tests = parse_test_names(config.getini("pytest_alembic_include"))
-    raw_experimental_included_tests = parse_test_names(
-        config.getini("pytest_alembic_include_experimental")
-    )
-    raw_excluded_tests = parse_test_names(
-        option.pytest_alembic_exclude or config.getini("pytest_alembic_exclude")
-    )
-
-    # The tests folder field is important because we cannot predict the test location
-    # of user tests. And so if someone invokes pytest like `pytest mytests/`, the user
-    # would need to attach **these** tests to the `mytests/` namespace, or else run
-    # `pytest mytests tests`.
-    tests_folder = config.getini("pytest_alembic_tests_folder")
-
-    test_collector = (
-        _TestCollector.collect(default=True, experimental=True)
-        .include(*raw_included_tests)
-        .include_experimental(*raw_experimental_included_tests)
-        .exclude(*raw_excluded_tests)
-    )
-
-    result = []
-    for test in test_collector.sorted_tests():
-        result.append(
-            PytestAlembicItem.from_parent(
-                session,
-                name=f"{tests_folder}::pytest_alembic::{test.raw_name}",
-                test_fn=test.function,
-            )
-        )
-
-    return result
-
-
-class PytestAlembicItem(pytest.Item):
-    """Pytest representation of each built-in test.
-
-    Tests such as these are more complex because they are not represented in the
-    users' source, which means we need to act as pytest does when producing tests
-    normally.
-
-    In particular, fixture resolution is the main complicating factor, and seemingly
-    not an external detail for which pytest has an officially recommended public API.
-    """
-
-    obj = None
-
-    @classmethod
-    def from_parent(cls, parent, *, name, test_fn):
-        kwargs = dict(name=name, parent=parent, nodeid=name)
-        if hasattr(super(), "from_parent"):
-            self = super().from_parent(**kwargs)
-        else:
-            self = cls(**kwargs)
-
-        self.test_fn = test_fn
-        self.funcargs = {}
-        self.add_marker("alembic")
-        return self
-
-    def runtest(self):
-        fm = self.session._fixturemanager
-        self._fixtureinfo = fm.getfixtureinfo(node=self, func=self.test_fn, cls=None)
-
-        try:
-            # Pytest deprecated direct construction of this, but there doesn't appear to
-            # be an obvious non-deprecated way to produce `pytest.Item`s (i.e. tests)
-            # which fullfill fixtures depended on by this plugin.
-            fixture_request = fixtures.FixtureRequest(self, _ispytest=True)
-        except TypeError:
-            # For backwards compatibility, attempt to make the `fixture_request` in the interface
-            # shape pre pytest's addition of this warning-producing parameter.
-            fixture_request = fixtures.FixtureRequest(self)
-        except Exception:
-            # Just to avoid a NameError in an unforeseen error constructing the `fixture_request`.
-            raise NotImplementedError(
-                "Failed to fill the fixtures. "
-                "This is almost certainly a pytest version incompatibility, please submit a bug report!"
-            )
-
-        fixture_request._fillfixtures()
-
-        params = {arg: self.funcargs[arg] for arg in self._fixtureinfo.argnames}
-
-        self.test_fn(**params)
-
-    def reportinfo(self):
-        return (self.fspath, 0, f"[pytest-alembic] {self.name}")
-
-    def repr_failure(self, excinfo):
-        if isinstance(excinfo.value, AlembicTestFailure):
-            return AlembicReprError(excinfo, self)
-        return super().repr_failure(excinfo)

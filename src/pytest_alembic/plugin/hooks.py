@@ -1,11 +1,11 @@
-from pytest_alembic.plugin.plugin import _TestCollector, collect_tests
+from pytest_alembic.plugin.plugin import PytestAlembicPlugin, TestOptionResolver
 
 
 def pytest_addoption(parser):
-    default_collector = _TestCollector.collect(default=True, experimental=False)
+    default_collector = TestOptionResolver.collect_test_definitions(default=True, experimental=False)
     default_tests = ", ".join(t.name for t in default_collector.available_tests.values())
 
-    experimental_collector = _TestCollector.collect(default=False, experimental=True)
+    experimental_collector = TestOptionResolver.collect_test_definitions(default=False, experimental=True)
     experimental_tests = ", ".join(t.name for t in experimental_collector.available_tests.values())
 
     parser.addini(
@@ -53,15 +53,7 @@ def pytest_configure(config):
     config.addinivalue_line("markers", "alembic: Tests which use pytest-alembic.")
 
 
-def pytest_collection_modifyitems(session, config, items):
-    tests = collect_tests(session, config)
-    items.extend(tests)
-
-
-def pytest_itemcollected(item):
-    """Attach a marker to each test which uses the alembic fixture."""
-    if not hasattr(item, "fixturenames"):
-        return
-
-    if "alembic_runner" in item.fixturenames:
-        item.add_marker("alembic")
+def pytest_sessionstart(session):
+    if session.config.option.pytest_alembic_enabled:
+        plugin = PytestAlembicPlugin(session.config)
+        session.config.pluginmanager.register(plugin, 'pytest-alembic')
