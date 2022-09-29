@@ -141,7 +141,7 @@ what your ``alembic_engine`` is.
 Pytest Mock Resources
 ~~~~~~~~~~~~~~~~~~~~~
 Our recommended approach is to use
-`pytest-mock-resources <http://www.pytest-mock-resources.readthedocs.io/>`_,
+`pytest-mock-resources <https://pytest-mock-resources.readthedocs.io/>`_,
 another library we have open sourced which uses Docker to manage the lifecycle of an ephemeral
 database instance.
 
