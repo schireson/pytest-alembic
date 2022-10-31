@@ -85,6 +85,7 @@ def test_model_definitions_match_ddl(alembic_runner):
     alembic_runner.generate_revision(
         message="test revision",
         autogenerate=True,
+        prevent_file_generation=True,
         process_revision_directives=verify_is_empty_revision,
     )
 

@@ -250,3 +250,8 @@ def test_experimental_all_models_register_namespace_package(pytester):
     """Assert all_models_register_on_metadata with namespace packages."""
     pytester.syspathinsert(pytester.path)
     run_pytest(pytester, passed=5)
+
+
+def test_generate_revision(pytester):
+    """Assert history is refreshed when generating a revision in a test."""
+    run_pytest(pytester, passed=3)
