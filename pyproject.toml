@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pytest-alembic"
-version = "0.8.4"
+version = "0.9.0"
 description = "A pytest plugin for verifying alembic migrations."
 authors = [
     "Dan Cardin <ddcardin@gmail.com>",
@@ -20,15 +20,14 @@ include = [
 [tool.poetry.dependencies]
 python = ">=3.6, <4"
 
-pytest = {version = ">=1.0"}
+pytest = {version = ">=6.0"}
 alembic = "*"
 sqlalchemy = "*"
-dataclasses = {version = "*", python = "<3.7" }
 
 [tool.poetry.dev-dependencies]
 bandit = "*"
-black = {version = "=>21.8b0", allow-prereleases = true, python = ">=3.6"}
-coverage = {version = ">=5", extras = ["toml"]}
+black = {version = "22.3.0", python = ">=3.6.2"}
+coverage = {version = ">=6.4.4", extras = ["toml"], python = ">=3.7"}
 flake8 = ">=3.9"
 isort = ">=5"
 mypy = {version = ">=0.900", python = ">=3.5"}
@@ -36,9 +35,10 @@ psycopg2-binary = "*"
 pydocstyle = {version = "*", python = ">=3.5"}
 pytest = {version = ">=6.2"}
 pytest-asyncio = "*"
-pytest-mock-resources = {version = ">=2.1.8"}
+pytest-mock-resources = {version = ">=2.6.3", extras = ["docker"], python = ">=3.7"}
 types-dataclasses = "^0.1.7"
-sqlalchemy = ">=1.4"
+sqlalchemy = {version = ">=1.4", extras = ["asyncio"]}
+greenlet = "*"
 asyncpg = "*"
 
 [tool.poetry.plugins.pytest11]
@@ -83,5 +83,5 @@ warn_unused_ignores = true
 incremental = true
 
 [build-system]
-requires = ["poetry>=0.12"]
-build-backend = "poetry.masonry.api"
+requires = ["poetry_core==1.0.8"]
+build-backend = "poetry.core.masonry.api"
