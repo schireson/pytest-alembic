@@ -5,6 +5,7 @@ from typing import Dict, List, Optional, Union
 
 import alembic.command
 import alembic.migration
+from alembic.script.revision import RevisionMap
 from sqlalchemy.engine import Engine
 
 from pytest_alembic.config import Config
@@ -36,8 +37,8 @@ class MigrationContext:
     command_executor: CommandExecutor
     revision_data: RevisionData
     connection_executor: ConnectionExecutor
-    config: Config
     history: AlembicHistory
+    config: Config
     connection: Engine = None
 
     @classmethod
@@ -48,15 +49,14 @@ class MigrationContext:
         connection_executor: ConnectionExecutor,
         connection: Engine,
     ):
-        raw_history = command_executor.script.revision_map
-        history = AlembicHistory.parse(raw_history)
+        history = AlembicHistory.parse(command_executor.script.revision_map)
 
         return cls(
             command_executor=command_executor,
             revision_data=RevisionData.from_config(config),
             connection_executor=connection_executor,
-            config=config,
             history=history,
+            config=config,
             connection=connection,
         )
 
@@ -84,22 +84,53 @@ class MigrationContext:
             return current
         return "base"
 
-    def generate_revision(self, process_revision_directives=None, **kwargs):
+    def refresh_history(self) -> AlembicHistory:
+        """Refresh the context's version of the alembic history.
+
+        Note this is not done automatically to avoid the expensive reevaluation
+        step which can make long histories take seconds longer to evaluate for
+        each test.
+        """
+        script = self.command_executor.script
+        script.revision_map = RevisionMap(script._load_revisions)
+        self.history = AlembicHistory.parse(self.command_executor.script.revision_map)
+        return self.history
+
+    def generate_revision(
+        self,
+        process_revision_directives=None,
+        prevent_file_generation=True,
+        autogenerate=False,
+        **kwargs
+    ):
         """Generate a test revision.
 
-        The final act of this process raises a `RevisionSuccess`, which is used as a sentinal
-        to indicate the revision was generated successfully, while not actually finishing the
-        generation of the revision file.
+        If `prevent_file_generation` is `True`, the final act of this process raises a
+        `RevisionSuccess`, which is used as a sentinal to indicate the revision was
+        generated successfully, while not actually finishing the generation of the
+        revision file on disk.
         """
         alembic_config = self.command_executor.alembic_config
         config_directive = alembic_config.attributes["process_revision_directives"]
-        fn = RevisionSuccess.process_revision_directives(
-            _sequence_directives(config_directive, process_revision_directives)
-        )
+
+        directive = _sequence_directives(config_directive, process_revision_directives)
+
+        if prevent_file_generation:
+            directive = RevisionSuccess.process_revision_directives(directive)
+
         try:
-            return self.command_executor.run_command(
-                "revision", process_revision_directives=fn, **kwargs
+            result = self.command_executor.run_command(
+                "revision",
+                process_revision_directives=directive,
+                autogenerate=autogenerate,
+                **kwargs,
             )
+
+            # The history will only have changed if we didn't aritifically prevent it from failing.
+            if not prevent_file_generation:
+                self.refresh_history()
+
+            return result
         except RevisionSuccess:
             pass
 
