@@ -1,6 +1,8 @@
-![CircleCI](https://img.shields.io/circleci/build/gh/schireson/pytest-alembic/main)
+![Github Actions Build](https://github.com/schireson/pytest-alembic/actions/workflows/build.yml/badge.svg)
 [![codecov](https://codecov.io/gh/schireson/pytest-alembic/branch/master/graph/badge.svg)](https://codecov.io/gh/schireson/pytest-alembic)
 [![Documentation Status](https://readthedocs.org/projects/pytest-alembic/badge/?version=latest)](https://pytest-alembic.readthedocs.io/en/latest/?badge=latest)
+
+See the full documentation [here](https://pytest-alembic.readthedocs.io/en/latest/).
 
 ## Introduction
 
