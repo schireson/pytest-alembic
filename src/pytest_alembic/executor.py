@@ -9,7 +9,7 @@ import alembic.config
 from alembic.runtime.environment import EnvironmentContext
 from alembic.script.base import ScriptDirectory
 from sqlalchemy import MetaData, Table
-from sqlalchemy.engine import Connection
+from sqlalchemy.engine import Connectable, Connection, Engine
 
 from pytest_alembic.config import Config
 
@@ -71,6 +71,9 @@ class CommandExecutor:
 
         self._run_env(downgrade, revision)
 
+    def stamp(self, revision: str):
+        return self.run_command("stamp", revision)
+
     def _run_env(self, fn, revision=None):
         """Execute the migrations' env.py, given some function to execute."""
         dont_mutate = revision is None
@@ -86,6 +89,7 @@ class CommandExecutor:
 
 @dataclass
 class ConnectionExecutor:
+    connection: Connectable
     metadatas: Dict[str, MetaData] = field(default_factory=dict)
 
     def metadata(self, revision: str) -> MetaData:
@@ -96,40 +100,88 @@ class ConnectionExecutor:
 
         return metadata
 
-    def table(self, connection, revision: str, name: str, schema: Optional[str] = None) -> Table:
+    def table(
+        self,
+        revision: str,
+        name: str,
+        schema: Optional[str] = None,
+        connection: Optional[Connection] = None,
+    ) -> Table:
         meta = self.metadata(revision)
         if name in meta.tables:
             return meta.tables[name]
 
-        return Table(name, meta, schema=schema, autoload_with=connection)
+        return Table(name, meta, schema=schema, autoload_with=connection or self.connection)
 
     def table_insert(
         self,
-        connection: Connection,
         revision: str,
         data: Union[Dict, List],
         tablename: Optional[str] = None,
         schema: Optional[str] = None,
     ):
-        if isinstance(data, dict):
-            data = [data]
+        def table_insert(
+            connection: Connectable,
+            data: Union[Dict, List],
+            tablename: Optional[str] = None,
+            schema: Optional[str] = None,
+        ):
+            if isinstance(data, dict):
+                data = [data]
 
-        for item in data:
-            _tablename = item.get("__tablename__", None)
-            table = _tablename or tablename
+            for item in data:
+                _tablename = item.get("__tablename__", None)
+                table = _tablename or tablename
 
-            if table is None:
-                raise ValueError(
-                    "No table name provided as either `table` argument, or '__tablename__' key in `data`."
-                )
+                if table is None:
+                    raise ValueError(
+                        "No table name provided as either `table` argument, or '__tablename__' key in `data`."
+                    )
 
-            try:
-                # Attempt to parse the schema out of the tablename
-                schema, table = table.split(".", 1)
-            except ValueError:
-                # However, if it doesn't work, both `table` and `schema` are in scope, so failure is fine.
-                pass
+                try:
+                    # Attempt to parse the schema out of the tablename
+                    schema, table = table.split(".", 1)
+                except ValueError:
+                    # However, if it doesn't work, both `table` and `schema` are in scope, so failure is fine.
+                    pass
 
-            table = self.table(connection, revision, table, schema=schema)
-            values = {k: v for k, v in item.items() if k != "__tablename__"}
-            connection.execute(table.insert().values(values))
+                table = self.table(revision, table, schema=schema, connection=connection)
+                values = {k: v for k, v in item.items() if k != "__tablename__"}
+                connection.execute(table.insert().values(values))
+
+        self.run_task(table_insert, data=data, tablename=tablename, schema=schema)
+
+    def run_task(self, fn, **kwargs):
+        """Run a given task on the provided connect, with the correct async/sync context.
+
+        Given an async engine, we need to run the task in an async execution context,
+        even though all internals are synchronous. This is how alembic suggests
+        running the migrations themselves, so this matches that style.
+        """
+        # The user may not have sqlalchemy 1.4+, and therefore may not even be able to
+        # use async engines.
+        try:
+            from sqlalchemy.ext.asyncio import AsyncEngine
+        except ImportError:  # pragma: no cover
+            AsyncEngine = None
+
+        if AsyncEngine and isinstance(self.connection, AsyncEngine):
+            import asyncio
+
+            async def run(engine):
+                async with engine.connect() as connection:
+                    result = await connection.run_sync(fn, **kwargs)
+                    await connection.commit()
+
+                await engine.dispose()
+                return result
+
+            return asyncio.run(run(self.connection))
+        else:
+            if isinstance(self.connection, Engine):
+                with self.connection.connect() as connection:
+                    result = fn(connection=connection, **kwargs)
+            else:
+                result = fn(connection=self.connection, **kwargs)
+
+            return result

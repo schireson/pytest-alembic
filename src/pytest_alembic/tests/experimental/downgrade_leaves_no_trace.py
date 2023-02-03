@@ -7,7 +7,7 @@ from sqlalchemy import MetaData
 
 from pytest_alembic.config import duplicate_alembic_config
 from pytest_alembic.plugin.error import AlembicTestFailure
-from pytest_alembic.runner import MigrationContext, run_connection_task
+from pytest_alembic.runner import MigrationContext
 from pytest_alembic.tests.default import NOT_IMPLEMENTED_WARNING
 
 
@@ -40,8 +40,8 @@ def test_downgrade_leaves_no_trace(alembic_runner: MigrationContext):
     detect a change you'd expect it to, alembic already has extensive ability
     to customize and extend the autogeneration capabilities.
     """
-    run_connection_task(
-        alembic_runner.connection, _test_downgrade_leaves_no_trace, alembic_runner=alembic_runner
+    alembic_runner.connection_executor.run_task(
+        _test_downgrade_leaves_no_trace, alembic_runner=alembic_runner
     )
 
 
@@ -53,9 +53,13 @@ def _test_downgrade_leaves_no_trace(connection, alembic_runner: MigrationContext
 
     alembic_runner = dataclasses.replace(
         alembic_runner,
-        connection=connection,
+        connection_executor=dataclasses.replace(
+            alembic_runner.connection_executor,
+            connection=connection,
+        ),
         command_executor=dataclasses.replace(
-            alembic_runner.command_executor, alembic_config=alembic_config
+            alembic_runner.command_executor,
+            alembic_config=alembic_config,
         ),
     )
 

@@ -7,6 +7,7 @@ import subprocess  # nosec
 from typing import List, Optional, Set, Tuple
 
 from sqlalchemy import MetaData
+from sqlalchemy.engine.url import URL
 
 from pytest_alembic.plugin.error import AlembicTestFailure
 from pytest_alembic.runner import MigrationContext
@@ -81,12 +82,12 @@ def test_all_models_register_on_metadata(
     if (
         async_ is None
         and AsyncEngine is not None
-        and isinstance(alembic_runner.connection, AsyncEngine)
+        and isinstance(alembic_runner.connection_executor.connection, AsyncEngine)
     ):
         async_ = True
 
     modules, bare_tables = get_bare_import_tableset(
-        str(alembic_runner.connection.url),
+        url_to_string(alembic_runner.connection_executor.connection.url),
         async_=bool(async_),
         offline=offline,
     )
@@ -236,3 +237,10 @@ def traverse_modules(
     else:
         name = package.__name__
         yield import_module(name)
+
+
+def url_to_string(url: URL) -> str:
+    try:
+        return url.render_as_string(hide_password=False)
+    except Exception:
+        return url.render_as_string()

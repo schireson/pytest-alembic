@@ -255,3 +255,8 @@ def test_experimental_all_models_register_namespace_package(pytester):
 def test_generate_revision(pytester):
     """Assert history is refreshed when generating a revision in a test."""
     run_pytest(pytester, passed=3)
+
+
+def test_skip_revision(pytester):
+    """Assert a revision can be skipped through configuring the "skip_revisions" config."""
+    run_pytest(pytester, passed=4)

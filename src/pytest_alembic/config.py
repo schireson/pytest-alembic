@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 import alembic.config
 
@@ -50,6 +50,7 @@ class Config:
     at_revision_data: Optional[Union[Dict, "RevisionSpec"]] = None
 
     minimum_downgrade_revision: Optional[str] = None
+    skip_revisions: Optional[List[str]] = None
 
     @classmethod
     def from_raw_config(
@@ -62,13 +63,13 @@ class Config:
 
         Examples:
             >>> Config.from_raw_config()
-            Config(config_options={}, alembic_config=None, before_revision_data=None, at_revision_data=None, minimum_downgrade_revision=None)
+            Config(config_options={}, alembic_config=None, before_revision_data=None, at_revision_data=None, minimum_downgrade_revision=None, skip_revisions=None)
 
             >>> Config.from_raw_config({'minimum_downgrade_revision': 'abc123'})
-            Config(config_options={}, alembic_config=None, before_revision_data=None, at_revision_data=None, minimum_downgrade_revision='abc123')
+            Config(config_options={}, alembic_config=None, before_revision_data=None, at_revision_data=None, minimum_downgrade_revision='abc123', skip_revisions=None)
 
             >>> Config.from_raw_config(Config(minimum_downgrade_revision='abc123'))
-            Config(config_options={}, alembic_config=None, before_revision_data=None, at_revision_data=None, minimum_downgrade_revision='abc123')
+            Config(config_options={}, alembic_config=None, before_revision_data=None, at_revision_data=None, minimum_downgrade_revision='abc123', skip_revisions=None)
         """
         if raw_config is None:
             return cls()
@@ -82,12 +83,14 @@ class Config:
         before_data = raw_config.pop("before_revision_data", None)
         at_data = raw_config.pop("at_revision_data", None)
         minimum_downgrade_revision = raw_config.pop("minimum_downgrade_revision", None)
+        skip_revisions = raw_config.pop("skip_revisions", None)
         return cls(
             config_options=raw_config,
             alembic_config=None,
             before_revision_data=before_data,
             at_revision_data=at_data,
             minimum_downgrade_revision=minimum_downgrade_revision,
+            skip_revisions=skip_revisions,
         )
 
     def make_alembic_config(self, stdout):

@@ -5,8 +5,8 @@ from typing import Dict, List, Optional, Union
 
 import alembic.command
 import alembic.migration
+import alembic.util
 from alembic.script.revision import RevisionMap
-from sqlalchemy.engine import Engine
 
 from pytest_alembic.config import Config
 from pytest_alembic.executor import CommandExecutor, ConnectionExecutor
@@ -23,7 +23,9 @@ def runner(config: Config, engine=None):
     """
     command_executor = CommandExecutor.from_config(config)
     migration_context = MigrationContext.from_config(
-        config, command_executor, ConnectionExecutor(), engine
+        config,
+        command_executor,
+        ConnectionExecutor(engine),
     )
 
     command_executor.configure(connection=engine)
@@ -39,7 +41,6 @@ class MigrationContext:
     connection_executor: ConnectionExecutor
     history: AlembicHistory
     config: Config
-    connection: Engine = None
 
     @classmethod
     def from_config(
@@ -47,7 +48,6 @@ class MigrationContext:
         config: Config,
         command_executor: CommandExecutor,
         connection_executor: ConnectionExecutor,
-        connection: Engine,
     ):
         history = AlembicHistory.parse(command_executor.script.revision_map)
 
@@ -57,7 +57,6 @@ class MigrationContext:
             connection_executor=connection_executor,
             history=history,
             config=config,
-            connection=connection,
         )
 
     @property
@@ -72,14 +71,14 @@ class MigrationContext:
     def current(self) -> str:
         """Get the list of revision heads."""
 
-        def get_current(conn):
-            context = alembic.migration.MigrationContext.configure(conn)
+        def get_current(connection):
+            context = alembic.migration.MigrationContext.configure(connection)
             heads = context.get_current_heads()
             if heads:
                 return heads[0]
             return None
 
-        current = run_connection_task(self.connection, get_current)
+        current = self.connection_executor.run_task(get_current)
         if current:
             return current
         return "base"
@@ -145,12 +144,37 @@ class MigrationContext:
             before_upgrade_data = list(self.revision_data.get_before(next_revision))
             self.insert_into(data=before_upgrade_data, revision=current_revision, table=None)
 
-            self.command_executor.upgrade(next_revision)
+            if next_revision in (self.config.skip_revisions or {}):
+                self.set_revision(next_revision)
+            else:
+                self.command_executor.upgrade(next_revision)
 
             at_upgrade_data = list(self.revision_data.get_at(next_revision))
             self.insert_into(data=at_upgrade_data, revision=next_revision, table=None)
 
         current = self.current
+        return current
+
+    def managed_downgrade(self, dest_revision):
+        """Perform an downgrade, one migration at a time."""
+        current = self.current
+        for dest_revision, current_revision in reversed(
+            self.history.revision_window(dest_revision, current)
+        ):
+            if current_revision in (self.config.skip_revisions or {}):
+                self.set_revision(dest_revision)
+            else:
+                try:
+                    self.command_executor.downgrade(dest_revision)
+                except alembic.util.CommandError as e:
+                    if "not a valid downgrade target" in str(e):
+                        pass
+                    else:
+                        raise
+
+        current = self.current
+        print(current, dest_revision)
+        # assert dest_revision == current
         return current
 
     def migrate_up_before(self, revision):
@@ -179,13 +203,13 @@ class MigrationContext:
     def migrate_down_to(self, revision):
         """Migrate down to, and including the given `revision`."""
         self.history.validate_revision(revision)
-        self.command_executor.downgrade(revision)
+        self.managed_downgrade(revision)
         return revision
 
     def migrate_down_one(self):
         """Migrate down by exactly one revision."""
         previous_revision = self.history.previous_revision(self.current)
-        self.command_executor.downgrade(previous_revision)
+        self.managed_downgrade(previous_revision)
         return previous_revision
 
     def roundtrip_next_revision(self):
@@ -209,12 +233,13 @@ class MigrationContext:
                 `dict`s representing a list of rows, or a `dict` representing one row.
             revision: The revision of MetaData to use as the table definition for the insert.
         """
+        if data is None:
+            return
+
         if revision is None:
             revision = self.current
 
-        return run_connection_task(
-            self.connection,
-            self.connection_executor.table_insert,
+        self.connection_executor.table_insert(
             revision=revision,
             tablename=table,
             data=data,
@@ -229,9 +254,10 @@ class MigrationContext:
             schema: The schema of the table.
         """
         revision = revision or self.current
-        return self.connection_executor.table(
-            self.connection, revision=revision, name=name, schema=schema
-        )
+        return self.connection_executor.table(revision=revision, name=name, schema=schema)
+
+    def set_revision(self, revision: str):
+        self.command_executor.stamp(revision)
 
 
 class RevisionSuccess(Exception):
@@ -261,39 +287,3 @@ def _sequence_directives(*directives):
             directive(*args, **kwargs)
 
     return directive_wrapper
-
-
-def run_connection_task(engine, fn, *args, **kwargs):
-    """Run a given task on the provided connect, with the correct async/sync context.
-
-    Given an async engine, we need to run the task in an async execution context,
-    even though all internals are synchronous. This is how alembic suggests
-    running the migrations themselves, so this matches that style.
-    """
-    # The user may not have sqlalchemy 1.4+, and therefore may not even be able to
-    # use async engines.
-    try:
-        from sqlalchemy.ext.asyncio import AsyncEngine
-    except ImportError:  # pragma: no cover
-        AsyncEngine = None
-
-    if AsyncEngine and isinstance(engine, AsyncEngine):
-        import asyncio
-
-        async def run(engine):
-            async with engine.connect() as connection:
-                result = await connection.run_sync(fn, *args, **kwargs)
-                await connection.commit()
-
-            await engine.dispose()
-            return result
-
-        return asyncio.run(run(engine))
-    else:
-        if isinstance(engine, Engine):
-            with engine.connect() as connection:
-                result = fn(connection, *args, **kwargs)
-        else:
-            result = fn(engine, *args, **kwargs)
-
-        return result
