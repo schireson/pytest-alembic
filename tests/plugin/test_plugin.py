@@ -1,6 +1,6 @@
 import pytest
 
-from pytest_alembic.plugin.plugin import parse_test_names, TestOptionResolver
+from pytest_alembic.plugin.plugin import OptionResolver, parse_test_names
 
 
 def test_parse_raw_test_names_empty_skips():
@@ -10,9 +10,9 @@ def test_parse_raw_test_names_empty_skips():
     assert expected_result == result
 
 
-class Test__TestOptionResolver:
+class Test__OptionResolver:
     def test_all_enabled(self):
-        test_collector = TestOptionResolver.collect_test_definitions()
+        test_collector = OptionResolver.collect_test_definitions()
         result = [t.name for t in test_collector.tests()]
 
         expected_result = [
@@ -24,7 +24,7 @@ class Test__TestOptionResolver:
         assert expected_result == result
 
     def test_include_specified_invalid(self):
-        test_collector = TestOptionResolver.collect_test_definitions()
+        test_collector = OptionResolver.collect_test_definitions()
         test_collector.include("foo", "bar")
 
         with pytest.raises(ValueError) as e:
@@ -32,7 +32,7 @@ class Test__TestOptionResolver:
         assert "bar, foo" in str(e.value)
 
     def test_include_specified(self):
-        test_collector = TestOptionResolver.collect_test_definitions()
+        test_collector = OptionResolver.collect_test_definitions()
         test_collector.include("single_head_revision", "upgrade")
 
         result = [t.name for t in test_collector.tests()]
@@ -41,7 +41,7 @@ class Test__TestOptionResolver:
         assert expected_result == result
 
     def test_exclude_specified_invalid(self):
-        test_collector = TestOptionResolver.collect_test_definitions()
+        test_collector = OptionResolver.collect_test_definitions()
         test_collector.exclude("foo", "bar")
 
         with pytest.raises(ValueError) as e:
@@ -49,7 +49,7 @@ class Test__TestOptionResolver:
         assert "bar, foo" in str(e.value)
 
     def test_exclude_specified(self):
-        test_collector = TestOptionResolver.collect_test_definitions()
+        test_collector = OptionResolver.collect_test_definitions()
         test_collector.exclude("single_head_revision", "upgrade")
 
         result = [t.name for t in test_collector.tests()]
@@ -61,7 +61,7 @@ class Test__TestOptionResolver:
         assert expected_result == result
 
     def test_include_experimental(self):
-        test_collector = TestOptionResolver.collect_test_definitions().include_experimental(
+        test_collector = OptionResolver.collect_test_definitions().include_experimental(
             "all_models_register_on_metadata"
         )
         test_collector.exclude("single_head_revision", "upgrade")

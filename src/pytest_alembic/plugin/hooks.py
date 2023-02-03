@@ -1,13 +1,11 @@
-from pytest_alembic.plugin.plugin import PytestAlembicPlugin, TestOptionResolver
+from pytest_alembic.plugin.plugin import OptionResolver, PytestAlembicPlugin
 
 
 def pytest_addoption(parser):
-    default_collector = TestOptionResolver.collect_test_definitions(
-        default=True, experimental=False
-    )
+    default_collector = OptionResolver.collect_test_definitions(default=True, experimental=False)
     default_tests = ", ".join(t.name for t in default_collector.available_tests.values())
 
-    experimental_collector = TestOptionResolver.collect_test_definitions(
+    experimental_collector = OptionResolver.collect_test_definitions(
         default=False, experimental=True
     )
     experimental_tests = ", ".join(t.name for t in experimental_collector.available_tests.values())

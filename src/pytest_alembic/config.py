@@ -26,6 +26,12 @@ class Config:
       **downgrade** migrations which are run built-in tests like ``test_up_down_consistency``
       and ``test_downgrade_leaves_no_trace``.
 
+    - :code:`skip_revisions` can be used to avoid executing specific revisions, particularly
+      if they are slow and you can guarantee to yourself that the difference in the resulting
+      migrations history wont have a meaningful effect. Note that skipping migrations can be
+      "dangerous", because either DDL or data differences could lead to migrations which
+      pass in tests, but fail in practice.
+
     For example:
         >>> import pytest
 

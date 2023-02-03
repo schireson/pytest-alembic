@@ -73,7 +73,7 @@ class TestCollector(pytest.Module):
         )
 
         test_collector = (
-            TestOptionResolver.collect_test_definitions(default=True, experimental=True)
+            OptionResolver.collect_test_definitions(default=True, experimental=True)
             .include(*raw_included_tests)
             .include_experimental(*raw_experimental_included_tests)
             .exclude(*raw_excluded_tests)
@@ -116,7 +116,7 @@ class PytestAlembicTest:
 
 
 @dataclass
-class TestOptionResolver:
+class OptionResolver:
     available_tests: Dict[str, PytestAlembicTest]
 
     included_tests: Optional[List[str]] = None
