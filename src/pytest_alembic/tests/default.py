@@ -6,6 +6,7 @@ from alembic.autogenerate.api import AutogenContext
 from alembic.autogenerate.render import _render_cmd_body
 
 from pytest_alembic.plugin.error import AlembicTestFailure
+from pytest_alembic.runner import AmbiguousDowngradeTarget
 
 log = logging.getLogger(__name__)
 
@@ -126,7 +127,11 @@ def test_up_down_consistency(alembic_runner):
             # to suggest that feature is used instead.
             warnings.warn(NOT_IMPLEMENTED_WARNING.format(revision=revision))
             break
-
+        except AmbiguousDowngradeTarget:
+            # This implies a branched history where the given revision cannot be directly
+            # targeted, and instead the downgrade must proceed to an ancestor revision
+            # further up the chain.
+            continue
         except Exception as e:
             raise AlembicTestFailure(
                 "Failed to downgrade through each revision individually.",

@@ -15,12 +15,12 @@ test:
 	coverage xml
 
 lint:
-	flake8 src tests
-	isort --check-only src tests
-	pydocstyle src tests
-	black --check src tests
-	mypy src tests
-	bandit -r src
+	flake8 src tests || exit 1
+	isort --check-only src tests || exit 1
+	pydocstyle src tests || exit 1
+	black --check src tests || exit 1
+	mypy src tests || exit 1
+	bandit -r src -s B101 || exit 1
 
 format:
 	isort src tests

@@ -1,7 +1,7 @@
 import contextlib
 import functools
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 import alembic.command
 import alembic.migration
@@ -69,19 +69,29 @@ class MigrationContext:
 
     @property
     def current(self) -> str:
+        """Get the first head in the list of current revisions.
+
+        This attribute is more convenient to use than `current_heads` for single-branch
+        histories, as you get a single revision. However navigating branched histories
+        can encounter issues by naively only selecting an arbitrary current revision.
+        """
+        return self.current_heads[0]
+
+    @property
+    def current_heads(self) -> Tuple[str]:
         """Get the list of revision heads."""
 
         def get_current(connection):
             context = alembic.migration.MigrationContext.configure(connection)
             heads = context.get_current_heads()
             if heads:
-                return heads[0]
+                return heads
             return None
 
         current = self.connection_executor.run_task(get_current)
         if current:
             return current
-        return "base"
+        return ("base",)
 
     def refresh_history(self) -> AlembicHistory:
         """Refresh the context's version of the alembic history.
@@ -100,7 +110,7 @@ class MigrationContext:
         process_revision_directives=None,
         prevent_file_generation=True,
         autogenerate=False,
-        **kwargs
+        **kwargs,
     ):
         """Generate a test revision.
 
@@ -158,23 +168,33 @@ class MigrationContext:
     def managed_downgrade(self, dest_revision):
         """Perform an downgrade, one migration at a time."""
         current = self.current
-        for dest_revision, current_revision in reversed(
-            self.history.revision_window(dest_revision, current)
-        ):
+
+        steps = self.history.revision_window(dest_revision, current)
+        if not steps:
+            return current
+
+        for i, (dest_revision, current_revision) in enumerate(reversed(steps), start=1):
             if current_revision in (self.config.skip_revisions or {}):
                 self.set_revision(dest_revision)
             else:
                 try:
                     self.command_executor.downgrade(dest_revision)
                 except alembic.util.CommandError as e:
-                    if "not a valid downgrade target" in str(e):
-                        pass
-                    else:
+                    if "not a valid downgrade target" not in str(e):
                         raise
 
+                    # This would indicated the last migration in the series of
+                    # steps taken to get to the `dest_revision`.
+                    if i == len(steps):
+                        raise AmbiguousDowngradeTarget(
+                            f"The target revision {dest_revision} is not a valid downgrade target"
+                        )
+
         current = self.current
-        print(current, dest_revision)
-        # assert dest_revision == current
+        assert dest_revision in self.current_heads, (
+            f"Destination revision {dest_revision} does not match actual revision {current}. "
+            f"Followed steps: {steps}"
+        )
         return current
 
     def migrate_up_before(self, revision):
@@ -258,6 +278,10 @@ class MigrationContext:
 
     def set_revision(self, revision: str):
         self.command_executor.stamp(revision)
+
+
+class AmbiguousDowngradeTarget(Exception):
+    """Raise if the target of a downgrade cannot be directly downgraded to, due to being ambiguous."""
 
 
 class RevisionSuccess(Exception):

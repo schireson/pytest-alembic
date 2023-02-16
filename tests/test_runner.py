@@ -110,6 +110,11 @@ def test_migrate_down_before(pytester):
     assert_has_test(result, "test_migrate_down_before_specific_revision")
 
 
+def test_migrate_down_to_base(pytester):
+    """Assert migrating down to the base revision undoes the first revision."""
+    run_pytest(pytester, passed=1, test_alembic=False)
+
+
 def test_process_revision_directives(pytester):
     result = run_pytest(pytester, success=False, passed=3, failed=1)
     assert_failed_test_has_content(
