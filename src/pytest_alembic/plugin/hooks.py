@@ -26,13 +26,12 @@ def pytest_addoption(parser):
         f"included. Valid options include: {experimental_tests}",
     )
     parser.addini(
-        "pytest_alembic_tests_folder",
-        "The location under which the built-in tests will be bound. This defaults to 'tests/' "
-        "(the tests themselves then being executed from tests/pytest_alembic/*), the typical test "
-        "location. However this can be customized if pytest is, for example, invoked from a parent "
-        "directory like `pytest folder/tests`, or the tests are otherwise located at a different "
-        "location, relative to `pytest`s invocation.",
-        default="tests",
+        "pytest_alembic_tests_path",
+        "The location at which the built-in tests will be bound. This defaults to 'tests/conftest.py'. "
+        "Typically, you would want this to coincide with the path at which your `alembic_engine` is being "
+        "defined/registered. Note that this path must be the full path, relative to the root location "
+        "at which pytest is being invoked.",
+        default="tests/conftest.py",
     )
 
     group = parser.getgroup("collect")
@@ -48,6 +47,12 @@ def pytest_addoption(parser):
         default=None,
         help=f"List of built-in tests to exclude. Valid options include: {default_tests}",
         dest="pytest_alembic_exclude",
+    )
+    group.addoption(
+        "--alembic-tests-path",
+        default="tests/conftest.py",
+        help="The location at which the built-in tests will be bound.",
+        dest="pytest_alembic_tests_path",
     )
 
 

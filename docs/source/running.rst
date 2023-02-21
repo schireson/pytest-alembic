@@ -1,8 +1,44 @@
 Running Tests
 =============
 
-:code:`Pytest Alembic` automatically adds a flag, :code:`pytest --test-alembic`, which will
-automatically invoke the baked-in tests.
+You have two primary options for running the configured set of tests:
+
+1. Automatically at the command-line via ``--test-alembic``
+
+   :code:`Pytest Alembic` automatically adds a flag, :code:`pytest --test-alembic`, which will
+   automatically invoke the baked-in tests.
+
+   This can be convenient if you want to exclude migrations tests most of the time, but include
+   them for e.g. CI. By default, ``pytest tests`` would then, **not** run migrations tests.
+
+   Additionally, it means you don't need to manually include the tests in a test file somewhere
+   in your project.
+
+   If your tests dont generally reside at/below a ``tests/`` directory with a ``tests/conftest.py``
+   file, you can/should set the :code:`pytest_alembic_tests_path` option, described
+   below.
+
+2. You can directly import the tests you want to include at any point in your project.
+
+   .. code-block:: python
+      :caption: tests/test_migrations.py
+   
+      from pytest_alembic.tests import (
+          test_model_definitions_match_ddl,
+          test_single_head_revision,
+          test_up_down_consistency,
+          test_upgrade,
+      )
+
+   This can be convenient if you always want the migrations tests to run, or else want a reference
+   to the tests' existence somewhere in your source code. Pytest would automatically include
+   the tests every time you run i.e. :code:`pytest tests`.
+
+In either case, you can exclude migrations tests using pytest's "marker" system, i.e.
+``pytest -m "not alembic"``.
+
+
+
 
 Configuration
 -------------
@@ -34,9 +70,24 @@ behavior.
 
   .. note::
 
-     As of pytest-alembic version 0.8.5, this option is ignored. Tests will be registered
-     at the top level, and `--test-alembic` will automatically include the tests regardless
-     of the provided path.
+     As of pytest-alembic version 0.8.5, this option is ignored. Instead, if you require customizing
+     the registration location, you should use :code:`pytest_alembic_tests_path` instead.
+
+* :code:`pytest_alembic_tests_path`
+
+  .. note::
+
+     Introduced in v0.10.1.
+
+  The location at which the built-in tests will be bound. This defaults to 'tests/conftest.py'.
+  Typically, you would want this to coincide with the path at which your `alembic_engine` is being
+  defined/registered. Note that this path must be the full path, relative to the root location
+  at which pytest is being invoked.
+
+  This option has replaced :code:`pytest_alembic_tests_folder` due to changes in how pytest test collection
+  needed to be performed in around pytest ~7.0.
+
+  Additionally, this option is only required if you are using the :code:`--test-alembic` flag.
 
 
 Alembic Config

@@ -2,6 +2,13 @@ import pytest
 
 from pytest_alembic.plugin.plugin import OptionResolver, parse_test_names
 
+pytest_options = (
+    "--test-alembic",
+    "--alembic-tests-path",
+    "conftest.py",
+    "-vv",
+)
+
 
 def test_parse_raw_test_names_empty_skips():
     result = sorted(parse_test_names("up_down_consistency,foo\n\n\nbar\n"))
@@ -88,7 +95,7 @@ class Test_collect_tests:
     def test_include_cfg(self, testdir):
         testdir.copy_example("test_no_data")
         testdir.makefile(".ini", pytest="[pytest]\npytest_alembic_include=single_head_revision\n")
-        result = testdir.runpytest("--test-alembic", "-vv")
+        result = testdir.runpytest(*pytest_options)
         stdout = result.stdout.str()
         print(stdout)
 
@@ -98,7 +105,7 @@ class Test_collect_tests:
     def test_exclude_cfg(self, testdir):
         testdir.copy_example("test_no_data")
         testdir.makefile(".ini", pytest="[pytest]\npytest_alembic_exclude=single_head_revision\n")
-        result = testdir.runpytest("--test-alembic", "-vv")
+        result = testdir.runpytest(*pytest_options)
         stdout = result.stdout.str()
         print(stdout)
 
@@ -107,7 +114,7 @@ class Test_collect_tests:
 
     def test_included_tests_start_with_tests(self, testdir):
         testdir.copy_example("test_no_data")
-        result = testdir.runpytest("--test-alembic", "-vv")
+        result = testdir.runpytest(*pytest_options)
         stdout = result.stdout.str()
         print(stdout)
 
