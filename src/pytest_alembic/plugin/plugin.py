@@ -1,6 +1,6 @@
 import re
 from dataclasses import dataclass
-from pathlib import Path
+from pathlib import Path, PurePath
 from typing import Callable, Dict, List, Optional
 
 import pytest
@@ -31,12 +31,16 @@ class PytestAlembicPlugin:
                 return TestCollector.from_parent(parent, fspath=path)
 
     def should_register(self, path):
-        if path.suffix != ".py":
-            return False
-
-        if not self.registered:
-            self.registered = True
-            return True
+        tests_path = PurePath(
+            self.config.option.pytest_alembic_tests_path
+            or self.config.getini("pytest_alembic_tests_path")
+            or "tests/conftest.py"
+        )
+        relative_path = path.relative_to(self.config.rootpath)
+        if relative_path == tests_path:
+            if not self.registered:
+                self.registered = True
+                return True
 
         return False
 

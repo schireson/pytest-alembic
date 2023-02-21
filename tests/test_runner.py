@@ -4,6 +4,8 @@ import pytest
 def run_pytest(pytester, *, success=True, passed=4, skipped=0, failed=0, test_alembic=True):
     args = [
         "--test-alembic",
+        "--alembic-tests-path",
+        "conftest.py",
         "-vv",
         "-s",
     ]
