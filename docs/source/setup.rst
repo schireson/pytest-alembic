@@ -91,7 +91,7 @@ in a :code:`conftest.py` (a special file recognized by pytest) at the root of yo
 typically :code:`tests/conftest.py`.
 
 If your tests are located elsewhere, you should use the :ref:`pytest config <Pytest Config>` to specify
-:code:`pytest_alembic_tests_folder`, to point at your tests folder root.
+:code:`pytest_alembic_tests_path` (defaults to :code:`tests/conftest.py`), to point at your tests folder root.
 
 Then you can define your own implementations of these fixtures
 
