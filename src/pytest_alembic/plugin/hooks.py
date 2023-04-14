@@ -11,6 +11,11 @@ def pytest_addoption(parser):
     experimental_tests = ", ".join(t.name for t in experimental_collector.available_tests.values())
 
     parser.addini(
+        "pytest_alembic_enabled",
+        "Whether to enable/disable the plugin's behavior entirely. Defaults to true.",
+        default=True,
+    )
+    parser.addini(
         "pytest_alembic_include",
         "List of built-in tests to include. If specified, 'pytest_alembic_exclude' is ignored. "
         f"If both are omitted, all tests are included. Valid options include: {default_tests}",
@@ -40,7 +45,7 @@ def pytest_addoption(parser):
         action="store_true",
         default=False,
         help="Enable pytest-alembic built-in tests",
-        dest="pytest_alembic_enabled",
+        dest="pytest_alembic_registration_enabled",
     )
     group.addoption(
         "--alembic-exclude",
@@ -61,6 +66,6 @@ def pytest_configure(config):
 
 
 def pytest_sessionstart(session):
-    if session.config.option.pytest_alembic_enabled:
+    if session.config.getini("pytest_alembic_enabled"):
         plugin = PytestAlembicPlugin(session.config)
         session.config.pluginmanager.register(plugin, "pytest-alembic")

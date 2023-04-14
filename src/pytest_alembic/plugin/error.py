@@ -1,33 +1,25 @@
 import textwrap
-
-from _pytest._code.code import FormattedExcinfo
+from typing import List
 
 
 class AlembicTestFailure(AssertionError):
     def __init__(self, message, context=None):
         super().__init__(message)
         self.context = context
+        self.exce = self
+        self.item = None
 
-
-class AlembicReprError:
-    def __init__(self, exce, item):
-        self.exce = exce
-        self.item = item
-
-    def toterminal(self, tw):
+    def format_context(self) -> List[str]:
         """Print out a custom error message to the terminal."""
-        exc = self.exce.value
-        context = exc.context
+        result = []
+        if not self.context:
+            return []
 
-        if context:
-            for title, item in context:
-                tw.line(title + ":", white=True, bold=True)
-                tw.line(textwrap.indent(item, "    "), red=True)
-                tw.line("")
+        for title, item in self.context:
+            result.extend(["", f"{title}:", textwrap.indent(item, "    ")])
+        return result
 
-        e = FormattedExcinfo()
-        lines = e.get_exconly(self.exce)
-
-        tw.line("Errors:", white=True, bold=True)
-        for line in lines:
-            tw.line(line, red=True, bold=True)
+    def __str__(self):
+        content = self.format_context()
+        segments = [super().__str__(), *content]
+        return "\n".join(segments)
