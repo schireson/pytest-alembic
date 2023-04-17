@@ -36,7 +36,6 @@ def pytest_addoption(parser):
         "Typically, you would want this to coincide with the path at which your `alembic_engine` is being "
         "defined/registered. Note that this path must be the full path, relative to the root location "
         "at which pytest is being invoked.",
-        default="tests/conftest.py",
     )
 
     group = parser.getgroup("collect")
@@ -55,8 +54,10 @@ def pytest_addoption(parser):
     )
     group.addoption(
         "--alembic-tests-path",
-        default="tests/conftest.py",
-        help="The location at which the built-in tests will be bound.",
+        help=(
+            "The location at which the built-in tests will be bound. Has higher precedence than the "
+            "corresponding `pytest_alembic_tests_path` ini option."
+        ),
         dest="pytest_alembic_tests_path",
     )
 

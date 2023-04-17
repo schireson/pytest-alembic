@@ -27,7 +27,7 @@ format:
 	black src tests
 
 publish: build
-	poetry publish -u __token__ -p '${PYPI_PASSWORD}' --no-interaction
+	poetry publish -u __token__ -p '${PYPI_TOKEN}' --no-interaction
 
 changelog:
 	# https://convco.github.io/
