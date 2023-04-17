@@ -6,8 +6,6 @@ from typing import Callable, Dict, List, Optional
 import pytest
 from _pytest import config
 
-from pytest_alembic.plugin.error import AlembicReprError, AlembicTestFailure
-
 pytest_version_tuple = getattr(pytest, "version_tuple", None)
 
 
@@ -60,11 +58,12 @@ class TestCollector(pytest.Module):
         self.add_marker("alembic")
 
     def collect(self):
+        assert self.parent
         config = self.parent.config
 
-        cli_enabled = config.option.pytest_alembic_enabled
+        cli_enabled = config.option.pytest_alembic_registration_enabled
         if not cli_enabled:
-            return None
+            return []
 
         option = config.option
 
@@ -100,11 +99,6 @@ class TestCollector(pytest.Module):
 class PytestAlembicItem(pytest.Function):
     def reportinfo(self):
         return (self.fspath, 0, f"[pytest-alembic] {self.name}")
-
-    def repr_failure(self, excinfo):
-        if isinstance(excinfo.value, AlembicTestFailure):
-            return AlembicReprError(excinfo, self)
-        return super().repr_failure(excinfo)
 
 
 @dataclass(frozen=True)
