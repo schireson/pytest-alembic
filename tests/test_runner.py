@@ -1,16 +1,19 @@
 import pytest
 
 
-def run_pytest(pytester, *, success=True, passed=4, skipped=0, failed=0, test_alembic=True):
-    args = [
-        "--test-alembic",
-        "--alembic-tests-path",
-        "conftest.py",
-        "-vv",
-        "-s",
-    ]
-    if not test_alembic:
-        args = ["-vv", "conftest.py"]
+def run_pytest(
+    pytester, *, success=True, passed=4, skipped=0, failed=0, test_alembic=True, args=None
+):
+    if not args:
+        args = [
+            "--test-alembic",
+            "--alembic-tests-path",
+            "conftest.py",
+            "-vv",
+            "-s",
+        ]
+        if not test_alembic:
+            args = ["-vv", "conftest.py"]
 
     pytester.copy_example()
     result = pytester.inline_run(*args)
@@ -262,3 +265,8 @@ def test_generate_revision(pytester):
 def test_skip_revision(pytester):
     """Assert a revision can be skipped through configuring the "skip_revisions" config."""
     run_pytest(pytester, passed=4)
+
+
+def test_pytest_alembic_tests_path(pytester):
+    """Assert the pytest_alembic_tests_path can be overridden."""
+    run_pytest(pytester, passed=4, args=["-vv", "--test-alembic", "tests_"])

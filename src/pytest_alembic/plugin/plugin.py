@@ -1,7 +1,7 @@
 import re
 from dataclasses import dataclass
 from pathlib import Path, PurePath
-from typing import Callable, Dict, List, Optional
+from typing import Callable, cast, Dict, List, Optional
 
 import pytest
 from _pytest import config
@@ -30,8 +30,8 @@ class PytestAlembicPlugin:
 
     def should_register(self, path):
         tests_path = PurePath(
-            self.config.option.pytest_alembic_tests_path
-            or self.config.getini("pytest_alembic_tests_path")
+            cast(Optional[str], self.config.option.pytest_alembic_tests_path)
+            or cast(Optional[str], self.config.getini("pytest_alembic_tests_path"))
             or "tests/conftest.py"
         )
         relative_path = path.relative_to(self.config.rootpath)
