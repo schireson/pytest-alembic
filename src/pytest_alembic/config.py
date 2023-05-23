@@ -1,7 +1,10 @@
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, TYPE_CHECKING, Union
 
 import alembic.config
+
+if TYPE_CHECKING:
+    from pytest_alembic.revision_data import RevisionSpec
 
 
 @dataclass
@@ -148,7 +151,3 @@ def duplicate_alembic_config(config: alembic.config.Config):
         config_args=config.config_args,
         attributes=config.attributes,
     )
-
-
-# isort: split
-from pytest_alembic.revision_data import RevisionSpec  # noqa

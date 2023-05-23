@@ -29,8 +29,9 @@ log = logging.getLogger(__name__)
 def test_all_models_register_on_metadata(
     alembic_runner: MigrationContext,
     model_package: Optional[str] = None,
+    *,
     offline: bool = False,
-    async_: bool = None,
+    async_: Optional[bool] = None,
 ):
     """Assert that all tables defined on your `MetaData`, are imported in the `env.py`.
 
@@ -99,7 +100,8 @@ def test_all_models_register_on_metadata(
     if bare_tables != full_tables:
         diff = bare_tables.symmetric_difference(full_tables)
         diff_str = ", ".join(diff)
-        raise AlembicTestFailure(
+
+        message = (
             "There was a difference detected between the set of tables registered on your "
             "`MetaData` during the course of loading your `env.py` compared with the set of "
             f"tables registered after importing all modules below the provided '{model_package}' "
@@ -112,10 +114,11 @@ def test_all_models_register_on_metadata(
             "command.\n\n"
             f"The following tables are affected: {diff_str}."
         )
+        raise AlembicTestFailure(message)
 
 
 def get_bare_import_tableset(
-    url: str, offline: bool = False, async_: bool = False
+    url: str, *, offline: bool = False, async_: bool = False
 ) -> Tuple[List[str], Set[str]]:
     """Get the set of tables which would have been added to the metadata on a bare ma.models import.
 
@@ -136,12 +139,12 @@ def get_bare_import_tableset(
         str(async_.real),
     ]
     try:
-        result = subprocess.run(  # nosec
+        result = subprocess.run(  # noqa: UP022
             command,
             check=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-            universal_newlines=True,
+            universal_newlines=True,  # noqa: UP021
         )
     except subprocess.CalledProcessError as e:  # pragma: no cover
         raise AlembicTestFailure(e.stderr)
@@ -178,7 +181,8 @@ def get_full_tableset(*module_names: str) -> Set[str]:
         try:
             module, *_ = modules
         except ValueError:
-            raise AlembicTestFailure(f"Invalid module name: {module_name}")
+            message = f"Invalid module name: {module_name}"
+            raise AlembicTestFailure(message)
 
         for item in module.__dict__.values():
             if isinstance(item, MetaData):
@@ -189,15 +193,15 @@ def get_full_tableset(*module_names: str) -> Set[str]:
                 break
 
     if metadata is None:
-        raise AlembicTestFailure(
+        message = (
             "Unable to locate a MetaData reference in the local context of your `env.py`. This "
             "test requires a local reference to either a `DeclarativeMeta` (i.e. declarative model "
             "base), or a `MetaData` to exist in your `env.py`."
         )
+        raise AlembicTestFailure(message)
 
     tables = metadata.tables
-    tablenames = set(tables.keys())
-    return tablenames
+    return set(tables.keys())
 
 
 def traverse_modules(
@@ -242,5 +246,5 @@ def traverse_modules(
 def url_to_string(url: URL) -> str:
     try:
         return url.render_as_string(hide_password=False)
-    except Exception:
+    except TypeError:
         return url.render_as_string()

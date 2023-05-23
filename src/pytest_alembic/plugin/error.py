@@ -2,7 +2,7 @@ import textwrap
 from typing import List
 
 
-class AlembicTestFailure(AssertionError):
+class AlembicTestFailure(AssertionError):  # noqa: N818
     def __init__(self, message, context=None):
         super().__init__(message)
         self.context = context

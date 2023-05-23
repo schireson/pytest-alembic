@@ -34,9 +34,8 @@ class Test__OptionResolver:
         test_collector = OptionResolver.collect_test_definitions()
         test_collector.include("foo", "bar")
 
-        with pytest.raises(ValueError) as e:
+        with pytest.raises(ValueError, match="bar, foo"):
             test_collector.tests()
-        assert "bar, foo" in str(e.value)
 
     def test_include_specified(self):
         test_collector = OptionResolver.collect_test_definitions()
@@ -51,9 +50,8 @@ class Test__OptionResolver:
         test_collector = OptionResolver.collect_test_definitions()
         test_collector.exclude("foo", "bar")
 
-        with pytest.raises(ValueError) as e:
+        with pytest.raises(ValueError, match="bar, foo"):
             test_collector.tests()
-        assert "bar, foo" in str(e.value)
 
     def test_exclude_specified(self):
         test_collector = OptionResolver.collect_test_definitions()

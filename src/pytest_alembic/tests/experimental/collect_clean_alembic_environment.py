@@ -5,6 +5,7 @@ python import state. Thus the `print` statements are the mechanism through
 which this script communicates the environment state back to the
 parent process.
 """
+import contextlib
 import gc
 import json
 import os
@@ -33,10 +34,8 @@ def run():  # pragma: no cover
     config = Config("alembic.ini")
     config.set_section_option(config.config_ini_section, "sqlalchemy.url", url)
 
-    try:
-        config.attributes["connection"] = create_connectable(url, async_)
-    except Exception:  # nosec
-        pass
+    with contextlib.suppress(Exception):
+        config.attributes["connection"] = create_connectable(url, async_=async_)
 
     script = ScriptDirectory.from_config(config)
 
@@ -44,16 +43,15 @@ def run():  # pragma: no cover
         script.run_env()
 
 
-def create_connectable(url, async_=False):
+def create_connectable(url, *, async_=False):
     if async_:
         from sqlalchemy.ext.asyncio import create_async_engine
 
-        connectable = create_async_engine(url)
-    else:
-        from sqlalchemy import create_engine
+        return create_async_engine(url)
 
-        connectable = create_engine(url).connect()
-    return connectable
+    from sqlalchemy import create_engine
+
+    return create_engine(url).connect()
 
 
 def environment_context_fn(_, migration_context):
@@ -97,11 +95,13 @@ def get_model_base(referrer, target_metadata):
     """Find all model referrers of any model base referents of the `target_metadata`."""
     metadata = referrer.get("metadata")
     if not metadata or metadata is not target_metadata:
-        return
+        return None
 
-    for referrer in gc.get_referrers(referrer):
-        if isinstance(referrer, DeclarativeMeta):
-            return referrer
+    for ref in gc.get_referrers(referrer):
+        if isinstance(ref, DeclarativeMeta):
+            return ref
+
+    return None
 
 
 def get_referrer_module(referrer):

@@ -18,15 +18,17 @@ class PytestAlembicPlugin:
     # way to support both <7 and >=7 without weird nonsense like this.
     if pytest_version_tuple and pytest_version_tuple[0] >= 7:
 
-        def pytest_collect_file(self, file_path, path, parent):
+        def pytest_collect_file(self, file_path, path, parent):  # noqa: ARG002
             if self.should_register(file_path):
                 return TestCollector.from_parent(parent, path=file_path)
+            return None
 
     else:
 
-        def pytest_collect_file(self, path, parent):  # type: ignore
+        def pytest_collect_file(self, path, parent):  # type: ignore[misc]
             if self.should_register(Path(path)):
                 return TestCollector.from_parent(parent, fspath=path)
+            return None
 
     def should_register(self, path):
         tests_path = PurePath(
@@ -35,10 +37,9 @@ class PytestAlembicPlugin:
             or "tests/conftest.py"
         )
         relative_path = path.relative_to(self.config.rootpath)
-        if relative_path == tests_path:
-            if not self.registered:
-                self.registered = True
-                return True
+        if relative_path == tests_path and not self.registered:
+            self.registered = True
+            return True
 
         return False
 
@@ -122,7 +123,7 @@ class OptionResolver:
     excluded_tests: Optional[List[str]] = None
 
     @classmethod
-    def collect_test_definitions(cls, default=True, experimental=True):
+    def collect_test_definitions(cls, *, default=True, experimental=True):  # noqa: ARG003
         import pytest_alembic.tests
         import pytest_alembic.tests.experimental
 
@@ -197,7 +198,8 @@ class OptionResolver:
 
         if invalid_tests:
             invalid_str = ", ".join(sorted(invalid_tests))
-            raise ValueError(f"The following tests were unrecognized: {invalid_str}")
+            message = f"The following tests were unrecognized: {invalid_str}"
+            raise ValueError(message)
 
         return [self.available_tests[t] for t in selected_tests]
 

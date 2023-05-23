@@ -17,7 +17,7 @@ NOT_IMPLEMENTED_WARNING = (
 )
 
 
-@pytest.mark.alembic
+@pytest.mark.alembic()
 def test_single_head_revision(alembic_runner):
     """Assert that there only exists one head revision.
 
@@ -30,26 +30,31 @@ def test_single_head_revision(alembic_runner):
 
     if head_count != 1:
         heads = "\n".join([h.strip() for h in heads])
+
+        message = f"Expected 1 head revision, found {head_count}"
         raise AlembicTestFailure(
-            "Expected 1 head revision, found {}".format(head_count),
+            message,
             context=[("Heads", heads)],
         )
 
 
-@pytest.mark.alembic
+@pytest.mark.alembic()
 def test_upgrade(alembic_runner):
     """Assert that the revision history can be run through from base to head."""
     try:
         alembic_runner.migrate_up_to("heads")
     except RuntimeError as e:
-        raise AlembicTestFailure(
+        message = (
             "Failed to upgrade to the head revision. This means the historical chain from an "
-            "empty database, to the current revision is not possible.",
+            "empty database, to the current revision is not possible."
+        )
+        raise AlembicTestFailure(
+            message,
             context=[("Alembic Error", str(e))],
         )
 
 
-@pytest.mark.alembic
+@pytest.mark.alembic()
 def test_model_definitions_match_ddl(alembic_runner):
     """Assert that the state of the migrations matches the state of the models describing the DDL.
 
@@ -68,11 +73,14 @@ def test_model_definitions_match_ddl(alembic_runner):
             rendered_upgrade = _render_cmd_body(script.upgrade_ops, autogen_context)
 
             if not migration_is_empty:
-                raise AlembicTestFailure(
+                message = (
                     "The models describing the DDL of your database are out of sync with the set of "
                     "steps described in the revision history. This usually means that someone has "
                     "made manual changes to the database's DDL, or some model has been changed "
-                    "without also generating a migration to describe that change.",
+                    "without also generating a migration to describe that change."
+                )
+                raise AlembicTestFailure(
+                    message,
                     context=[
                         (
                             "The upgrade which would have been generated would look like",
@@ -90,11 +98,11 @@ def test_model_definitions_match_ddl(alembic_runner):
     )
 
 
-@pytest.mark.alembic
+@pytest.mark.alembic()
 def test_up_down_consistency(alembic_runner):
     """Assert that all downgrades succeed.
 
-    While downgrading may not be lossless operation data-wise, there’s a theory of database
+    While downgrading may not be lossless operation data-wise, there's a theory of database
     migrations that says that the revisions in existence for a database should be able to go
     from an entirely blank schema to the finished product, and back again.
 
@@ -104,8 +112,9 @@ def test_up_down_consistency(alembic_runner):
         try:
             alembic_runner.migrate_up_to(revision)
         except Exception as e:
+            message = "Failed to upgrade through each revision individually."
             raise AlembicTestFailure(
-                "Failed to upgrade through each revision individually.",
+                message,
                 context=[("Failing Revision", revision), ("Alembic Error", str(e))],
             )
 
@@ -124,12 +133,13 @@ def test_up_down_consistency(alembic_runner):
             # In the event of a `NotImplementedError`, we should have the same semantics,
             # as-if `minimum_downgrade_revision` was specified, but we'll emit a warning
             # to suggest that feature is used instead.
-            warnings.warn(NOT_IMPLEMENTED_WARNING.format(revision=revision))
+            warnings.warn(NOT_IMPLEMENTED_WARNING.format(revision=revision), stacklevel=1)
             break
 
         except Exception as e:
+            message = "Failed to downgrade through each revision individually."
             raise AlembicTestFailure(
-                "Failed to downgrade through each revision individually.",
+                message,
                 context=[("Failing Revision", revision), ("Alembic Error", str(e))],
             )
 
@@ -140,10 +150,11 @@ def test_up_down_consistency(alembic_runner):
         try:
             alembic_runner.migrate_up_to(revision)
         except Exception as e:
+            message = (
+                "Failed to upgrade through each revision individually after performing a "
+                "roundtrip upgrade -> downgrade -> upgrade cycle."
+            )
             raise AlembicTestFailure(
-                (
-                    "Failed to upgrade through each revision individually after performing a "
-                    "roundtrip upgrade -> downgrade -> upgrade cycle."
-                ),
+                message,
                 context=[("Failing Revision", revision), ("Alembic Error", str(e))],
             )

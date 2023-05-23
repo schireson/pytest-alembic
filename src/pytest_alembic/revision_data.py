@@ -1,5 +1,8 @@
 from dataclasses import dataclass
-from typing import Dict, List, Union
+from typing import Dict, List, TYPE_CHECKING, Union
+
+if TYPE_CHECKING:
+    from pytest_alembic.config import Config
 
 
 @dataclass
@@ -39,23 +42,18 @@ class RevisionData:
             at_revision_data=RevisionSpec.parse(config.at_revision_data),
         )
 
-    def get(self, revision: str, revision_data: Union[Dict, List[Dict]]):
+    def get(self, revision_data: Union[Dict, List[Dict]]):
         if isinstance(revision_data, Dict):
             yield revision_data
         else:
-            for item in revision_data:
-                yield item
+            yield from revision_data
 
-    def get_before(self, revision: str) -> Union[Dict, List[Dict]]:
+    def get_before(self, revision: str) -> List[Dict]:
         """Yield the individual data insertions which should occur before the given revision."""
         before_revision_data = self.before_revision_data.get(revision)
-        return self.get(revision, before_revision_data)
+        return list(self.get(before_revision_data))
 
     def get_at(self, revision: str) -> Union[Dict, List[Dict]]:
-        """Yield the individual data insertions which should occur upon reaching the given revision."""
+        """Yield individual data insertions which should occur upon reaching the given revision."""
         at_revision_data = self.at_revision_data.get(revision)
-        return self.get(revision, at_revision_data)
-
-
-# isort: split
-from pytest_alembic.config import Config  # noqa
+        return list(self.get(at_revision_data))

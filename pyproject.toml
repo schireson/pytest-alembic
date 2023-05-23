@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pytest-alembic"
-version = "0.10.4"
+version = "0.10.5"
 description = "A pytest plugin for verifying alembic migrations."
 authors = [
     "Dan Cardin <ddcardin@gmail.com>",
@@ -25,32 +25,21 @@ alembic = "*"
 sqlalchemy = "*"
 
 [tool.poetry.dev-dependencies]
-bandit = "*"
+asyncpg = "*"
 black = {version = "22.3.0", python = ">=3.6.2"}
 coverage = {version = ">=6.4.4", extras = ["toml"], python = ">=3.7"}
-flake8 = ">=3.9"
-isort = ">=5"
+greenlet = "*"
 mypy = {version = ">=0.900", python = ">=3.5"}
 psycopg2-binary = "*"
-pydocstyle = {version = "*", python = ">=3.5"}
 pytest = {version = ">=6.2"}
 pytest-asyncio = "*"
 pytest-mock-resources = {version = ">=2.6.3", extras = ["docker"], python = ">=3.7"}
-types-dataclasses = "^0.1.7"
+ruff = {version = '0.0.269', python = ">3.7"}
 sqlalchemy = {version = ">=1.4", extras = ["asyncio"]}
-greenlet = "*"
-asyncpg = "*"
+types-dataclasses = "^0.1.7"
 
 [tool.poetry.plugins.pytest11]
 pytest_alembic = "pytest_alembic.plugin"
-
-[tool.isort]
-profile = 'black'
-known_first_party = 'pytest_alembic,tests'
-line_length = 100
-float_to_top = true
-order_by_type = false
-use_parentheses = true
 
 [tool.black]
 line_length = 100
@@ -63,6 +52,28 @@ exclude_lines = [
   "if TYPE_CHECKING:",
   "if __name__ == .__main__.:",
 ]
+
+[tool.ruff]
+src = ["src", "tests"]
+target-version = "py37"
+line-length = 100
+select = [
+  "A", "B", "C", "D", "E", "F", "G", "I", "N", "Q", "S", "T", "W", "ARG", "BLE",
+  "DJ", "DTZ", "EM", "ERA", "EXE", "FBT", "ICN", "INP", "ISC", "NPY", "PD", "PGH",
+  "PIE", "PT", "PTH", "PYI", "RET", "RSE", "RUF", "SIM", "SLF", "TCH", "TID",
+  "TRY", "UP", "YTT"
+]
+ignore = ["E501", "S101", "D1", "TRY200", "B007", "B904"]
+
+[tool.ruff.isort]
+order-by-type = false
+
+[tool.ruff.per-file-ignores]
+"src/pytest_alembic/tests/**/*.py" = ["S101", "BLE001"]
+"**/tests/**/*.py" = ["D", "S", "N801", "N802", "N806", "T201", "E501"]
+
+[tool.ruff.pydocstyle]
+convention = "google"
 
 [tool.coverage.run]
 source = ["src"]
