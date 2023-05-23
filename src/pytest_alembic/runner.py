@@ -91,13 +91,14 @@ class MigrationContext:
         each test.
         """
         script = self.command_executor.script
-        script.revision_map = RevisionMap(script._load_revisions)
+        script.revision_map = RevisionMap(script._load_revisions)  # noqa: SLF001
         self.history = AlembicHistory.parse(self.command_executor.script.revision_map)
         return self.history
 
     def generate_revision(
         self,
         process_revision_directives=None,
+        *,
         prevent_file_generation=True,
         autogenerate=False,
         **kwargs
@@ -128,20 +129,20 @@ class MigrationContext:
             # The history will only have changed if we didn't aritifically prevent it from failing.
             if not prevent_file_generation:
                 self.refresh_history()
-
-            return result
         except RevisionSuccess:
             pass
+        else:
+            return result
 
     def raw_command(self, *args, **kwargs):
         """Execute a raw alembic command."""
         return self.command_executor.run_command(*args, **kwargs)
 
     def managed_upgrade(self, dest_revision):
-        """Perform an upgrade, one migration at a time, inserting static data at the given points."""
+        """Perform an upgrade one migration at a time, inserting static data at the given points."""
         current = self.current
         for current_revision, next_revision in self.history.revision_window(current, dest_revision):
-            before_upgrade_data = list(self.revision_data.get_before(next_revision))
+            before_upgrade_data = self.revision_data.get_before(next_revision)
             self.insert_into(data=before_upgrade_data, revision=current_revision, table=None)
 
             if next_revision in (self.config.skip_revisions or {}):
@@ -149,7 +150,7 @@ class MigrationContext:
             else:
                 self.command_executor.upgrade(next_revision)
 
-            at_upgrade_data = list(self.revision_data.get_at(next_revision))
+            at_upgrade_data = self.revision_data.get_at(next_revision)
             self.insert_into(data=at_upgrade_data, revision=next_revision, table=None)
 
         current = self.current
@@ -158,14 +159,14 @@ class MigrationContext:
     def managed_downgrade(self, dest_revision):
         """Perform an downgrade, one migration at a time."""
         current = self.current
-        for dest_revision, current_revision in reversed(
+        for next_revision, current_revision in reversed(
             self.history.revision_window(dest_revision, current)
         ):
             if current_revision in (self.config.skip_revisions or {}):
-                self.set_revision(dest_revision)
+                self.set_revision(next_revision)
             else:
                 try:
-                    self.command_executor.downgrade(dest_revision)
+                    self.command_executor.downgrade(next_revision)
                 except alembic.util.CommandError as e:
                     if "not a valid downgrade target" in str(e):
                         pass
@@ -173,8 +174,6 @@ class MigrationContext:
                         raise
 
         current = self.current
-        print(current, dest_revision)
-        # assert dest_revision == current
         return current
 
     def migrate_up_before(self, revision):
@@ -260,7 +259,7 @@ class MigrationContext:
         self.command_executor.stamp(revision)
 
 
-class RevisionSuccess(Exception):
+class RevisionSuccess(Exception):  # noqa: N818
     """Raise when a revision is successfully generated.
 
     In order to prevent the generation of an actual revision file on disk when running tests,
@@ -269,12 +268,12 @@ class RevisionSuccess(Exception):
 
     @classmethod
     def process_revision_directives(cls, fn):
-        """Wrap a real `process_revision_directives` function, while preventing it from completing."""
+        """Wrap a real `process_revision_directives` function, preventing it from completing."""
 
         @functools.wraps(fn)
         def _process_revision_directives(context, revision, directives):
             fn(context, revision, directives)
-            raise cls()
+            raise cls
 
         return _process_revision_directives
 

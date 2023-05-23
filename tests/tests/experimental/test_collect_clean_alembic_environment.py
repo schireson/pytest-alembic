@@ -73,7 +73,13 @@ class Loader:
 
 class Test_get_referrer_module:
     @pytest.mark.parametrize(
-        "name, loader_name", ((None, []), ("__main__", []), ("env_py", []), ("meow", ["meow"]))
+        ("name", "loader_name"),
+        [
+            (None, []),
+            ("__main__", []),
+            ("env_py", []),
+            ("meow", ["meow"]),
+        ],
     )
     def test_get_referer(self, name, loader_name):
         referrer = {"__loader__": Loader(name)}

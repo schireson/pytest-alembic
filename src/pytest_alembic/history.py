@@ -8,7 +8,7 @@ from alembic.script.revision import RevisionMap
 
 @dataclass
 class AlembicHistory:
-    map: RevisionMap
+    map: RevisionMap  # noqa: A003
     revisions: List[str]
     revision_indices: Dict[str, int]
     revisions_by_index: Dict[int, str]
@@ -41,7 +41,8 @@ class AlembicHistory:
             revision = "heads"
 
         if revision not in self.revision_indices:
-            raise ValueError(f"Revision {revision} is not a valid revision in alembic's history")
+            message = f"Revision {revision} is not a valid revision in alembic's history"
+            raise ValueError(message)
         return revision
 
     def previous_revision(self, revision: str) -> Optional[str]:
@@ -64,7 +65,7 @@ class AlembicHistory:
     def revision_window(self, current_revision: str, dest_revision: str) -> List[Tuple[str, str]]:
         revision_range = self.revision_range(current_revision, dest_revision)
         return list(
-            zip(  # type: ignore
+            zip(  # type: ignore[arg-type]
                 *(
                     collections.deque(itertools.islice(it, i), 0) or it
                     for i, it in enumerate(itertools.tee(revision_range, 2))

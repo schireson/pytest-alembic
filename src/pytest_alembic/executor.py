@@ -59,7 +59,7 @@ class CommandExecutor:
         """Upgrade to the given `revision`."""
 
         def upgrade(rev, _):
-            return self.script._upgrade_revs(revision, rev)
+            return self.script._upgrade_revs(revision, rev)  # noqa: SLF001
 
         self._run_env(upgrade, revision)
 
@@ -67,7 +67,7 @@ class CommandExecutor:
         """Downgrade to the given `revision`."""
 
         def downgrade(rev, _):
-            return self.script._downgrade_revs(revision, rev)
+            return self.script._downgrade_revs(revision, rev)  # noqa: SLF001
 
         self._run_env(downgrade, revision)
 
@@ -134,16 +134,13 @@ class ConnectionExecutor:
                 table = _tablename or tablename
 
                 if table is None:
-                    raise ValueError(
-                        "No table name provided as either `table` argument, or '__tablename__' key in `data`."
-                    )
+                    message = "No table name provided as either `table` argument, or '__tablename__' key in `data`."
+                    raise ValueError(message)
 
-                try:
+                with contextlib.suppress(ValueError):
                     # Attempt to parse the schema out of the tablename
-                    schema, table = table.split(".", 1)
-                except ValueError:
                     # However, if it doesn't work, both `table` and `schema` are in scope, so failure is fine.
-                    pass
+                    schema, table = table.split(".", 1)
 
                 table = self.table(revision, table, schema=schema, connection=connection)
                 values = {k: v for k, v in item.items() if k != "__tablename__"}
@@ -163,7 +160,7 @@ class ConnectionExecutor:
         try:
             from sqlalchemy.ext.asyncio import AsyncEngine
         except ImportError:  # pragma: no cover
-            AsyncEngine = None
+            AsyncEngine = None  # noqa: N806
 
         if AsyncEngine and isinstance(self.connection, AsyncEngine):
             import asyncio
@@ -177,11 +174,9 @@ class ConnectionExecutor:
                 return result
 
             return asyncio.run(run(self.connection))
-        else:
-            if isinstance(self.connection, Engine):
-                with self.connection.connect() as connection:
-                    result = fn(connection=connection, **kwargs)
-            else:
-                result = fn(connection=self.connection, **kwargs)
 
-            return result
+        if isinstance(self.connection, Engine):
+            with self.connection.connect() as connection:
+                return fn(connection=connection, **kwargs)
+
+        return fn(connection=self.connection, **kwargs)

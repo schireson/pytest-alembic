@@ -11,22 +11,19 @@ class Module:
     pass
 
 
-def make_module(name, *, package=None, path=None, dict=None):
+def make_module(name, *, package=None, path=None):
     module = Module()
     module.__name__ = name
     module.__package__ = package
     if path:
         module.__path__ = [path]
-
-    if dict:
-        module.__dict__.update(dict)
     return module
 
 
 def yield_per_call(*calls):
     state = iter(calls)
 
-    def call(*args, **kwargs):
+    def call(*_args, **_kwargs):
         result = next(state)
         if isinstance(result, Exception):
             raise result

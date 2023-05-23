@@ -36,9 +36,8 @@ def test_validate_revision():
     revision_map = RevisionMap.from_strs([["baz", "bax"], ["bax", None]])
     alembic_history = AlembicHistory.parse(revision_map)
 
-    with pytest.raises(ValueError) as e:
+    with pytest.raises(ValueError, match="asdf"):
         alembic_history.validate_revision("asdf")
-    assert "asdf" in str(e.value)
 
 
 def test_previous_revision():
@@ -46,7 +45,7 @@ def test_previous_revision():
     alembic_history = AlembicHistory.parse(revision_map)
     result = alembic_history.previous_revision("bax")
 
-    assert "bar" == result
+    assert result == "bar"
 
 
 def test_previous_revision_base():
@@ -62,7 +61,7 @@ def test_next_revision():
     alembic_history = AlembicHistory.parse(revision_map)
     result = alembic_history.next_revision("bax")
 
-    assert "baz" == result
+    assert result == "baz"
 
 
 def test_next_revision_head():
