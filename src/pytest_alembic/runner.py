@@ -70,15 +70,17 @@ class MigrationContext:
     @property
     def current(self) -> str:
         """Get the list of revision heads."""
+        current = "base"
 
-        def get_current(connection):
-            context = alembic.migration.MigrationContext.configure(connection)
-            heads = context.get_current_heads()
-            if heads:
-                return heads[0]
-            return None
+        def get_current(rev, _):
+            nonlocal current
+            if rev:
+                current = rev[0]
 
-        current = self.connection_executor.run_task(get_current)
+            return []
+
+        self.command_executor.execute_fn(get_current)
+
         if current:
             return current
         return "base"
@@ -138,9 +140,11 @@ class MigrationContext:
         """Execute a raw alembic command."""
         return self.command_executor.run_command(*args, **kwargs)
 
-    def managed_upgrade(self, dest_revision):
+    def managed_upgrade(self, dest_revision, *, current=None, return_current=True):
         """Perform an upgrade one migration at a time, inserting static data at the given points."""
-        current = self.current
+        if current is None:
+            current = self.current
+
         for current_revision, next_revision in self.history.revision_window(current, dest_revision):
             before_upgrade_data = self.revision_data.get_before(next_revision)
             self.insert_into(data=before_upgrade_data, revision=current_revision, table=None)
@@ -153,12 +157,16 @@ class MigrationContext:
             at_upgrade_data = self.revision_data.get_at(next_revision)
             self.insert_into(data=at_upgrade_data, revision=next_revision, table=None)
 
-        current = self.current
-        return current
+        if return_current:
+            current = self.current
+            return current
+        return None
 
-    def managed_downgrade(self, dest_revision):
+    def managed_downgrade(self, dest_revision, *, current=None, return_current=True):
         """Perform an downgrade, one migration at a time."""
-        current = self.current
+        if current is None:
+            current = self.current
+
         for next_revision, current_revision in reversed(
             self.history.revision_window(dest_revision, current)
         ):
@@ -173,23 +181,25 @@ class MigrationContext:
                     else:
                         raise
 
-        current = self.current
-        return current
+        if return_current:
+            current = self.current
+            return current
+        return None
 
     def migrate_up_before(self, revision):
         """Migrate up to, but not including the given `revision`."""
         preceeding_revision = self.history.previous_revision(revision)
         return self.managed_upgrade(preceeding_revision)
 
-    def migrate_up_to(self, revision):
+    def migrate_up_to(self, revision, *, return_current: bool = True):
         """Migrate up to, and including the given `revision`."""
-        return self.managed_upgrade(revision)
+        return self.managed_upgrade(revision, return_current=return_current)
 
     def migrate_up_one(self):
         """Migrate up by exactly one revision."""
         current = self.current
         next_revision = self.history.next_revision(current)
-        new_revision = self.managed_upgrade(next_revision)
+        new_revision = self.managed_upgrade(next_revision, current=current)
         if current == new_revision:
             return None
         return new_revision
@@ -199,16 +209,17 @@ class MigrationContext:
         next_revision = self.history.next_revision(revision)
         return self.migrate_down_to(next_revision)
 
-    def migrate_down_to(self, revision):
+    def migrate_down_to(self, revision, *, return_current: bool = True):
         """Migrate down to, and including the given `revision`."""
         self.history.validate_revision(revision)
-        self.managed_downgrade(revision)
+        self.managed_downgrade(revision, return_current=return_current)
         return revision
 
     def migrate_down_one(self):
         """Migrate down by exactly one revision."""
-        previous_revision = self.history.previous_revision(self.current)
-        self.managed_downgrade(previous_revision)
+        current = self.current
+        previous_revision = self.history.previous_revision(current)
+        self.managed_downgrade(previous_revision, current=current)
         return previous_revision
 
     def roundtrip_next_revision(self):

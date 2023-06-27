@@ -42,7 +42,7 @@ def test_single_head_revision(alembic_runner):
 def test_upgrade(alembic_runner):
     """Assert that the revision history can be run through from base to head."""
     try:
-        alembic_runner.migrate_up_to("heads")
+        alembic_runner.migrate_up_to("heads", return_current=False)
     except RuntimeError as e:
         message = (
             "Failed to upgrade to the head revision. This means the historical chain from an "
@@ -110,7 +110,7 @@ def test_up_down_consistency(alembic_runner):
     """
     for revision in alembic_runner.history.revisions:
         try:
-            alembic_runner.migrate_up_to(revision)
+            alembic_runner.migrate_up_to(revision, return_current=False)
         except Exception as e:
             message = "Failed to upgrade through each revision individually."
             raise AlembicTestFailure(
@@ -128,7 +128,7 @@ def test_up_down_consistency(alembic_runner):
             break
 
         try:
-            alembic_runner.migrate_down_to(revision)
+            alembic_runner.migrate_down_to(revision, return_current=False)
         except NotImplementedError:
             # In the event of a `NotImplementedError`, we should have the same semantics,
             # as-if `minimum_downgrade_revision` was specified, but we'll emit a warning
@@ -148,7 +148,7 @@ def test_up_down_consistency(alembic_runner):
 
     for revision in reversed(down_revisions):
         try:
-            alembic_runner.migrate_up_to(revision)
+            alembic_runner.migrate_up_to(revision, return_current=False)
         except Exception as e:
             message = (
                 "Failed to upgrade through each revision individually after performing a "

@@ -36,6 +36,10 @@ class CommandExecutor:
         for key, value in kwargs.items():
             self.alembic_config.attributes[key] = value
 
+    def execute_fn(self, fn):
+        with EnvironmentContext(self.alembic_config, self.script, fn=fn):
+            self.script.run_env()
+
     def run_command(self, command, *args, **kwargs):
         self.stream_position = self.stdout.tell()
 
