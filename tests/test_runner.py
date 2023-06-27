@@ -270,3 +270,8 @@ def test_skip_revision(pytester):
 def test_pytest_alembic_tests_path(pytester):
     """Assert the pytest_alembic_tests_path can be overridden."""
     run_pytest(pytester, passed=4, args=["-vv", "--test-alembic", "tests_"])
+
+
+def test_version_table_schema(pytester):
+    """Assert the setting the version_table_schema option functions correctly."""
+    run_pytest(pytester, passed=5)
