@@ -8,20 +8,20 @@ build:
 	poetry build
 
 test:
-	COVERAGE_PROCESS_START="$(PWD)/pyproject.toml" \
+	SQLALCHEMY_WARN_20=1 COVERAGE_PROCESS_START="$(PWD)/pyproject.toml" \
 	coverage run -m pytest src tests -vv
 	coverage combine
 	coverage report -i
 	coverage xml
 
 lint:
-	ruff src tests || exit 1
-	black --check src tests || exit 1
+	ruff src tests examples || exit 1
+	black --check src tests examples || exit 1
 	mypy src tests || exit 1
 
 format:
-	ruff --fix src tests
-	black src tests
+	ruff --fix src tests examples
+	black src tests examples
 
 publish: build
 	poetry publish -u __token__ -p '${PYPI_TOKEN}' --no-interaction

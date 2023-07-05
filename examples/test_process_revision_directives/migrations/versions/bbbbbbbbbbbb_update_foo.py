@@ -1,4 +1,5 @@
 from alembic import op
+from sqlalchemy import text
 
 revision = "bbbbbbbbbbbb"
 down_revision = "aaaaaaaaaaaa"
@@ -12,4 +13,4 @@ def upgrade():
 
 def downgrade():
     conn = op.get_bind()
-    conn.execute("DELETE FROM foo")
+    conn.execute(text("DELETE FROM foo"))

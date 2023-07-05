@@ -109,13 +109,16 @@ class ConnectionExecutor:
         revision: str,
         name: str,
         schema: Optional[str] = None,
-        connection: Optional[Connection] = None,
+        connection: Optional[Union[Connection, Engine]] = None,
     ) -> Table:
         meta = self.metadata(revision)
         if name in meta.tables:
             return meta.tables[name]
 
-        return Table(name, meta, schema=schema, autoload_with=connection or self.connection)
+        autoload_with = connection or self.connection
+
+        assert isinstance(autoload_with, (Engine, Connection)), autoload_with
+        return Table(name, meta, schema=schema, autoload_with=autoload_with)
 
     def table_insert(
         self,
@@ -125,7 +128,7 @@ class ConnectionExecutor:
         schema: Optional[str] = None,
     ):
         def table_insert(
-            connection: Connectable,
+            connection: Connection,
             data: Union[Dict, List],
             tablename: Optional[str] = None,
             schema: Optional[str] = None,
@@ -180,7 +183,7 @@ class ConnectionExecutor:
             return asyncio.run(run(self.connection))
 
         if isinstance(self.connection, Engine):
-            with self.connection.connect() as connection:
+            with self.connection.begin() as connection:
                 return fn(connection=connection, **kwargs)
 
         return fn(connection=self.connection, **kwargs)

@@ -1,4 +1,3 @@
-import sqlalchemy
 from sqlalchemy import Column, types
 
 from models import Base

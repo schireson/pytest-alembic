@@ -1,4 +1,3 @@
-import sqlalchemy as sa
 from alembic import op
 
 revision = "bbbbbbbbbbbb"
@@ -13,4 +12,4 @@ def upgrade():
 
 
 def downgrade():
-    raise NotImplementedError()
+    raise NotImplementedError

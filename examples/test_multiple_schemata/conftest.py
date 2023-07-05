@@ -1,6 +1,5 @@
-from pytest_alembic.plugin.fixtures import create_alembic_fixture
 from pytest_alembic import tests
-
+from pytest_alembic.plugin.fixtures import create_alembic_fixture
 
 alembic1 = create_alembic_fixture()
 alembic2 = create_alembic_fixture({"file": "alembic2.ini"})

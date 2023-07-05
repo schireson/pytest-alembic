@@ -1,13 +1,14 @@
-import os
 import sys
 from logging.config import fileConfig
+from pathlib import Path
 
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 
-sys.path.append(os.path.abspath("."))
-from foo.bar import Base  # isort: skip
+sys.path.append(str(Path(".").resolve()))
 
+# isort: split
+from foo.bar import Base  # noqa: E402
 
 fileConfig(context.config.config_file_name)
 target_metadata = Base.metadata

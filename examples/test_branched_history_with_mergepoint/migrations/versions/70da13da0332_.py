@@ -1,17 +1,15 @@
-"""empty message
+"""empty message.
 
 Revision ID: 70da13da0332
 Revises: bbbbbbbbbbbb, cccccccccccc
 Create Date: 2021-05-07 08:56:12.886096
 
 """
-from alembic import op
-import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '70da13da0332'
-down_revision = ('bbbbbbbbbbbb', 'cccccccccccc')
+revision = "70da13da0332"
+down_revision = ("bbbbbbbbbbbb", "cccccccccccc")
 branch_labels = None
 depends_on = None
 

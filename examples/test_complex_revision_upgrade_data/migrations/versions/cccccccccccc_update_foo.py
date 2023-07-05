@@ -1,4 +1,5 @@
 from alembic import op
+from sqlalchemy import text
 
 revision = "cccccccccccc"
 down_revision = "bbbbbbbbbbbb"
@@ -8,12 +9,12 @@ depends_on = None
 
 def upgrade():
     conn = op.get_bind()
-    result = conn.execute("SELECT * FROM foo").fetchall()
+    result = conn.execute(text("SELECT * FROM foo")).fetchall()
     assert len(result) == 2
     assert result[0].id == 9, f"{result[0].id} == 9"
     assert result[1].id == 10, f"{result[1].id} == 10"
 
-    result = conn.execute("SELECT * FROM bar").fetchall()
+    result = conn.execute(text("SELECT * FROM bar")).fetchall()
     assert len(result) == 2
     assert result[0].id == 1, f"{result[0].id} == 1"
     assert result[0].foo_id == 9, f"{result[0].foo_id} == 9"

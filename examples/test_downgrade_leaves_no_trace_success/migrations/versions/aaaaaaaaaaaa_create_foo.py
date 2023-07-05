@@ -1,5 +1,5 @@
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 revision = "aaaaaaaaaaaa"
 down_revision = None
@@ -16,4 +16,4 @@ def upgrade():
 
 
 def downgrade():
-    op.drop_table('foo')
+    op.drop_table("foo")
