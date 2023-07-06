@@ -1,9 +1,8 @@
 from logging.config import fileConfig
 
 from alembic import context
-from sqlalchemy import engine_from_config, pool
-
 from models import metadata
+from sqlalchemy import engine_from_config, pool
 
 fileConfig(context.config.config_file_name)
 

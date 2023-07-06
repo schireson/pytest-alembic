@@ -1,7 +1,8 @@
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, TYPE_CHECKING, Union
+from typing import Any, cast, Dict, List, Optional, TYPE_CHECKING, Union
 
 import alembic.config
+from alembic.util import immutabledict
 
 if TYPE_CHECKING:
     from pytest_alembic.revision_data import RevisionSpec
@@ -148,6 +149,6 @@ def duplicate_alembic_config(config: alembic.config.Config):
         output_buffer=config.output_buffer,
         stdout=config.stdout,
         cmd_opts=config.cmd_opts,
-        config_args=config.config_args,
+        config_args=cast(immutabledict, config.config_args),
         attributes=config.attributes,
     )

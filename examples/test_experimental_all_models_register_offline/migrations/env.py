@@ -1,9 +1,8 @@
 from logging.config import fileConfig
 
 from alembic import context
-from sqlalchemy import engine_from_config, pool
-
 from models import Base
+from sqlalchemy import engine_from_config, pool
 
 fileConfig(context.config.config_file_name)
 target_metadata = Base.metadata
@@ -11,7 +10,10 @@ target_metadata = Base.metadata
 
 connectable = context.config.attributes.get("connection", None)
 
+
 def run_migrations_online():
+    global connectable
+
     if connectable is None:
         connectable = engine_from_config(
             context.config.get_section(context.config.config_ini_section),

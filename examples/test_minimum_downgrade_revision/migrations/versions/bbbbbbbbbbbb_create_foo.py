@@ -1,4 +1,3 @@
-import sqlalchemy as sa
 from alembic import op
 
 revision = "bbbbbbbbbbbb"
@@ -13,4 +12,5 @@ def upgrade():
 
 
 def downgrade():
-    raise ValueError("Cannot downgrade here!")
+    msg = "Cannot downgrade here!"
+    raise ValueError(msg)

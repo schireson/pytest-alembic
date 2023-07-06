@@ -1,5 +1,5 @@
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 revision = "aaaaaaaaaaaa"
 down_revision = None
@@ -21,7 +21,8 @@ def upgrade():
     )
 
     op.create_table(
-        "bar", sa.Column("id", sa.Integer(), autoincrement=True, nullable=False),
+        "bar",
+        sa.Column("id", sa.Integer(), autoincrement=True, nullable=False),
     )
 
 

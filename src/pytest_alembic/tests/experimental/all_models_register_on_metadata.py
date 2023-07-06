@@ -7,20 +7,23 @@ import subprocess  # nosec
 from typing import List, Optional, Set, Tuple
 
 from sqlalchemy import MetaData
+from sqlalchemy.engine import Engine
 from sqlalchemy.engine.url import URL
 
 from pytest_alembic.plugin.error import AlembicTestFailure
 from pytest_alembic.runner import MigrationContext
 
 try:
-    from sqlalchemy.ext.declarative import DeclarativeMeta
+    from sqlalchemy.orm import DeclarativeMeta
 except ImportError:  # pragma: no cover
-    from sqlalchemy.declarative import DeclarativeMeta
+    from sqlalchemy.ext.declarative import DeclarativeMeta
 
 try:
     from sqlalchemy.ext.asyncio import AsyncEngine
+
+    async_engine_cls = True
 except ImportError:
-    AsyncEngine = None
+    async_engine_cls = False
 
 
 log = logging.getLogger(__name__)
@@ -77,18 +80,20 @@ def test_all_models_register_on_metadata(
         async_: Whether to produce an async engine in the internal engine creation
             step. Defaults to `None` (i.e. automatic detection).
     """
+    connection = alembic_runner.connection_executor.connection
     # If `async_` is None, then we should automatically detect whether to run in
     # async mode. If `AsyncEngine` is None, then we're not running on a version
     # of sqlalchemy which supports it.
-    if (
-        async_ is None
-        and AsyncEngine is not None
-        and isinstance(alembic_runner.connection_executor.connection, AsyncEngine)
-    ):
-        async_ = True
+    if async_engine_cls and isinstance(connection, AsyncEngine):
+        if async_ is None:
+            async_ = True
+        url = connection.url
+    else:
+        assert isinstance(connection, Engine), connection
+        url = connection.url
 
     modules, bare_tables = get_bare_import_tableset(
-        url_to_string(alembic_runner.connection_executor.connection.url),
+        url_to_string(url),
         async_=bool(async_),
         offline=offline,
     )
@@ -248,3 +253,5 @@ def url_to_string(url: URL) -> str:
         return url.render_as_string(hide_password=False)
     except TypeError:
         return url.render_as_string()
+    except AttributeError:
+        return str(url)

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pytest-alembic"
-version = "0.10.6"
+version = "0.10.7"
 description = "A pytest plugin for verifying alembic migrations."
 authors = [
     "Dan Cardin <ddcardin@gmail.com>",
@@ -71,6 +71,7 @@ order-by-type = false
 [tool.ruff.per-file-ignores]
 "src/pytest_alembic/tests/**/*.py" = ["S101", "BLE001"]
 "**/tests/**/*.py" = ["D", "S", "N801", "N802", "N806", "T201", "E501"]
+"examples/**/*.py" = ["INP001", "A", "D"]
 
 [tool.ruff.pydocstyle]
 convention = "google"
@@ -86,6 +87,14 @@ addopts = "--doctest-modules -vv --ff --strict-markers"
 pytest_alembic_exclude = 'up_down_consistency'
 norecursedirs = ".* build dist *.egg"
 pytester_example_dir = "examples"
+filterwarnings = [
+  "error",
+  "default:.*which short-circuited the downgrade operation and may have passed the test.*:UserWarning",
+  "ignore:unclosed <socket.socket.*:ResourceWarning",
+  "ignore:unclosed transport.*:ResourceWarning",
+  "ignore:unclosed connection.*:ResourceWarning",
+  "ignore:pkg_resources is deprecated as an API:DeprecationWarning",
+]
 
 [tool.mypy]
 strict_optional = true

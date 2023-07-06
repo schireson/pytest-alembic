@@ -16,9 +16,9 @@ from alembic.runtime.environment import EnvironmentContext
 from alembic.script import ScriptDirectory
 
 try:
-    from sqlalchemy.ext.declarative import DeclarativeMeta
+    from sqlalchemy.orm import DeclarativeMeta
 except ImportError:  # pragma: no cover
-    from sqlalchemy.declarative import DeclarativeMeta
+    from sqlalchemy.ext.declarative import DeclarativeMeta
 
 
 def run():  # pragma: no cover
@@ -51,7 +51,7 @@ def create_connectable(url, *, async_=False):
 
     from sqlalchemy import create_engine
 
-    return create_engine(url).connect()
+    return create_engine(url)
 
 
 def environment_context_fn(_, migration_context):

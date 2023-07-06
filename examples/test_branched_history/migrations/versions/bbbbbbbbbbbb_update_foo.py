@@ -1,5 +1,5 @@
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 revision = "bbbbbbbbbbbb"
 down_revision = "aaaaaaaaaaaa"
@@ -9,7 +9,7 @@ depends_on = None
 
 def upgrade():
     op.add_column(
-        'foo',
+        "foo",
         sa.Column(
             "created_at",
             sa.DateTime(timezone=True),

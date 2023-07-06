@@ -1,9 +1,8 @@
 from logging.config import fileConfig
 
 from alembic import context
-from sqlalchemy import engine_from_config, pool
-
 from models import Base
+from sqlalchemy import engine_from_config, pool
 
 fileConfig(context.config.config_file_name)
 target_metadata = Base.metadata
@@ -17,6 +16,7 @@ if connectable is None:
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
     )
+
 
 with connectable.connect() as connection:
     context.configure(connection=connection, target_metadata=target_metadata)

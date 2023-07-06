@@ -109,7 +109,8 @@ thus fixes :ref:`test_downgrade_leaves_no_trace`.
        if isinstance(connectable, AsyncEngine):
            asyncio.run(run_async_migrations(connectable))
        else:
-           do_run_migrations(connectable)
+           with connectable.connect() as connection:
+               do_run_migrations(connection)
    
    
    # Then use their setup for async connection/running of the migration

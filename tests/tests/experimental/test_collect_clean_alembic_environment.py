@@ -2,7 +2,12 @@ from dataclasses import dataclass
 
 import pytest
 from sqlalchemy import MetaData
-from sqlalchemy.ext.declarative import declarative_base
+
+try:
+    from sqlalchemy.orm import declarative_base
+except ImportError:
+    from sqlalchemy.ext.declarative import declarative_base
+
 
 from pytest_alembic.tests.experimental.all_models_register_on_metadata import (
     parse_collection_output,

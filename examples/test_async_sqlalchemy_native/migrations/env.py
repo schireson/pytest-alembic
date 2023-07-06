@@ -26,7 +26,8 @@ def run_migrations_online():
     if isinstance(connectable, AsyncEngine):
         asyncio.run(run_async_migrations(connectable))
     else:
-        do_run_migrations(connectable)
+        with connectable.connect() as connection:
+            do_run_migrations(connection)
 
 
 async def run_async_migrations(connectable):
