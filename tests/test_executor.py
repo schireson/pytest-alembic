@@ -11,5 +11,6 @@ pg = create_postgres_fixture(metadata)
 
 
 def test_table_insert(pg):
-    command_executor = ConnectionExecutor(pg)
-    command_executor.table_insert("", [{"name": "who"}], tablename="t")
+    with pg.begin() as conn:
+        command_executor = ConnectionExecutor(conn)
+        command_executor.table_insert("", [{"name": "who"}], tablename="t")

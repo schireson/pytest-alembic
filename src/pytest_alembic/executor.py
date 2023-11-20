@@ -162,28 +162,8 @@ class ConnectionExecutor:
         even though all internals are synchronous. This is how alembic suggests
         running the migrations themselves, so this matches that style.
         """
-        # The user may not have sqlalchemy 1.4+, and therefore may not even be able to
-        # use async engines.
-        try:
-            from sqlalchemy.ext.asyncio import AsyncEngine
-        except ImportError:  # pragma: no cover
-            AsyncEngine = None  # noqa: N806
-
-        if AsyncEngine and isinstance(self.connection, AsyncEngine):
-            import asyncio
-
-            async def run(engine):
-                async with engine.connect() as connection:
-                    result = await connection.run_sync(fn, **kwargs)
-                    await connection.commit()
-
-                await engine.dispose()
-                return result
-
-            return asyncio.run(run(self.connection))
-
         if isinstance(self.connection, Engine):
-            with self.connection.begin() as connection:
+            with self.connection.connect() as connection:
                 return fn(connection=connection, **kwargs)
 
         return fn(connection=self.connection, **kwargs)
