@@ -77,6 +77,11 @@ Further down in your :code:`env.py`, you'll see a configure block.
 Consider enabling the following options:
 
 * :code:`compare_type=True`: Indicates type comparison behavior during an autogenerate operation.
+
+  .. note::
+
+     As of Alembic version 1.12.0, ``compare_type=True`` is the default.
+
 * :code:`compare_server_default=True`: Indicates server default comparison behavior during an autogenerate operation.
 * :code:`include_schemas=True`: If True, autogenerate will scan across all schemas located by the SQLAlchemy get_schema_names() method, and include all differences in tables found across all those schemas. This may only be useful if you make use of schemas.
 
