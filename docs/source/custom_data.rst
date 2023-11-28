@@ -39,6 +39,15 @@ To be clear, you can use either of them to describe the same operation. But depe
 circumstance (if for example, you are testing a real-world situation that you are trying to
 semantically model more closely), one or the other option may be more appropriate.
 
+.. warning::
+
+   Both :code:`before_revision_data` and :code:`at_revision_data` internally issue ``commit``
+   during the migration process (a side-effect of how Alembic works, and how it integrates
+   with this library).
+
+   If you rely upon the database state to be able to be rolled back after the migrations have run,
+   you may not be able to use this feature.
+
 Schema
 ------
 
