@@ -16,9 +16,16 @@ class PytestAlembicPlugin:
 
     # Some weird decisions were made by pytest it seems like. There is not an obvious
     # way to support both <7 and >=7 without weird nonsense like this.
-    if pytest_version_tuple and pytest_version_tuple[0] >= 7:
+    if pytest_version_tuple and pytest_version_tuple >= (8, 1, 0):
 
-        def pytest_collect_file(self, file_path, path, parent):  # noqa: ARG002
+        def pytest_collect_file(self, file_path, parent):
+            if self.should_register(file_path):
+                return TestCollector.from_parent(parent, path=file_path)
+            return None
+
+    elif pytest_version_tuple and pytest_version_tuple[0] >= 7:
+
+        def pytest_collect_file(self, file_path, path, parent):  # type: ignore[misc] # noqa: ARG002
             if self.should_register(file_path):
                 return TestCollector.from_parent(parent, path=file_path)
             return None
