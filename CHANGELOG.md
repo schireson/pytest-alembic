@@ -1,11 +1,13 @@
 # Changelog
 
-### [v0.11.1](https://github.com/schireson/pytest-alembic/compare/v0.11.0...v0.11.1) (2024-07-29)
+## [Unreleased](https://github.com/schireson/pytest-alembic/compare/v0.11.0...HEAD) (2024-08-30)
 
-#### Fixes
+### Fixes
 
+* Ensure branched revisions are upgraded individually once.
+([9cf7229](https://github.com/schireson/pytest-alembic/commit/9cf7229deb3f598f57d7347ee65fd046fadfc968))
 * Updated pyproject.toml to be more flexible with poetry_core versioning.
-([a64ffa5](https://github.com/schireson/pytest-alembic/commit/a64ffa57a3229863ec53d5a358bb5cf5699ce2c0))
+([c7f25c3](https://github.com/schireson/pytest-alembic/commit/c7f25c39a795591a794f1ab89203f4a992012319))
 
 ## [v0.11.0](https://github.com/schireson/pytest-alembic/compare/v0.10.7...v0.11.0) (2024-03-04)
 

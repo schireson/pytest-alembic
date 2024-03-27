@@ -103,12 +103,12 @@ class MigrationContext:
         *,
         prevent_file_generation=True,
         autogenerate=False,
-        **kwargs
+        **kwargs,
     ):
         """Generate a test revision.
 
         If `prevent_file_generation` is `True`, the final act of this process raises a
-        `RevisionSuccess`, which is used as a sentinal to indicate the revision was
+        `RevisionSuccess`, which is used as a sentinel to indicate the revision was
         generated successfully, while not actually finishing the generation of the
         revision file on disk.
         """
@@ -158,8 +158,7 @@ class MigrationContext:
             self.insert_into(data=at_upgrade_data, revision=next_revision, table=None)
 
         if return_current:
-            current = self.current
-            return current
+            return self.current
         return None
 
     def managed_downgrade(self, dest_revision, *, current=None, return_current=True):
@@ -191,9 +190,11 @@ class MigrationContext:
         preceeding_revision = self.history.previous_revision(revision)
         return self.managed_upgrade(preceeding_revision)
 
-    def migrate_up_to(self, revision, *, return_current: bool = True):
+    def migrate_up_to(
+        self, revision, *, current: Optional[str] = None, return_current: bool = True
+    ):
         """Migrate up to, and including the given `revision`."""
-        return self.managed_upgrade(revision, return_current=return_current)
+        return self.managed_upgrade(revision, current=current, return_current=return_current)
 
     def migrate_up_one(self):
         """Migrate up by exactly one revision."""
@@ -209,10 +210,12 @@ class MigrationContext:
         next_revision = self.history.next_revision(revision)
         return self.migrate_down_to(next_revision)
 
-    def migrate_down_to(self, revision, *, return_current: bool = True):
+    def migrate_down_to(
+        self, revision, *, current: Optional[str] = None, return_current: bool = True
+    ):
         """Migrate down to, and including the given `revision`."""
         self.history.validate_revision(revision)
-        self.managed_downgrade(revision, return_current=return_current)
+        self.managed_downgrade(revision, current=current, return_current=return_current)
         return revision
 
     def migrate_down_one(self):

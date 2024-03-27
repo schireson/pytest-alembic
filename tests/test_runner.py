@@ -77,7 +77,7 @@ def test_multiple_schemata(pytester):
 
     Given the way pytest fixtures and test collection seem to work, for this
     test, we cannot automatically collect the tests and run them against a given
-    "runner" fixture. Therefore, we wont use the "--test-alembic" flag.
+    "runner" fixture. Therefore, we won't use the "--test-alembic" flag.
     """
     run_pytest(pytester, passed=8, test_alembic=False)
 
@@ -280,3 +280,8 @@ def test_pytest_alembic_tests_path(pytester):
 def test_version_table_schema(pytester):
     """Assert the setting the version_table_schema option functions correctly."""
     run_pytest(pytester, passed=5)
+
+
+def test_branched_history_before_upgrade_data(pytester):
+    """Assert branched upgrade data is only inserted once per migration."""
+    run_pytest(pytester, passed=4)

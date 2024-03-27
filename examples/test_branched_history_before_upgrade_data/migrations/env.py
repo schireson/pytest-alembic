@@ -1,15 +1,7 @@
-import sys
-from logging.config import fileConfig
-from pathlib import Path
-
 from alembic import context
+from models import Base
 from sqlalchemy import engine_from_config, pool
 
-sys.path.append(str(Path().resolve()))
-
-from foo.bar import Base  # noqa: E402
-
-fileConfig(context.config.config_file_name)
 target_metadata = Base.metadata
 
 
