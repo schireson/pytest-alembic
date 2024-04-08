@@ -1,14 +1,86 @@
 # Changelog
 
-## [Unreleased](https://github.com/schireson/pytest-alembic/compare/v0.8.3...HEAD) (2022-10-31)
+### [v0.11.1](https://github.com/schireson/pytest-alembic/compare/v0.11.0...v0.11.1) (2024-03-27)
+
+#### Fixes
+
+* Ensure branched revisions are upgraded individually once.
+  ([25b03a3](https://github.com/schireson/pytest-alembic/commit/25b03a3cac04258bbf3725f00e4794663808581a))
+
+## [v0.11.0](https://github.com/schireson/pytest-alembic/compare/v0.10.7...v0.11.0) (2024-03-04)
 
 ### Fixes
 
+* fixture definition incompatibility with 8.x.x series pytest.
+  ([637f28c](https://github.com/schireson/pytest-alembic/commit/637f28c6649c9e2fa139b8c766923b9d077f9353))
+
+### [v0.10.7](https://github.com/schireson/pytest-alembic/compare/v0.10.6...v0.10.7) (2023-07-06)
+
+#### Fixes
+
+* Add testing for sqlalchemy 2.0 compatibility.
+  ([6ef0f3c](https://github.com/schireson/pytest-alembic/commit/6ef0f3cf5c7f1d0d88453a6b28c4d77ea2f0dc60))
+
+### [v0.10.6](https://github.com/schireson/pytest-alembic/compare/v0.10.5...v0.10.6) (2023-06-27)
+
+#### Fixes
+
+* Issue with runtime version_table_schema option.
+  ([8e417a3](https://github.com/schireson/pytest-alembic/commit/8e417a3220234d16bad8661733faf0f5edd356c0))
+
+### [v0.10.5](https://github.com/schireson/pytest-alembic/compare/v0.10.4...v0.10.5) (2023-05-23)
+
+### [v0.10.4](https://github.com/schireson/pytest-alembic/compare/v0.10.2...v0.10.4) (2023-04-18)
+
+#### Fixes
+
+* Over-eager cli option default for alembic-tests-path.
+  ([367fa50](https://github.com/schireson/pytest-alembic/commit/367fa501c705f462cc44ece4243258dd1c1b0289))
+
+### [v0.10.2](https://github.com/schireson/pytest-alembic/compare/v0.10.1...v0.10.2) (2023-04-17)
+
+#### Fixes
+
+* Ensure parity of behavior between testing with/without `--test-alembic`.
+  ([5f93d08](https://github.com/schireson/pytest-alembic/commit/5f93d081716b1252331a259d3feaf97feda4f8e5))
+* Remove dangling references to pytest_alembic_tests_folder.
+  ([ef11751](https://github.com/schireson/pytest-alembic/commit/ef117516e545da30d7fefc7665a71835d5cdc2ae))
+
+### [v0.10.1](https://github.com/schireson/pytest-alembic/compare/v0.10.0...v0.10.1) (2023-02-21)
+
+#### Fixes
+
+* Add an option to configure the default test registration path.
+  ([cc6076d](https://github.com/schireson/pytest-alembic/commit/cc6076d0834e6cef633e1cc69c47ee01823d1244))
+
+## [v0.10.0](https://github.com/schireson/pytest-alembic/compare/v0.9.1...v0.10.0) (2023-02-03)
+
+### Features
+
+* Add config option to skip specific sets of revisions.
+  ([0848c38](https://github.com/schireson/pytest-alembic/commit/0848c38674dcb3aab5740a77a8a0dcb9a7f57e4b))
+
+### [v0.9.1](https://github.com/schireson/pytest-alembic/compare/v0.9.0...v0.9.1) (2022-11-01)
+
+#### Fixes
+
 * Refresh alembic history to enable tests generate new revisions to be aware of  
 those revisions.
-  ([a81b5f8](https://github.com/schireson/pytest-alembic/commit/a81b5f82cbf0243f045cc41263a56bb788fc260d))
+  ([a255f81](https://github.com/schireson/pytest-alembic/commit/a255f81ba1bddf4be806c7ddc0558bfc45955b4b))
+
+## [v0.9.0](https://github.com/schireson/pytest-alembic/compare/v0.8.4...v0.9.0) (2022-11-01)
+
+### Fixes
+
 * Compatibility with newer versions of pytest and pytest-asyncio.
   ([4ed809b](https://github.com/schireson/pytest-alembic/commit/4ed809b8b059091cbd55aa68d57d398c129a7d3f))
+
+### [v0.8.4](https://github.com/schireson/pytest-alembic/compare/v0.8.3...v0.8.4) (2022-08-03)
+
+#### Fixes
+
+* Correctly insert the root package during metaadata detection.
+  ([b89e604](https://github.com/schireson/pytest-alembic/commit/b89e604a15052c3e23a9a19049497b0040759a75))
 * Correctly insert the root package during metaadata detection.
   ([d719608](https://github.com/schireson/pytest-alembic/commit/d71960884a6e47176d21e64e14d987bdc09715f0))
 
