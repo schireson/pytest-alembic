@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pytest-alembic"
-version = "0.11.0"
+version = "0.11.1"
 description = "A pytest plugin for verifying alembic migrations."
 authors = [
     "Dan Cardin <ddcardin@gmail.com>",
@@ -103,5 +103,5 @@ warn_unused_ignores = true
 incremental = true
 
 [build-system]
-requires = ["poetry_core==1.0.8"]
+requires = ["poetry_core>=1.0.8"]
 build-backend = "poetry.core.masonry.api"
