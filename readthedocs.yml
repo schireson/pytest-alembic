@@ -11,6 +11,5 @@ build:
 formats: all
 
 python:
-  version: "3.10"
   install:
     - requirements: docs/requirements.txt
