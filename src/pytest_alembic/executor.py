@@ -164,10 +164,9 @@ class ConnectionExecutor:
         """
         # The user may not have sqlalchemy 1.4+, and therefore may not even be able to
         # use async engines.
-        try:
+        AsyncEngine = None  # noqa: N806
+        with contextlib.suppress(ImportError):
             from sqlalchemy.ext.asyncio import AsyncEngine
-        except ImportError:  # pragma: no cover
-            AsyncEngine = None  # noqa: N806
 
         if AsyncEngine and isinstance(self.connection, AsyncEngine):
             import asyncio

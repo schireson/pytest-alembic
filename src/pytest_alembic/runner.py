@@ -1,17 +1,21 @@
+from __future__ import annotations
+
 import contextlib
 import functools
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Union
+from typing import TYPE_CHECKING
 
 import alembic.command
 import alembic.migration
 import alembic.util
 from alembic.script.revision import RevisionMap
 
-from pytest_alembic.config import Config
 from pytest_alembic.executor import CommandExecutor, ConnectionExecutor
 from pytest_alembic.history import AlembicHistory
 from pytest_alembic.revision_data import RevisionData
+
+if TYPE_CHECKING:
+    from pytest_alembic.config import Config
 
 
 @contextlib.contextmanager
@@ -60,7 +64,7 @@ class MigrationContext:
         )
 
     @property
-    def heads(self) -> List[str]:
+    def heads(self) -> list[str]:
         """Get the list of revision heads.
 
         Result is cached for the lifetime of the `MigrationContext`.
@@ -190,9 +194,7 @@ class MigrationContext:
         preceeding_revision = self.history.previous_revision(revision)
         return self.managed_upgrade(preceeding_revision)
 
-    def migrate_up_to(
-        self, revision, *, current: Optional[str] = None, return_current: bool = True
-    ):
+    def migrate_up_to(self, revision, *, current: str | None = None, return_current: bool = True):
         """Migrate up to, and including the given `revision`."""
         return self.managed_upgrade(revision, current=current, return_current=return_current)
 
@@ -210,9 +212,7 @@ class MigrationContext:
         next_revision = self.history.next_revision(revision)
         return self.migrate_down_to(next_revision)
 
-    def migrate_down_to(
-        self, revision, *, current: Optional[str] = None, return_current: bool = True
-    ):
+    def migrate_down_to(self, revision, *, current: str | None = None, return_current: bool = True):
         """Migrate down to, and including the given `revision`."""
         self.history.validate_revision(revision)
         self.managed_downgrade(revision, current=current, return_current=return_current)
@@ -236,7 +236,7 @@ class MigrationContext:
             return self.migrate_up_one()
         return None
 
-    def insert_into(self, table: Optional[str], data: Union[Dict, List] = None, revision=None):
+    def insert_into(self, table: str | None, data: dict | list | None = None, revision=None):
         """Insert data into a given table.
 
         Args:

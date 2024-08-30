@@ -58,6 +58,7 @@ jobs:
           poetry run pip install 'pytest-asyncio~=${{ matrix.pytest-asyncio-version }}'
 
       - name: Run linters
+        if: ${{ matrix.python-version != '3.8' }}
         run: poetry run make lint
 
       - name: Run tests
