@@ -32,7 +32,7 @@ class PytestAlembicPlugin:
 
     else:
 
-        def pytest_collect_file(self, path, parent):  # type: ignore[misc]
+        def pytest_collect_file(self, path, parent):
             if self.should_register(Path(path)):
                 return TestCollector.from_parent(parent, fspath=path)
             return None

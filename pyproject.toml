@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pytest-alembic"
-version = "0.11.1"
+version = "0.11.2"
 description = "A pytest plugin for verifying alembic migrations."
 authors = [
     "Dan Cardin <ddcardin@gmail.com>",
@@ -18,7 +18,7 @@ include = [
 ]
 
 [tool.poetry.dependencies]
-python = ">=3.6, <4"
+python = ">=3.7, <4"
 
 pytest = {version = ">=6.0"}
 alembic = "*"
@@ -27,14 +27,14 @@ sqlalchemy = "*"
 [tool.poetry.dev-dependencies]
 asyncpg = "*"
 black = {version = "22.3.0", python = ">=3.6.2"}
-coverage = {version = ">=6.4.4", extras = ["toml"], python = ">=3.7"}
-greenlet = "*"
-mypy = {version = ">=0.900", python = ">=3.5"}
+coverage = {version = ">=6.4.4", extras = ["toml"]}
+greenlet = ">=3.0"
+mypy = {version = ">=1.11", python = ">=3.8"}
 psycopg2-binary = "*"
-pytest = {version = ">=6.2"}
+pytest = {version = ">=8.3.2", python = ">=3.8"}
 pytest-asyncio = "*"
-pytest-mock-resources = {version = ">=2.6.3", extras = ["docker"], python = ">=3.7"}
-ruff = {version = '0.0.269', python = ">3.7"}
+pytest-mock-resources = {version = ">=2.6.3", extras = ["docker"]}
+ruff = {version = '0.0.269'}
 sqlalchemy = {version = ">=1.4", extras = ["asyncio"]}
 types-dataclasses = "^0.1.7"
 
@@ -94,6 +94,7 @@ filterwarnings = [
   "ignore:unclosed transport.*:ResourceWarning",
   "ignore:unclosed connection.*:ResourceWarning",
   "ignore:pkg_resources is deprecated as an API:DeprecationWarning",
+  "ignore:.*is deprecated and will be removed in Python 3.14.*:DeprecationWarning",
 ]
 
 [tool.mypy]

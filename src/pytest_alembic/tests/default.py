@@ -108,27 +108,30 @@ def test_up_down_consistency(alembic_runner):
 
     Individually upgrade to ensure that it's clear which revision caused the failure.
     """
+    last = None
     for revision in alembic_runner.history.revisions:
         try:
-            alembic_runner.migrate_up_to(revision, return_current=False)
+            alembic_runner.migrate_up_to(revision, current=last, return_current=False)
         except Exception as e:
             message = "Failed to upgrade through each revision individually."
             raise AlembicTestFailure(
                 message,
                 context=[("Failing Revision", revision), ("Alembic Error", str(e))],
             )
+        last = revision
 
     # Skip the `heads` revision. Caused by new alembic warning in 1.6.x.
     down_revisions = list(reversed(alembic_runner.history.revisions[:-1]))
 
     index = 0
+    last = None
     for index, revision in enumerate(down_revisions):
         if alembic_runner.config.minimum_downgrade_revision == revision:
             # If there is a minimum_downgrade_revision, stop downgrading here.
             break
 
         try:
-            alembic_runner.migrate_down_to(revision, return_current=False)
+            alembic_runner.migrate_down_to(revision, current=last, return_current=False)
         except NotImplementedError:
             # In the event of a `NotImplementedError`, we should have the same semantics,
             # as-if `minimum_downgrade_revision` was specified, but we'll emit a warning
@@ -142,13 +145,15 @@ def test_up_down_consistency(alembic_runner):
                 message,
                 context=[("Failing Revision", revision), ("Alembic Error", str(e))],
             )
+        last = revision
 
     # We should only upgrade as far as we successfully downgraded.
     down_revisions = down_revisions[:index]
 
+    last = None
     for revision in reversed(down_revisions):
         try:
-            alembic_runner.migrate_up_to(revision, return_current=False)
+            alembic_runner.migrate_up_to(revision, current=last, return_current=False)
         except Exception as e:
             message = (
                 "Failed to upgrade through each revision individually after performing a "
@@ -158,3 +163,4 @@ def test_up_down_consistency(alembic_runner):
                 message,
                 context=[("Failing Revision", revision), ("Alembic Error", str(e))],
             )
+        last = revision
