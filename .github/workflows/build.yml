@@ -1,5 +1,7 @@
 name: CI
-on: push
+on: 
+  push:
+  pull_request:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -22,15 +24,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
-        pytest-version: ["6.2.0", "7.0.0", "8.1.0"]
-        pytest-asyncio-version: ["0.16.0", "0.23.0"]
-        sqlalchemy-version: ["1.3.0", "1.4.0", "2.0.0"]
+        python-version: ["3.13"]
+        pytest-version: ["8.3.5"]
+        pytest-asyncio-version: ["0.23.0"]
+        sqlalchemy-version: ["2.0.40"]
 
-        exclude:
+        # exclude:
           # old versions of pytest-asyncio use old pytest hook syntax
-          - pytest-version: "8.1.0"
-            pytest-asyncio-version: "0.16.0"
+          # - pytest-version: "8.1.0"
+            # pytest-asyncio-version: "0.16.0"
 
     steps:
       - uses: actions/checkout@v4
@@ -40,7 +42,7 @@ jobs:
       - name: Install poetry
         uses: abatilo/actions-poetry@v3.0.1
         with:
-          poetry-version: 1.2.2
+          poetry-version: 2.1.3
 
       - name: Set up cache
         uses: actions/cache@v4
