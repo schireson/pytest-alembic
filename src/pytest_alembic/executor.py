@@ -182,7 +182,11 @@ class ConnectionExecutor:
             return asyncio.run(run(self.connection))
 
         if isinstance(self.connection, Engine):
-            with self.connection.begin() as connection:
-                return fn(connection=connection, **kwargs)
+            connection = self.connection.connect()
+            result = fn(connection=connection, **kwargs)
+            connection.commit()
+            # SQLite does not close via the context manager, close expliclitly
+            connection.close()
+            return result
 
         return fn(connection=self.connection, **kwargs)
