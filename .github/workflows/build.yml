@@ -27,7 +27,7 @@ jobs:
         python-version: ["3.9", "3.10", "3.11", "3.12"]
         pytest-version: ["7.0.0", "8.3.5"]
         pytest-asyncio-version: ["0.16.0", "0.23.0"]
-        sqlalchemy-version: ["1.3.0", "1.4.0", "2.0.40"]
+        sqlalchemy-version: ["1.4.0", "2.0.40"]
 
         exclude:
           # old versions of pytest-asyncio use old pytest hook syntax
