@@ -170,6 +170,7 @@ class ConnectionExecutor:
 
         if AsyncEngine and isinstance(self.connection, AsyncEngine):
             import asyncio
+            from concurrent.futures import ThreadPoolExecutor
 
             async def run(engine):
                 async with engine.connect() as connection:
@@ -179,7 +180,21 @@ class ConnectionExecutor:
                 await engine.dispose()
                 return result
 
-            return asyncio.run(run(self.connection))
+            def execute_in_thread(connection):
+                asyncio.run(run(connection))
+
+            raise
+            try:
+                loop = asyncio.get_running_loop()
+            except RuntimeError:
+                return asyncio.run(run(self.connection))
+            else:
+                return asyncio.run_coroutine_threadsafe(run(self.connection), loop).result()
+                return loop.run_in_executor(None, run, self.connection).result()
+
+            # return asyncio.run(run(self.connection))
+            # with ThreadPoolExecutor() as executor:
+            #     return executor.submit(execute_in_thread, self.connection)
 
         if isinstance(self.connection, Engine):
             with self.connection.begin() as connection:

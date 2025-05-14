@@ -285,3 +285,8 @@ def test_version_table_schema(pytester):
 def test_branched_history_before_upgrade_data(pytester):
     """Assert branched upgrade data is only inserted once per migration."""
     run_pytest(pytester, passed=4)
+
+
+def test_async_anyio(pytester):
+    """Test with anyio instead of pytest-asyncio."""
+    run_pytest(pytester, passed=4, test_alembic=False)

@@ -1,3 +1,4 @@
+from contextlib import contextmanager
 from typing import Any, Dict, Union
 
 import alembic.config
@@ -44,6 +45,22 @@ def create_alembic_fixture(raw_config=None):
     def alembic_fixture(alembic_engine):
         config = Config.from_raw_config(raw_config)
         with pytest_alembic.runner(config=config, engine=alembic_engine) as runner:
+            yield runner
+
+    return alembic_fixture
+
+
+def create_async_alembic_fixture(raw_config=None):
+    from sqlalchemy.ext.asyncio import AsyncEngine
+
+    @pytest.fixture()
+    async def alembic_fixture(alembic_engine):
+        if not isinstance(alembic_engine, AsyncEngine):
+            raise ValueError("This fixture requires an async engine.")
+
+        engine = alembic_engine.sync_engine
+        config = Config.from_raw_config(raw_config)
+        with pytest_alembic.runner(config=config, engine=engine) as runner:
             yield runner
 
     return alembic_fixture
