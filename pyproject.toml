@@ -24,7 +24,7 @@ pytest = {version = ">=6.0"}
 alembic = "*"
 sqlalchemy = "*"
 
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.dev.dependencies]
 asyncpg = "*"
 black = {version = "22.3.0", python = ">=3.6.2"}
 coverage = {version = ">=6.4.4", extras = ["toml"]}
@@ -95,7 +95,7 @@ filterwarnings = [
   "ignore:unclosed connection.*:ResourceWarning",
   "ignore:pkg_resources is deprecated as an API:DeprecationWarning",
   "ignore:.*is deprecated and will be removed in Python 3.14.*:DeprecationWarning",
-]
+  ]
 
 [tool.mypy]
 strict_optional = true
