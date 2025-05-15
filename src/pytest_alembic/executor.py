@@ -183,6 +183,10 @@ class ConnectionExecutor:
 
         if isinstance(self.connection, Engine):
             with self.connection.begin() as connection:
-                return fn(connection=connection, **kwargs)
+                result = fn(connection=connection, **kwargs)
+
+            # SQLite does not close via the context manager, close expliclitly
+            connection.close()
+            return result
 
         return fn(connection=self.connection, **kwargs)
