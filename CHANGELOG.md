@@ -1,11 +1,19 @@
 # Changelog
 
-## [Unreleased](https://github.com/schireson/pytest-alembic/compare/v0.11.0...HEAD) (2024-08-30)
+## [Unreleased](https://github.com/schireson/pytest-alembic/compare/v0.11.0...HEAD) (2025-05-16)
 
 ### Fixes
 
+* Release 0.12.0
+([87dbf29](https://github.com/schireson/pytest-alembic/commit/87dbf29e24f47417a5821fb6908673058ead7d89))
+* Failing tests.
+([1dc5b43](https://github.com/schireson/pytest-alembic/commit/1dc5b43d7e5b7530181808490cb31386631990a9))
+* Linting.
+([0c32cb2](https://github.com/schireson/pytest-alembic/commit/0c32cb23a32e711e633df3af9124f713b9bfa475))
+* Bump minimum python version on package to 3.7, stop testing 3.7.
+([32b8f62](https://github.com/schireson/pytest-alembic/commit/32b8f629f99efad07bcc2bd3ba4ff8981c399b13))
 * Ensure branched revisions are upgraded individually once.
-([9cf7229](https://github.com/schireson/pytest-alembic/commit/9cf7229deb3f598f57d7347ee65fd046fadfc968))
+([853b116](https://github.com/schireson/pytest-alembic/commit/853b1164af9d03cb71504895c63e4962cc14ab84))
 * Updated pyproject.toml to be more flexible with poetry_core versioning.
 ([c7f25c3](https://github.com/schireson/pytest-alembic/commit/c7f25c39a795591a794f1ab89203f4a992012319))
 
