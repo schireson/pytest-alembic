@@ -2,9 +2,10 @@ from dataclasses import dataclass, field
 from typing import Any, cast, Dict, List, Optional, TYPE_CHECKING, Union
 
 import alembic.config
-from alembic.util import immutabledict
 
 if TYPE_CHECKING:
+    from alembic.util import immutabledict
+
     from pytest_alembic.revision_data import RevisionSpec
 
 
@@ -104,7 +105,7 @@ class Config:
         )
 
     def make_alembic_config(self, stdout):
-        file = (
+        ini_file = (
             self.config_options.get("file")
             or self.config_options.get("config_file_name")
             or "alembic.ini"
@@ -116,19 +117,24 @@ class Config:
             alembic_config = self.alembic_config
             alembic_config.stdout = stdout
         else:
-            alembic_config = alembic.config.Config(file, stdout=stdout)
+            if _supports_toml():
+                alembic_config = alembic.config.Config(
+                    file_=ini_file, toml_file="pyproject.toml", stdout=stdout
+                )
+            else:
+                alembic_config = alembic.config.Config(ini_file, stdout=stdout)
 
         sqlalchemy_url = self.config_options.get("sqlalchemy.url")
         if sqlalchemy_url:
             alembic_config.set_main_option("sqlalchemy.url", sqlalchemy_url)
 
-        # Only set script_location if set.
         script_location = self.config_options.get("script_location")
-        if script_location:
-            alembic_config.set_section_option("alembic", "script_location", script_location)
-        elif not alembic_config.get_section_option("alembic", "script_location"):
+        if not script_location:
             # Or in the event that it's not set after already having loaded the config.
-            alembic_config.set_main_option("script_location", "migrations")
+            script_location = self._get_option(
+                alembic_config, "script_location", default="migrations"
+            )
+        alembic_config.set_main_option("script_location", script_location)
 
         target_metadata = self.config_options.get("target_metadata")
         alembic_config.attributes["target_metadata"] = target_metadata
@@ -141,6 +147,13 @@ class Config:
 
         return alembic_config
 
+    @staticmethod
+    def _get_option(alembic_config: alembic.config.Config, key: str, *, default: str) -> str:
+        if _supports_toml():
+            get_alembic_option = getattr(alembic_config, "get_alembic_option")  # noqa: B009
+            return get_alembic_option(key, default)
+        return alembic_config.get_main_option(key, default)
+
 
 def duplicate_alembic_config(config: alembic.config.Config):
     return alembic.config.Config(
@@ -149,6 +162,10 @@ def duplicate_alembic_config(config: alembic.config.Config):
         output_buffer=config.output_buffer,
         stdout=config.stdout,
         cmd_opts=config.cmd_opts,
-        config_args=cast(immutabledict, config.config_args),
+        config_args=cast("immutabledict", config.config_args),
         attributes=config.attributes,
     )
+
+
+def _supports_toml() -> bool:
+    return hasattr(alembic.config.Config, "get_alembic_option")
