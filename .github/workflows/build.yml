@@ -67,7 +67,7 @@ jobs:
         run: poetry run make test
 
       - name: Store test result artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: covarage-${{ runner.os }}-${{ matrix.python-version }}-${{ matrix.pytest-version }}-${{ matrix.pytest-asyncio-version }}-${{ matrix.sqlalchemy-version }}-${{ hashFiles('**/poetry.lock') }}
           path: coverage.xml
