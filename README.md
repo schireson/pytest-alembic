@@ -31,7 +31,7 @@ Have you ever written a migration only to realize that it fails when
 there’s data in the table?
 
 Have you ever written a **perfect** migration only to merge it and later
-find out that someone else merged also merged a migration and your CD is
+find out that someone else also merged a migration and your CD is
 now broken!?
 
 `pytest-alembic` is meant to (with a little help) solve all these
