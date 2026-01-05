@@ -53,7 +53,7 @@ behavior.
 
   List of built-in tests to include. If specified, 'pytest_alembic_exclude' is ignored.
   If both are omitted, all tests are included. The tests should be listed as a comma delimited string
-  containing the tests' names.
+  containing the tests' names (e.g., ``pytest_alembic_include = "up_down_consistency"``).
 
 * :code:`pytest_alembic_exclude`
 
