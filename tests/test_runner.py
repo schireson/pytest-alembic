@@ -287,3 +287,12 @@ def test_version_table_schema(pytester):
 def test_branched_history_before_upgrade_data(pytester):
     """Assert branched upgrade data is only inserted once per migration."""
     run_pytest(pytester, passed=4)
+
+
+@requires_asyncio_support
+def test_async_anyio(pytester):
+    """Assert pytest-alembic works with anyio plugin installed.
+
+    The test uses asyncpg as the async driver with anyio as the async framework.
+    """
+    run_pytest(pytester, passed=4, test_alembic=False)

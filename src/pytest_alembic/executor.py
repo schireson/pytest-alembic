@@ -179,7 +179,20 @@ class ConnectionExecutor:
                 await engine.dispose()
                 return result
 
-            return asyncio.run(run(self.connection))
+            # Check if there's already a running event loop.
+            # This can happen with anyio session-scoped fixtures or other async frameworks
+            # that keep the loop alive. In such cases, we need to run in a separate thread
+            # to avoid "asyncio.run() cannot be called from a running event loop" errors.
+            try:
+                asyncio.get_running_loop()
+                # There's a running loop, use ThreadPoolExecutor to run in a separate thread
+                from concurrent.futures import ThreadPoolExecutor
+
+                with ThreadPoolExecutor() as pool:
+                    return pool.submit(asyncio.run, run(self.connection)).result()
+            except RuntimeError:
+                # No running loop, safe to use asyncio.run() directly
+                return asyncio.run(run(self.connection))
 
         if isinstance(self.connection, Engine):
             with self.connection.begin() as connection:

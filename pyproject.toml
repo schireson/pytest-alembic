@@ -30,6 +30,7 @@ pytest-mock-resources = { version = ">=2.6.3", extras = ["docker"] }
 ruff = { version = '>=0.15.0' }
 sqlalchemy = { version = ">=1.4.54,>=2.0.42", extras = ["asyncio"] }
 types-dataclasses = "^0.1.7"
+anyio = "*"
 
 [tool.poetry.plugins.pytest11]
 pytest_alembic = "pytest_alembic.plugin"
