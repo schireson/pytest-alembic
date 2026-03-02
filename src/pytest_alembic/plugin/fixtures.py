@@ -40,7 +40,7 @@ def create_alembic_fixture(raw_config=None):
         >>> alembic = create_alembic_fixture({'file': 'migrations.ini'})
     """
 
-    @pytest.fixture()
+    @pytest.fixture
     def alembic_fixture(alembic_engine):
         config = Config.from_raw_config(raw_config)
         with pytest_alembic.runner(config=config, engine=alembic_engine) as runner:
@@ -49,7 +49,7 @@ def create_alembic_fixture(raw_config=None):
     return alembic_fixture
 
 
-@pytest.fixture()
+@pytest.fixture
 def alembic_runner(alembic_config, alembic_engine):
     """Produce the primary alembic migration context in which to execute alembic tests.
 
@@ -66,7 +66,7 @@ def alembic_runner(alembic_config, alembic_engine):
         yield runner
 
 
-@pytest.fixture()
+@pytest.fixture
 def alembic_config() -> Union[Dict[str, Any], alembic.config.Config, Config]:
     """Override this fixture to configure the exact alembic context setup required.
 
@@ -119,7 +119,7 @@ def alembic_config() -> Union[Dict[str, Any], alembic.config.Config, Config]:
     return {}
 
 
-@pytest.fixture()
+@pytest.fixture
 def alembic_engine():
     """Override this fixture to provide pytest-alembic powered tests with a database handle."""
     engine = sqlalchemy.create_engine("sqlite:///")

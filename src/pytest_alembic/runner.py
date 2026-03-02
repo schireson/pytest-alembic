@@ -185,8 +185,7 @@ class MigrationContext:
                         raise
 
         if return_current:
-            current = self.current
-            return current
+            return self.current
         return None
 
     def migrate_up_before(self, revision):

@@ -152,7 +152,9 @@ def test_experimental_all_models_register_no_metadata(pytester):
     """Assert the all-models-register test fails when there is no metadata in-context."""
     result = run_pytest(pytester, success=False, passed=0, failed=1, test_alembic=False)
     assert_failed_test_has_content(
-        result, test="test_all_models_register_on_metadata", content="Unable to locate a MetaData"
+        result,
+        test="test_all_models_register_on_metadata",
+        content="Unable to locate a MetaData",
     )
 
 
@@ -207,7 +209,7 @@ def test_unimplemented_downgrade_warning(pytester):
     assert len(warnings) == 2
 
     for warning in warnings:
-        assert warning.warning_message.category == UserWarning
+        assert warning.warning_message.category is UserWarning
 
         warning_str = str(warning.warning_message.message)
         assert "NotImplementedError" in warning_str
