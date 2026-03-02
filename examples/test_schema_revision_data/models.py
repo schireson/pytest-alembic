@@ -1,3 +1,5 @@
+from typing import ClassVar
+
 from sqlalchemy import Column, types
 
 try:
@@ -11,6 +13,6 @@ Base = declarative_base()
 
 class Foo(Base):
     __tablename__ = "foo"
-    __table_args__ = {"schema": "meow"}
+    __table_args__: ClassVar[dict] = {"schema": "meow"}
 
     id = Column(types.Integer(), autoincrement=True, primary_key=True)

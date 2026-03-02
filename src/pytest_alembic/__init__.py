@@ -4,7 +4,7 @@ from pytest_alembic.runner import MigrationContext, runner
 
 __all__ = [
     "Config",
-    "create_alembic_fixture",
     "MigrationContext",
+    "create_alembic_fixture",
     "runner",
 ]

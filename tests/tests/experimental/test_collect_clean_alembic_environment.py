@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import ClassVar
 
 import pytest
 from sqlalchemy import MetaData
@@ -38,7 +39,7 @@ class Test_environment_context_fn:
 
     def test_output(self, capsys):
         class Target:
-            tables = {"t1": None}
+            tables: ClassVar[dict] = {"t1": None}
 
         context = MigrationContext(target_metdata=Target())
         environment_context_fn(None, context)
@@ -64,7 +65,7 @@ class Test_identify_modules:
         assert modules == []
 
     metadata = MetaData()
-    _refers_to_metadata = [metadata]
+    _refers_to_metadata: ClassVar = [metadata]
 
     def test_just_metadata(self):
         modules = list(identify_modules(self.metadata))

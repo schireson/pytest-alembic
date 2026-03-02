@@ -7,7 +7,7 @@ from sqlalchemy import engine_from_config, pool
 
 sys.path.append(str(Path().resolve()))
 
-from foo.bar import Base  # noqa: E402
+from foo.bar import Base
 
 fileConfig(context.config.config_file_name)
 target_metadata = Base.metadata

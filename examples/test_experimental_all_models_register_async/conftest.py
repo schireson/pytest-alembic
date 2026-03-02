@@ -6,7 +6,7 @@ import pytest_alembic.tests.experimental
 alembic_engine = create_postgres_fixture(async_=True)
 
 
-@pytest.fixture()
+@pytest.fixture
 def alembic_config():
     return {"before_revision_data": {"bbbbbbbbbbbb": {"__tablename__": "foo", "id": 9}}}
 

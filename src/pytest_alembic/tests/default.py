@@ -17,7 +17,7 @@ NOT_IMPLEMENTED_WARNING = (
 )
 
 
-@pytest.mark.alembic()
+@pytest.mark.alembic
 def test_single_head_revision(alembic_runner):
     """Assert that there only exists one head revision.
 
@@ -38,7 +38,7 @@ def test_single_head_revision(alembic_runner):
         )
 
 
-@pytest.mark.alembic()
+@pytest.mark.alembic
 def test_upgrade(alembic_runner):
     """Assert that the revision history can be run through from base to head."""
     try:
@@ -54,7 +54,7 @@ def test_upgrade(alembic_runner):
         )
 
 
-@pytest.mark.alembic()
+@pytest.mark.alembic
 def test_model_definitions_match_ddl(alembic_runner):
     """Assert that the state of the migrations matches the state of the models describing the DDL.
 
@@ -98,7 +98,7 @@ def test_model_definitions_match_ddl(alembic_runner):
     )
 
 
-@pytest.mark.alembic()
+@pytest.mark.alembic
 def test_up_down_consistency(alembic_runner):
     """Assert that all downgrades succeed.
 

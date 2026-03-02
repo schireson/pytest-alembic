@@ -31,10 +31,10 @@ log = logging.getLogger(__name__)
 
 def test_all_models_register_on_metadata(
     alembic_runner: MigrationContext,
-    model_package: Optional[str] = None,
+    model_package: Optional[str] = None,  # noqa: PT028
     *,
-    offline: bool = False,
-    async_: Optional[bool] = None,
+    offline: bool = False,  # noqa: PT028
+    async_: Optional[bool] = None,  # noqa: PT028
 ):
     """Assert that all tables defined on your `MetaData`, are imported in the `env.py`.
 

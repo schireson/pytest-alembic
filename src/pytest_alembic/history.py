@@ -8,7 +8,7 @@ from alembic.script.revision import RevisionMap
 
 @dataclass
 class AlembicHistory:
-    map: RevisionMap  # noqa: A003
+    map: RevisionMap
     revisions: List[str]
     revision_indices: Dict[str, int]
     revisions_by_index: Dict[int, str]

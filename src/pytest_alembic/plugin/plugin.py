@@ -39,8 +39,8 @@ class PytestAlembicPlugin:
 
     def should_register(self, path):
         tests_path = PurePath(
-            cast(Optional[str], self.config.option.pytest_alembic_tests_path)
-            or cast(Optional[str], self.config.getini("pytest_alembic_tests_path"))
+            cast("Optional[str]", self.config.option.pytest_alembic_tests_path)
+            or cast("Optional[str]", self.config.getini("pytest_alembic_tests_path"))
             or "tests/conftest.py"
         )
         relative_path = path.relative_to(self.config.rootpath)
@@ -130,7 +130,12 @@ class OptionResolver:
     excluded_tests: Optional[List[str]] = None
 
     @classmethod
-    def collect_test_definitions(cls, *, default=True, experimental=True):  # noqa: ARG003
+    def collect_test_definitions(
+        cls,
+        *,
+        default=True,  # noqa: ARG003
+        experimental=True,
+    ):
         import pytest_alembic.tests
         import pytest_alembic.tests.experimental
 

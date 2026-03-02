@@ -65,7 +65,8 @@ class Config:
 
     @classmethod
     def from_raw_config(
-        cls, raw_config: Union[Dict[str, Any], alembic.config.Config, "Config", None] = None
+        cls,
+        raw_config: Union[Dict[str, Any], alembic.config.Config, "Config", None] = None,
     ):
         """Adapt between pre-produced alembic config and raw config options.
 
@@ -150,7 +151,7 @@ class Config:
     @staticmethod
     def _get_option(alembic_config: alembic.config.Config, key: str, *, default: str) -> str:
         if _supports_toml():
-            get_alembic_option = getattr(alembic_config, "get_alembic_option")  # noqa: B009
+            get_alembic_option = alembic_config.get_alembic_option  # type: ignore[attr-defined]
             return get_alembic_option(key, default)
         return alembic_config.get_main_option(key, default)
 
