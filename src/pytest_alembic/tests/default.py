@@ -6,6 +6,7 @@ from alembic.autogenerate.api import AutogenContext
 from alembic.autogenerate.render import _render_cmd_body
 
 from pytest_alembic.plugin.error import AlembicTestFailure
+from pytest_alembic.runner import MigrationContext
 
 log = logging.getLogger(__name__)
 
@@ -18,7 +19,7 @@ NOT_IMPLEMENTED_WARNING = (
 
 
 @pytest.mark.alembic
-def test_single_head_revision(alembic_runner):
+def test_single_head_revision(alembic_runner: MigrationContext) -> None:
     """Assert that there only exists one head revision.
 
     We're not sure what realistic scenario involves a diverging history to be desirable. We
@@ -39,7 +40,7 @@ def test_single_head_revision(alembic_runner):
 
 
 @pytest.mark.alembic
-def test_upgrade(alembic_runner):
+def test_upgrade(alembic_runner: MigrationContext) -> None:
     """Assert that the revision history can be run through from base to head."""
     try:
         alembic_runner.migrate_up_to("heads", return_current=False)
@@ -55,7 +56,7 @@ def test_upgrade(alembic_runner):
 
 
 @pytest.mark.alembic
-def test_model_definitions_match_ddl(alembic_runner):
+def test_model_definitions_match_ddl(alembic_runner: MigrationContext) -> None:
     """Assert that the state of the migrations matches the state of the models describing the DDL.
 
     In general, the set of migrations in the history should coalesce into DDL which is described
@@ -99,7 +100,7 @@ def test_model_definitions_match_ddl(alembic_runner):
 
 
 @pytest.mark.alembic
-def test_up_down_consistency(alembic_runner):
+def test_up_down_consistency(alembic_runner: MigrationContext) -> None:
     """Assert that all downgrades succeed.
 
     While downgrading may not be lossless operation data-wise, there's a theory of database
