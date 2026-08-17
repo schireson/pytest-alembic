@@ -2,29 +2,29 @@
 .DEFAULT_GOAL := test
 
 install:
-	poetry install
+	uv sync
 
 build:
-	poetry build
+	uv build
 
 test:
 	SQLALCHEMY_WARN_20=1 COVERAGE_PROCESS_START="$(PWD)/pyproject.toml" \
-	coverage run -m pytest src tests -vv
-	coverage combine
-	coverage report -i
-	coverage xml
+	uv run coverage run -m pytest src tests -vv
+	uv run coverage combine
+	uv run coverage report -i
+	uv run coverage xml
 
 lint:
-	ruff check src tests examples || exit 1
-	ruff format --check src tests examples || exit 1
-	mypy src tests || exit 1
+	uv run ruff check src tests examples || exit 1
+	uv run ruff format --check src tests examples || exit 1
+	uv run mypy src tests || exit 1
 
 format:
-	ruff check --fix src tests examples
-	ruff format src tests examples
+	uv run ruff check --fix src tests examples
+	uv run ruff format src tests examples
 
 publish: build
-	poetry publish -u __token__ -p '${PYPI_TOKEN}' --no-interaction
+	uv publish --token '${PYPI_TOKEN}'
 
 changelog:
 	# https://convco.github.io/

@@ -12,7 +12,7 @@ class RevisionSpec:
     data: Dict[str, Union[Dict, List[Dict]]]
 
     @classmethod
-    def parse(cls, data: Union[None, "RevisionSpec", Dict[str, Union[Dict, List[Dict]]]]):
+    def parse(cls, data: Union["RevisionSpec", Dict[str, Union[Dict, List[Dict]]], None]):
         """Parse a raw dict structure into a `RevisionSpec`."""
         if not data:
             return cls({})

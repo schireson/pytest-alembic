@@ -3,7 +3,7 @@
 
 # You can set these variables from the command line.
 SPHINXOPTS    =
-SPHINXBUILD   = sphinx-build
+SPHINXBUILD   = uv run sphinx-build
 SOURCEDIR     = source
 BUILDDIR      = build
 
@@ -19,4 +19,4 @@ help:
 	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
 livehtml:
-	sphinx-autobuild -b html $(SOURCEDIR) $(SPHINXOPTS) $(BUILDDIR)/html
+	uv run sphinx-autobuild -b html $(SOURCEDIR) $(SPHINXOPTS) $(BUILDDIR)/html
