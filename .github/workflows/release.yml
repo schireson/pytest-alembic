@@ -20,17 +20,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/setup-python@v6
+      - uses: astral-sh/setup-uv@v6
         with:
-          python-version: "3.9"
-      - name: Run image
-        uses: abatilo/actions-poetry@v3.0.1
-        with:
-          poetry-version: 1.2.2
+          python-version: "3.12"
 
       - name: Publish
         env:
           PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
         run: |
-          poetry config pypi-token.pypi $PYPI_TOKEN
-          poetry publish --build
+          uv build
+          uv publish --token $PYPI_TOKEN

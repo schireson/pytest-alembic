@@ -151,7 +151,7 @@ class Config:
     @staticmethod
     def _get_option(alembic_config: alembic.config.Config, key: str, *, default: str) -> str:
         if _supports_toml():
-            get_alembic_option = alembic_config.get_alembic_option  # type: ignore[attr-defined]
+            get_alembic_option = alembic_config.get_alembic_option
             return get_alembic_option(key, default)
         return alembic_config.get_main_option(key, default)
 
