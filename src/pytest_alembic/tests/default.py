@@ -30,12 +30,12 @@ def test_single_head_revision(alembic_runner: MigrationContext) -> None:
     head_count = len(heads)
 
     if head_count != 1:
-        heads = "\n".join([h.strip() for h in heads])
+        heads_str = "\n".join([h.strip() for h in heads])
 
         message = f"Expected 1 head revision, found {head_count}"
         raise AlembicTestFailure(
             message,
-            context=[("Heads", heads)],
+            context=[("Heads", heads_str)],
         )
 
 
