@@ -4,8 +4,8 @@ import alembic.config
 import pytest
 import sqlalchemy
 
-import pytest_alembic
 from pytest_alembic.config import Config
+from pytest_alembic.runner import runner
 
 
 def create_alembic_fixture(raw_config=None):
@@ -43,8 +43,8 @@ def create_alembic_fixture(raw_config=None):
     @pytest.fixture
     def alembic_fixture(alembic_engine):
         config = Config.from_raw_config(raw_config)
-        with pytest_alembic.runner(config=config, engine=alembic_engine) as runner:
-            yield runner
+        with runner(config=config, engine=alembic_engine) as migration_context:
+            yield migration_context
 
     return alembic_fixture
 
@@ -62,8 +62,8 @@ def alembic_runner(alembic_config, alembic_engine):
         ...     assert ...
     """
     config = Config.from_raw_config(alembic_config)
-    with pytest_alembic.runner(config=config, engine=alembic_engine) as runner:
-        yield runner
+    with runner(config=config, engine=alembic_engine) as migration_context:
+        yield migration_context
 
 
 @pytest.fixture
