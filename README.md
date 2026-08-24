@@ -1,5 +1,5 @@
 ![Github Actions Build](https://github.com/schireson/pytest-alembic/actions/workflows/build.yml/badge.svg)
-[![codecov](https://codecov.io/gh/schireson/pytest-alembic/branch/master/graph/badge.svg)](https://codecov.io/gh/schireson/pytest-alembic)
+[![Coverage Status](https://coveralls.io/repos/github/schireson/pytest-alembic/badge.svg?branch=main)](https://coveralls.io/github/schireson/pytest-alembic?branch=main)
 [![Documentation Status](https://readthedocs.org/projects/pytest-alembic/badge/?version=latest)](https://pytest-alembic.readthedocs.io/en/latest/?badge=latest)
 
 See the full documentation [here](https://pytest-alembic.readthedocs.io/en/latest/).
