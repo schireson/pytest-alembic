@@ -16,6 +16,23 @@ from pytest_alembic.config import Config
 
 @dataclass
 class CommandExecutor:
+    """Run alembic commands against a captured config, buffering their output.
+
+    This is the seam between pytest-alembic and alembic proper: every ``alembic
+    upgrade``/``downgrade``/``revision`` invocation a test triggers goes through here,
+    with stdout captured into a buffer so command output can be asserted on rather than
+    printed.
+
+    Construct it with :meth:`from_config` rather than directly, since it needs a
+    ``ScriptDirectory`` derived from the same alembic config.
+
+    Examples:
+        >>> def test_history_is_reachable(alembic_runner):
+        ...     executor = alembic_runner.command_executor
+        ...     executor.upgrade("heads")
+        ...     assert executor.heads()
+    """
+
     alembic_config: alembic.config.Config
     stdout: StringIO
     stream_position: int
@@ -93,10 +110,42 @@ class CommandExecutor:
 
 @dataclass
 class ConnectionExecutor:
+    """Read and write actual data through the connection under test.
+
+    Where :class:`CommandExecutor` drives alembic, this drives the database: reflecting
+    tables as they exist at a particular revision, and inserting rows into them.
+
+    A separate ``MetaData`` is kept per revision, because the same table can have a
+    different shape before and after a migration; sharing one would cache the wrong
+    definition. See :meth:`metadata`.
+    """
+
     connection: Connectable
     metadatas: Dict[str, MetaData] = field(default_factory=dict)
 
     def metadata(self, revision: str) -> MetaData:
+        """Return the ``MetaData`` for `revision`, creating it on first use.
+
+        The result is memoized per revision, so tables reflected at one revision are not
+        reused at another. Nothing here touches the connection, so it is safe to call
+        before any migration has run.
+
+        Examples:
+            >>> executor = ConnectionExecutor(connection=None)
+            >>> metadata = executor.metadata("a1")
+
+            The same revision hands back the identical object:
+
+            >>> executor.metadata("a1") is metadata
+            True
+
+            A different revision gets its own:
+
+            >>> executor.metadata("b2") is metadata
+            False
+            >>> sorted(executor.metadatas)
+            ['a1', 'b2']
+        """
         metadata = self.metadatas.get(revision)
         if metadata is None:
             metadata = MetaData()
