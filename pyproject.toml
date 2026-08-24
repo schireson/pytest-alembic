@@ -17,7 +17,7 @@ repository = "https://github.com/schireson/pytest-alembic"
 pytest_alembic = "pytest_alembic.plugin"
 
 [build-system]
-requires = ["uv_build>=0.6,<0.7"]
+requires = ["uv_build>=0.6,<0.13"]
 build-backend = "uv_build"
 
 [dependency-groups]
