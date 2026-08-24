@@ -133,13 +133,15 @@ class OptionResolver:
     def collect_test_definitions(
         cls,
         *,
-        default=True,  # noqa: ARG003
+        default=True,
         experimental=True,
     ):
         import pytest_alembic.tests
         import pytest_alembic.tests.experimental
 
-        test_groups = [(pytest_alembic.tests, False)]
+        test_groups = []
+        if default:
+            test_groups.append((pytest_alembic.tests, False))
         if experimental:
             test_groups.append((pytest_alembic.tests.experimental, True))
 

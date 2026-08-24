@@ -17,6 +17,46 @@ def test_parse_raw_test_names_empty_skips():
     assert expected_result == result
 
 
+class Test__collect_test_definitions:
+    def test_default_only(self):
+        collector = OptionResolver.collect_test_definitions(default=True, experimental=False)
+
+        assert sorted(collector.available_tests) == [
+            "model_definitions_match_ddl",
+            "single_head_revision",
+            "up_down_consistency",
+            "upgrade",
+        ]
+
+    def test_experimental_only(self):
+        # `default=False` must actually exclude the default group. `pytest_addoption`
+        # relies on this to describe `pytest_alembic_include_experimental`, so a
+        # regression here silently advertises non-experimental tests as experimental.
+        collector = OptionResolver.collect_test_definitions(default=False, experimental=True)
+
+        assert sorted(collector.available_tests) == [
+            "all_models_register_on_metadata",
+            "downgrade_leaves_no_trace",
+        ]
+
+    def test_both_groups(self):
+        collector = OptionResolver.collect_test_definitions(default=True, experimental=True)
+
+        assert sorted(collector.available_tests) == [
+            "all_models_register_on_metadata",
+            "downgrade_leaves_no_trace",
+            "model_definitions_match_ddl",
+            "single_head_revision",
+            "up_down_consistency",
+            "upgrade",
+        ]
+
+    def test_neither_group(self):
+        collector = OptionResolver.collect_test_definitions(default=False, experimental=False)
+
+        assert collector.available_tests == {}
+
+
 class Test__OptionResolver:
     def test_all_enabled(self):
         test_collector = OptionResolver.collect_test_definitions()
