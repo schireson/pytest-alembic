@@ -136,6 +136,20 @@ class OptionResolver:
         default=True,  # noqa: ARG003
         experimental=True,
     ):
+        # Imported here rather than at module scope to contain the blast radius of a
+        # broken alembic. This module is reached from `pytest_alembic.plugin`, the
+        # pytest11 entry point, so it loads during pytest startup for every project
+        # that merely has pytest-alembic installed. The test modules below import
+        # private alembic APIs -- `alembic.autogenerate.render._render_cmd_body` in
+        # tests/default.py -- and an alembic release that moves one would then break
+        # `pytest` itself everywhere, rather than only for people who actually use
+        # these tests.
+        #
+        # Note this placement is *not* required to avoid an import cycle. There is a
+        # cycle in the graph (plugin.plugin -> tests -> plugin.error), but it is
+        # benign: plugin/error.py imports only textwrap and typing, so it never needs
+        # a partially-initialised module. Hoisting these two imports leaves the whole
+        # suite green -- the reason to keep them here is the blast radius above.
         import pytest_alembic.tests
         import pytest_alembic.tests.experimental
 
