@@ -35,7 +35,7 @@ dev = [
     "types-dataclasses>=0.1.7,<0.2",
     "anyio",
 ]
-docs = ["m2r2", "sphinx", "sphinx-rtd-theme", "sphinx-autodoc-typehints", "sphinx-autobuild"]
+docs = ["myst-parser", "sphinx", "sphinx-rtd-theme", "sphinx-autodoc-typehints", "sphinx-autobuild"]
 
 [tool.coverage.report]
 show_missing = true
