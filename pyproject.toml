@@ -32,7 +32,7 @@ dev = [
     "pytest-mock-resources[docker]>=2.6.3",
     "ruff>=0.15.0",
     "sqlalchemy[asyncio]>=2.0.42",
-    "types-dataclasses>=0.1.7,<0.2",
+    "types-dataclasses>=0.1.7,<0.7",
     "anyio",
 ]
 docs = ["m2r2", "sphinx", "sphinx-rtd-theme", "sphinx-autodoc-typehints", "sphinx-autobuild"]
