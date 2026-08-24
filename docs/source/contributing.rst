@@ -4,20 +4,23 @@ Contributing
 Prerequisites
 -------------
 
-If you are not already familiar with Poetry_, this is a poetry project, so you'll need this!
+This project is managed with uv_, so you'll need that first. See the `uv installation
+docs`_ for the available options.
+
+The test suite provisions a real postgres instance through pytest-mock-resources_, so
+you will also need Docker running locally.
 
 Getting Setup
 -------------
-Note, while the project itself provisionally runs on Python 3.8, test dependencies
-including pytest-mock-resources, coverage, and black, have minimum python versions of 3.9.
-So local development of pytest-alembic itself requires. Additionally this means
-we dont test 3.8 support, so supporting it is best effort until it becomes inconvenient.
+``pytest-alembic`` supports Python 3.9 and above (see ``requires-python`` in
+``pyproject.toml``). CI exercises 3.9 through 3.13 against a matrix of ``pytest``,
+``pytest-asyncio`` and ``sqlalchemy`` versions.
 
-See the :code:`Makefile` for common commands, but for some basic setup:
+Run :code:`make help` to list the common commands, but for some basic setup:
 
 .. code-block:: bash
 
-    # Installs the package with all the extras
+    # Installs the package along with its dev dependencies
     make install
 
 And you'll want to make sure you can run the tests and linters successfully:
@@ -25,12 +28,33 @@ And you'll want to make sure you can run the tests and linters successfully:
 .. code-block:: bash
 
     # Runs CI-level tests, with coverage reports
-    make test lint
+    make test
 
+    # Runs ruff (lint and format check) and mypy
+    make lint
+
+Both of these are the same entry points CI uses, so a green :code:`make test lint`
+locally should mean a green build.
+
+If :code:`make lint` reports formatting differences or fixable lint errors,
+:code:`make format` applies them in place.
+
+Building the docs
+-----------------
+
+The docs dependencies live in a non-default group, so :code:`make install` does not
+include them:
+
+.. code-block:: bash
+
+    uv sync --group docs
+    uv run sphinx-autobuild docs/source docs/build
 
 Need help
 ---------
 
 Submit an issue!
 
-.. _Poetry: https://poetry.eustace.io/
+.. _uv: https://docs.astral.sh/uv/
+.. _uv installation docs: https://docs.astral.sh/uv/getting-started/installation/
+.. _pytest-mock-resources: https://github.com/schireson/pytest-mock-resources
