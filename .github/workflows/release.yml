@@ -6,7 +6,17 @@ on:
       - "v*.*.*"
 
 jobs:
+  # Run the full CI matrix for the tagged commit before anything is published.
+  # `needs: test` below is what makes this a gate: a tag pushed onto a commit
+  # whose tests fail stops here, having released nothing.
+  #
+  # No `secrets: inherit` — the called workflow only uses GITHUB_TOKEN, which is
+  # provided automatically, so PYPI_TOKEN stays scoped to the publish job.
+  test:
+    uses: ./.github/workflows/build.yml
+
   gh-release:
+    needs: test
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -17,6 +27,7 @@ jobs:
           generate_release_notes: true
 
   publish-pypi:
+    needs: test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -29,4 +40,4 @@ jobs:
           PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
         run: |
           uv build
-          uv publish --token $PYPI_TOKEN
+          uv publish --token "$PYPI_TOKEN"
