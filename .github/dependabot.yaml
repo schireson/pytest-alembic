@@ -10,3 +10,11 @@ updates:
     schedule:
       # Check for updates to GitHub Actions every week
       interval: "weekly"
+
+  # Python dependencies, from pyproject.toml and uv.lock. Covers every group,
+  # so advisories against dev and docs tooling arrive as pull requests rather
+  # than only as a CI finding.
+  - package-ecosystem: "uv"
+    directory: "/"
+    schedule:
+      interval: "weekly"

@@ -1,4 +1,4 @@
-.PHONY: help install build test lint format publish changelog
+.PHONY: install build test lint format audit audit-all publish changelog
 .DEFAULT_GOAL := test
 
 help:  ## Show this help
@@ -26,6 +26,14 @@ lint:  ## Check lint, formatting and types (ruff, mypy)
 format:  ## Apply ruff fixes and formatting in place
 	uv run ruff check --fix src tests examples
 	uv run ruff format src tests examples
+
+audit:  ## Audit runtime dependencies for known vulnerabilities
+	uv export --frozen --no-emit-project --no-dev --no-hashes --format requirements-txt \
+		| uvx pip-audit --no-deps -r /dev/stdin
+
+audit-all:  ## Audit every dependency group, including dev and docs
+	uv export --frozen --no-emit-project --all-groups --no-hashes --format requirements-txt \
+		| uvx pip-audit --no-deps -r /dev/stdin
 
 publish: build  ## Build and publish to PyPI
 	uv publish --token '${PYPI_TOKEN}'
