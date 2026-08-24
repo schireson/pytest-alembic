@@ -287,3 +287,38 @@ def test_version_table_schema(pytester):
 def test_branched_history_before_upgrade_data(pytester):
     """Assert branched upgrade data is only inserted once per migration."""
     run_pytest(pytester, passed=4)
+
+
+def test_multiple_heads(pytester):
+    """Assert `single_head_revision` fails, and reports the heads, when history has diverged."""
+    result = run_pytest(pytester, success=False, passed=0, failed=1)
+    assert_failed_test_has_content(
+        result, test="test_single_head_revision", content="Expected 1 head revision, found 2"
+    )
+    assert_failed_test_has_content(result, test="test_single_head_revision", content="Heads")
+
+
+def test_model_definitions_out_of_sync(pytester):
+    """Assert `model_definitions_match_ddl` fails, and renders the diff, when models drift."""
+    result = run_pytest(pytester, success=False, passed=2, failed=1)
+    assert_failed_test_has_content(
+        result,
+        test="test_model_definitions_match_ddl",
+        content="out of sync with the set of",
+    )
+    assert_failed_test_has_content(
+        result,
+        test="test_model_definitions_match_ddl",
+        content="create_table",
+    )
+
+
+def test_failing_upgrade(pytester):
+    """Assert a migration failing on upgrade is reported per-revision by up/down consistency."""
+    result = run_pytest(pytester, success=False, passed=1, failed=3)
+    assert_failed_test_has_content(
+        result,
+        test="test_up_down_consistency",
+        content="Failed to upgrade through each revision individually",
+    )
+    assert_failed_test_has_content(result, test="test_up_down_consistency", content="bbbbbbbbbbbb")

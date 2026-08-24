@@ -1,7 +1,22 @@
 name: CI
 on:
+  # Branches only. Tag pushes reach this workflow through release.yml, which
+  # calls it via workflow_call so that publishing waits on a green matrix; a
+  # bare `push:` would additionally run the matrix a second time on the tag.
   push:
+    branches:
+      - "**"
   pull_request:
+  workflow_call:
+    inputs:
+      working-directory:
+        # Already referenced by the Coveralls flag name below. Declared with an
+        # empty default so the reference stays valid now that this workflow has
+        # a real input schema, and resolves to the same value it always did.
+        description: Optional label fragment for the Coveralls flag name.
+        type: string
+        required: false
+        default: ""
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -36,7 +51,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v6
-      - uses: astral-sh/setup-uv@v6
+      - uses: astral-sh/setup-uv@v7
         with:
           python-version: ${{ matrix.python-version }}
           enable-cache: true
