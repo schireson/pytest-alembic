@@ -136,3 +136,35 @@ strict_optional = true
 ignore_missing_imports = true
 warn_unused_ignores = true
 incremental = true
+
+[tool.interrogate]
+# Docstring *coverage*, as a ratchet. This deliberately complements ruff rather
+# than duplicating it: `D1` is ignored under [tool.ruff.lint], so no individual
+# symbol is required to carry a docstring, while this floor stops the overall
+# proportion from regressing. Public API first, internals as they are touched.
+#
+# Ratcheted floor, in the same spirit as [tool.coverage.report]. Held just below
+# the 45.0% observed locally so an unrelated refactor that adds an undocumented
+# helper does not redden the build; raise it whenever the measured number moves up.
+fail-under = 44
+
+# Re-export modules (`__init__.py`) hold only imports and `__all__`; magic
+# methods and nested helpers are not a documentation surface. `ignore-init-method`
+# is intentionally absent: it is mutually exclusive with `style = "google"`, where
+# the class docstring is what documents `__init__`.
+ignore-init-module = true
+ignore-magic = true
+ignore-nested-functions = true
+ignore-private = true
+ignore-semiprivate = true
+
+# Note: ignore-property-decorators / ignore-setters / ignore-overloaded-functions
+# are deliberately left off — this project's properties *are* documented, so
+# excluding them would drop them from the numerator and lower the score.
+
+# Honour the google convention already configured in [tool.ruff.lint.pydocstyle].
+style = "google"
+
+exclude = ["tests", "examples", "docs", "build", "dist", ".venv"]
+omit-covered-files = false
+verbose = 1
