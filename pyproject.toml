@@ -40,6 +40,10 @@ docs = ["m2r2", "sphinx", "sphinx-rtd-theme", "sphinx-autodoc-typehints", "sphin
 [tool.coverage.report]
 show_missing = true
 skip_covered = true
+# Ratcheted floor. Held below the ~95% actually observed locally, because the CI
+# matrix skips the asyncio tests on sqlalchemy versions without asyncio support,
+# which legitimately lowers coverage on those entries.
+fail_under = 93
 exclude_lines = ["pragma: no cover", "if TYPE_CHECKING:", "if __name__ == .__main__.:"]
 
 [tool.ruff]
