@@ -8,6 +8,45 @@ from alembic.script.revision import RevisionMap
 
 @dataclass
 class AlembicHistory:
+    """A linear, indexable view of alembic's revision history.
+
+    Alembic's own ``RevisionMap`` is a graph keyed by revision hash. This flattens it
+    into an ordered list bracketed by the two sentinel revisions ``base`` and ``heads``,
+    which is what makes "the revision before this one" and "every revision between
+    these two" cheap to answer.
+
+    Examples:
+        >>> from alembic.script.revision import Revision, RevisionMap
+        >>> revision_map = RevisionMap(
+        ...     lambda: [
+        ...         Revision("a1", None),
+        ...         Revision("b2", "a1"),
+        ...         Revision("c3", "b2"),
+        ...     ]
+        ... )
+        >>> history = AlembicHistory.parse(revision_map)
+
+        The sentinels bookend the real revisions, oldest first:
+
+        >>> history.revisions
+        ['base', 'a1', 'b2', 'c3', 'heads']
+
+        >>> history.previous_revision("b2")
+        'a1'
+        >>> history.next_revision("b2")
+        'c3'
+
+        Both sentinels are addressable, and ``head`` is accepted as an alias of
+        ``heads``:
+
+        >>> history.next_revision("heads") is None
+        True
+        >>> history.previous_revision("base") is None
+        True
+        >>> history.revision_range("a1", "head")
+        ['a1', 'b2', 'c3', 'heads']
+    """
+
     map: RevisionMap
     revisions: List[str]
     revision_indices: Dict[str, int]
@@ -15,7 +54,21 @@ class AlembicHistory:
 
     @classmethod
     def parse(cls, revision_map: RevisionMap) -> "AlembicHistory":
-        """Extract the set of migration revision hashes from alembic's notion of the history."""
+        """Extract the set of migration revision hashes from alembic's notion of the history.
+
+        The resulting list is ordered oldest-to-newest and padded with the ``base`` and
+        ``heads`` sentinels, so index arithmetic is enough to walk it.
+
+        Examples:
+            >>> from alembic.script.revision import Revision, RevisionMap
+            >>> history = AlembicHistory.parse(
+            ...     RevisionMap(lambda: [Revision("a1", None), Revision("b2", "a1")])
+            ... )
+            >>> history.revisions
+            ['base', 'a1', 'b2', 'heads']
+            >>> history.revision_indices["a1"]
+            1
+        """
         revision_hashes = ["heads"]
 
         history = revision_map.iterate_revisions("heads", "base")

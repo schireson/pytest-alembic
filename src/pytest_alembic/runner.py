@@ -22,8 +22,20 @@ if TYPE_CHECKING:
 def runner(config: Config, engine=None):
     """Manage the alembic execution context, in a given context.
 
+    Most tests never call this directly — the :func:`alembic_runner` fixture wraps it and
+    yields the same :class:`MigrationContext`. Reach for it when you need a runner outside
+    a fixture, such as in a ``conftest.py`` helper.
+
     Yields:
         `MigrationContext` to the caller.
+
+    Examples:
+        >>> import pytest_alembic
+        >>> from pytest_alembic.config import Config
+        >>>
+        >>> def upgrade_to_head(engine):
+        ...     with pytest_alembic.runner(config=Config(), engine=engine) as alembic_runner:
+        ...         alembic_runner.migrate_up_to("heads")
     """
     command_executor = CommandExecutor.from_config(config)
     migration_context = MigrationContext.from_config(
@@ -38,7 +50,27 @@ def runner(config: Config, engine=None):
 
 @dataclass
 class MigrationContext:
-    """Within a given environment/execution context, executes alembic commands."""
+    """Within a given environment/execution context, executes alembic commands.
+
+    This is the object the :func:`alembic_runner` fixture yields, and the primary surface
+    for tests written against a specific migration history. The methods fall into three
+    groups:
+
+    - **Moving through the history**: :meth:`migrate_up_one`, :meth:`migrate_up_to`,
+      :meth:`migrate_up_before`, and their ``down`` counterparts.
+    - **Inspecting it**: :attr:`current`, :attr:`heads`, and ``history``
+      (an :class:`~pytest_alembic.history.AlembicHistory`).
+    - **Reading and writing data**: :meth:`insert_into` and :meth:`table_at_revision`.
+
+    Examples:
+        >>> def test_migration_backfills_existing_rows(alembic_runner):
+        ...     alembic_runner.migrate_up_before("abc123")
+        ...     alembic_runner.insert_into("foo", {"id": 1})
+        ...     alembic_runner.migrate_up_one()
+        ...
+        ...     foo = alembic_runner.table_at_revision("foo")
+        ...     assert foo.name == "foo"
+    """
 
     command_executor: CommandExecutor
     revision_data: RevisionData
@@ -68,12 +100,27 @@ class MigrationContext:
         """Get the list of revision heads.
 
         Result is cached for the lifetime of the `MigrationContext`.
+
+        Examples:
+            >>> def test_history_has_one_head(alembic_runner):
+            ...     assert len(alembic_runner.heads) == 1
         """
         return self.command_executor.heads()
 
     @property
     def current(self) -> str:
-        """Get the list of revision heads."""
+        """Get the revision the database is currently at.
+
+        Returns the string ``"base"`` when no migration has been applied yet, rather than
+        ``None``, so the result is always comparable against a revision hash.
+
+        Examples:
+            >>> def test_starts_at_base(alembic_runner):
+            ...     assert alembic_runner.current == "base"
+            ...
+            ...     alembic_runner.migrate_up_one()
+            ...     assert alembic_runner.current != "base"
+        """
         current = "base"
 
         def get_current(rev, _):
@@ -95,6 +142,16 @@ class MigrationContext:
         Note this is not done automatically to avoid the expensive reevaluation
         step which can make long histories take seconds longer to evaluate for
         each test.
+
+        Call this after writing a revision file during a test; otherwise the cached
+        history will not contain it.
+
+        Examples:
+            >>> def test_history_picks_up_new_revision(alembic_runner):
+            ...     alembic_runner.generate_revision(prevent_file_generation=False)
+            ...
+            ...     history = alembic_runner.refresh_history()
+            ...     assert history.revisions
         """
         script = self.command_executor.script
         script.revision_map = RevisionMap(script._load_revisions)  # noqa: SLF001
@@ -141,7 +198,17 @@ class MigrationContext:
             return result
 
     def raw_command(self, *args, **kwargs):
-        """Execute a raw alembic command."""
+        """Execute a raw alembic command.
+
+        An escape hatch for alembic commands with no dedicated method here. Arguments are
+        forwarded to the corresponding function in ``alembic.command``, and captured
+        stdout is returned as a list of lines.
+
+        Examples:
+            >>> def test_history_command_runs(alembic_runner):
+            ...     output = alembic_runner.raw_command("history")
+            ...     assert isinstance(output, list)
+        """
         return self.command_executor.run_command(*args, **kwargs)
 
     def managed_upgrade(self, dest_revision, *, current=None, return_current=True):
@@ -189,16 +256,47 @@ class MigrationContext:
         return None
 
     def migrate_up_before(self, revision):
-        """Migrate up to, but not including the given `revision`."""
+        """Migrate up to, but not including the given `revision`.
+
+        This is the usual way to set up state that a migration is then asked to
+        transform: get the schema to the point just before the revision under test,
+        insert rows, then apply exactly one migration.
+
+        Examples:
+            >>> def test_migration_transforms_existing_rows(alembic_runner):
+            ...     alembic_runner.migrate_up_before("abc123")
+            ...     alembic_runner.insert_into("foo", {"id": 1})
+            ...     alembic_runner.migrate_up_one()
+        """
         preceeding_revision = self.history.previous_revision(revision)
         return self.managed_upgrade(preceeding_revision)
 
     def migrate_up_to(self, revision, *, current: str | None = None, return_current: bool = True):
-        """Migrate up to, and including the given `revision`."""
+        """Migrate up to, and including the given `revision`.
+
+        Accepts ``"heads"`` to apply the whole history.
+
+        Examples:
+            >>> def test_upgrade_to_specific_revision(alembic_runner):
+            ...     alembic_runner.migrate_up_to("abc123")
+            ...     assert alembic_runner.current == "abc123"
+
+            >>> def test_full_history_applies(alembic_runner):
+            ...     alembic_runner.migrate_up_to("heads")
+        """
         return self.managed_upgrade(revision, current=current, return_current=return_current)
 
     def migrate_up_one(self):
-        """Migrate up by exactly one revision."""
+        """Migrate up by exactly one revision.
+
+        Returns the revision migrated to, or ``None`` if already at the head — which
+        makes it usable as a loop condition when stepping through a history.
+
+        Examples:
+            >>> def test_each_revision_applies(alembic_runner):
+            ...     while alembic_runner.migrate_up_one():
+            ...         pass
+        """
         current = self.current
         next_revision = self.history.next_revision(current)
         new_revision = self.managed_upgrade(next_revision, current=current)
@@ -207,18 +305,41 @@ class MigrationContext:
         return new_revision
 
     def migrate_down_before(self, revision):
-        """Migrate down to, but not including the given `revision`."""
+        """Migrate down to, but not including the given `revision`.
+
+        Examples:
+            >>> def test_downgrade_stops_short(alembic_runner):
+            ...     alembic_runner.migrate_up_to("heads")
+            ...     alembic_runner.migrate_down_before("abc123")
+        """
         next_revision = self.history.next_revision(revision)
         return self.migrate_down_to(next_revision)
 
     def migrate_down_to(self, revision, *, current: str | None = None, return_current: bool = True):
-        """Migrate down to, and including the given `revision`."""
+        """Migrate down to, and including the given `revision`.
+
+        Accepts ``"base"`` to unwind the entire history.
+
+        Examples:
+            >>> def test_downgrade_to_base(alembic_runner):
+            ...     alembic_runner.migrate_up_to("heads")
+            ...     alembic_runner.migrate_down_to("base")
+        """
         self.history.validate_revision(revision)
         self.managed_downgrade(revision, current=current, return_current=return_current)
         return revision
 
     def migrate_down_one(self):
-        """Migrate down by exactly one revision."""
+        """Migrate down by exactly one revision.
+
+        Returns the revision migrated down to.
+
+        Examples:
+            >>> def test_downgrade_one_step(alembic_runner):
+            ...     alembic_runner.migrate_up_to("heads")
+            ...     previous = alembic_runner.migrate_down_one()
+            ...     assert alembic_runner.current == previous
+        """
         current = self.current
         previous_revision = self.history.previous_revision(current)
         self.managed_downgrade(previous_revision, current=current)
@@ -228,6 +349,13 @@ class MigrationContext:
         """Upgrade, downgrade then upgrade.
 
         This is meant to ensure that the given revision is idempotent.
+
+        Returns the revision arrived at, or ``None`` if already at the head.
+
+        Examples:
+            >>> def test_every_revision_round_trips(alembic_runner):
+            ...     while alembic_runner.roundtrip_next_revision():
+            ...         pass
         """
         next_revision = self.migrate_up_one()
         if next_revision:
@@ -238,12 +366,43 @@ class MigrationContext:
     def insert_into(self, table: str | None, data: dict | list | None = None, revision=None):
         """Insert data into a given table.
 
+        The table is reflected at `revision`, which defaults to the current revision — so
+        the rows are written against the schema as it exists at that point, not as it
+        exists at the head.
+
         Args:
             table: The name of the table to insert data into
             data: The data to insert. This is eventually passed through to SQLAlchemy's
                 Table class `values` method, and so should accept either a list of
                 `dict`s representing a list of rows, or a `dict` representing one row.
             revision: The revision of MetaData to use as the table definition for the insert.
+
+        Examples:
+            One row:
+
+            >>> def test_insert_one_row(alembic_runner):
+            ...     alembic_runner.migrate_up_to("abc123")
+            ...     alembic_runner.insert_into("foo", {"id": 1, "name": "one"})
+
+            Several, as a list of dicts:
+
+            >>> def test_insert_many_rows(alembic_runner):
+            ...     alembic_runner.migrate_up_to("abc123")
+            ...     alembic_runner.insert_into(
+            ...         "foo", [{"id": 1, "name": "one"}, {"id": 2, "name": "two"}]
+            ...     )
+
+            The table name can also travel with the data, which is what lets one call
+            span more than one table:
+
+            >>> def test_insert_across_tables(alembic_runner):
+            ...     alembic_runner.insert_into(
+            ...         None,
+            ...         [
+            ...             {"__tablename__": "foo", "id": 1},
+            ...             {"__tablename__": "bar", "id": 2},
+            ...         ],
+            ...     )
         """
         if data is None:
             return
@@ -260,10 +419,21 @@ class MigrationContext:
     def table_at_revision(self, name, *, revision=None, schema=None):
         """Return a reference to a `sqlalchemy.Table` at the given revision.
 
+        Useful for asserting on what a migration actually did — the returned table is
+        reflected from the live database, so its columns are the real post-migration
+        shape rather than whatever the current models declare.
+
         Args:
             name: The name of the table to produce a `sqlalchemy.Table` for.
             revision: The revision of the table to return.
             schema: The schema of the table.
+
+        Examples:
+            >>> def test_migration_adds_column(alembic_runner):
+            ...     alembic_runner.migrate_up_to("abc123")
+            ...
+            ...     foo = alembic_runner.table_at_revision("foo")
+            ...     assert "new_column" in foo.columns
         """
         revision = revision or self.current
         return self.connection_executor.table(revision=revision, name=name, schema=schema)
