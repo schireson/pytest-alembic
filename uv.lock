@@ -1899,7 +1899,7 @@ dev = [
     { name = "pytest-mock-resources", extras = ["docker"], specifier = ">=2.6.3" },
     { name = "ruff", specifier = ">=0.15.0" },
     { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2.0.42" },
-    { name = "types-dataclasses", specifier = ">=0.1.7,<0.2" },
+    { name = "types-dataclasses", specifier = ">=0.1.7,<0.7" },
 ]
 docs = [
     { name = "m2r2" },
@@ -2540,11 +2540,11 @@ wheels = [
 
 [[package]]
 name = "types-dataclasses"
-version = "0.1.7"
+version = "0.6.6"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/86/97/2e61ec4c0213ced6a8f476ed42209109557f4d4f59538972b94be3b7456b/types-dataclasses-0.1.7.tar.gz", hash = "sha256:248075d093d8f7c1541ce515594df7ae40233d1340afde11ce7125368c5209b8", size = 2240, upload-time = "2021-08-08T18:20:47.186Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/4b/6a/dec8fbc818b1e716cb2d9424f1ea0f6f3b1443460eb6a70d00d9d8527360/types-dataclasses-0.6.6.tar.gz", hash = "sha256:4b5a2fcf8e568d5a1974cd69010e320e1af8251177ec968de7b9bb49aa49f7b9", size = 2884, upload-time = "2022-06-30T09:49:21.449Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/6d/ee/44f77aa172b519351ebc2c5dff949007ff4ec86b24e79397397aa967e72e/types_dataclasses-0.1.7-py3-none-any.whl", hash = "sha256:fc372bb68b878ac7a68fd04230d923d4a6303a137ecb0b9700b90630bdfcbfc9", size = 2678, upload-time = "2021-08-08T18:20:45.684Z" },
+    { url = "https://files.pythonhosted.org/packages/31/85/23ab2bbc280266af5bf22ded4e070946d1694d1721ced90666b649eaa795/types_dataclasses-0.6.6-py3-none-any.whl", hash = "sha256:a0a1ab5324ba30363a15c9daa0f053ae4fff914812a1ebd8ad84a08e5349574d", size = 2868, upload-time = "2022-06-30T09:49:19.977Z" },
 ]
 
 [[package]]
