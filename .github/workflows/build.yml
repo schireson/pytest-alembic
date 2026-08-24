@@ -102,11 +102,11 @@ jobs:
         run: make audit
 
       - name: Audit dev and docs dependencies
-        # Informational. The docs group reaches mistune 0.8.4 through m2r2,
-        # which pins it exactly (`mistune==0.8.4`), so its advisories cannot be
-        # resolved without replacing m2r2. Reported rather than gated, so a
-        # dependency this repo cannot move does not permanently redden the build.
-        continue-on-error: true
+        # Gating, not informational. This was `continue-on-error` while the docs group
+        # reached mistune 0.8.4 through m2r2, which pinned it exactly and so could not be
+        # resolved. m2r2 has been replaced by myst-parser, the whole lockfile is clean,
+        # and a new advisory in the dev or docs groups should fail the build rather than
+        # be reported into a log nobody reads.
         run: make audit-all
 
   finish:
