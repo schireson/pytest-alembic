@@ -72,6 +72,28 @@ jobs:
           uv pip install tomli coveralls
           uv run coveralls --service=github
 
+  audit:
+    # Dependency vulnerability scan. Deliberately outside the test matrix and
+    # with no `needs:` — the lockfile is identical for every matrix entry, so
+    # auditing it 20 times would report the same answer 20 times.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+
+      - name: Audit runtime dependencies
+        run: make audit
+
+      - name: Audit dev and docs dependencies
+        # Informational. The docs group reaches mistune 0.8.4 through m2r2,
+        # which pins it exactly (`mistune==0.8.4`), so its advisories cannot be
+        # resolved without replacing m2r2. Reported rather than gated, so a
+        # dependency this repo cannot move does not permanently redden the build.
+        continue-on-error: true
+        run: make audit-all
+
   finish:
     needs:
       - test
