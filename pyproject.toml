@@ -46,10 +46,19 @@ docs = ["myst-parser", "sphinx", "sphinx-rtd-theme", "sphinx-autodoc-typehints",
 [tool.coverage.report]
 show_missing = true
 skip_covered = true
-# Ratcheted floor. Held below the ~95% actually observed locally, because the CI
-# matrix skips the asyncio tests on sqlalchemy versions without asyncio support,
-# which legitimately lowers coverage on those entries.
-fail_under = 93
+# The ratchet has reached the top, like [tool.interrogate] below: every statement
+# and every branch under `src` is executed by the suite, so the floor is the measured
+# number. A 100% floor is the only one that cannot silently erode -- anything less
+# lets a new untested path hide inside the slack.
+#
+# The previous floor of 93 was set because the CI matrix skipped the asyncio tests on
+# sqlalchemy versions without asyncio support. That reason is gone: the matrix pins a
+# single sqlalchemy (2.0.40), so no entry skips them any more.
+#
+# Each matrix entry enforces this on its own -- `make test` runs the report per job --
+# so what is excluded below has to be excluded for *every* entry, not just this one.
+# `branch = true` under [tool.coverage.run] means partial branches count too.
+fail_under = 100
 exclude_lines = ["pragma: no cover", "if TYPE_CHECKING:", "if __name__ == .__main__.:"]
 
 [tool.ruff]

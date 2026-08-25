@@ -82,22 +82,21 @@ def test_model_definitions_match_ddl(alembic_runner: MigrationContext) -> None:
             autogen_context = AutogenContext(migration_context)
             rendered_upgrade = _render_cmd_body(script.upgrade_ops, autogen_context)
 
-            if not migration_is_empty:
-                message = (
-                    "The models describing the DDL of your database are out of sync with the set of "
-                    "steps described in the revision history. This usually means that someone has "
-                    "made manual changes to the database's DDL, or some model has been changed "
-                    "without also generating a migration to describe that change."
-                )
-                raise AlembicTestFailure(
-                    message,
-                    context=[
-                        (
-                            "The upgrade which would have been generated would look like",
-                            rendered_upgrade,
-                        )
-                    ],
-                )
+            message = (
+                "The models describing the DDL of your database are out of sync with the set of "
+                "steps described in the revision history. This usually means that someone has "
+                "made manual changes to the database's DDL, or some model has been changed "
+                "without also generating a migration to describe that change."
+            )
+            raise AlembicTestFailure(
+                message,
+                context=[
+                    (
+                        "The upgrade which would have been generated would look like",
+                        rendered_upgrade,
+                    )
+                ],
+            )
 
     test_upgrade(alembic_runner)
     alembic_runner.generate_revision(

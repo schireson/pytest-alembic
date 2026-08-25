@@ -36,7 +36,14 @@ class PytestAlembicPlugin:
 
     # Some weird decisions were made by pytest it seems like. There is not an obvious
     # way to support both <7 and >=7 without weird nonsense like this.
-    if pytest_version_tuple and pytest_version_tuple >= (8, 1, 0):
+    #
+    # Excluded from coverage, on the whole construct: exactly one of these three
+    # variants is defined in any given interpreter, so no single run can execute the
+    # other two. The CI matrix runs both pytest 7 and pytest 8, and each entry enforces
+    # the coverage floor on its own, so a run that covered them all does not exist. The
+    # bodies are three lines of identical logic behind three different signatures; what
+    # they do is exercised through the pytester-based tests either way.
+    if pytest_version_tuple and pytest_version_tuple >= (8, 1, 0):  # pragma: no cover
 
         def pytest_collect_file(
             self, file_path: Path, parent: pytest.Collector
@@ -46,7 +53,7 @@ class PytestAlembicPlugin:
                 return TestCollector.from_parent(parent, path=file_path)
             return None
 
-    elif pytest_version_tuple and pytest_version_tuple[0] >= 7:
+    elif pytest_version_tuple and pytest_version_tuple[0] >= 7:  # pragma: no cover
 
         def pytest_collect_file(  # type: ignore[misc]
             self,
@@ -63,7 +70,7 @@ class PytestAlembicPlugin:
                 return TestCollector.from_parent(parent, path=file_path)
             return None
 
-    else:
+    else:  # pragma: no cover
 
         def pytest_collect_file(  # type: ignore[misc]
             self, path: Any, parent: pytest.Collector

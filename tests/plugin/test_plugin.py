@@ -1,6 +1,8 @@
+from unittest import mock
+
 import pytest
 
-from pytest_alembic.plugin.plugin import OptionResolver, parse_test_names
+from pytest_alembic.plugin.plugin import OptionResolver, parse_test_names, PytestAlembicPlugin
 
 pytest_options = (
     "--test-alembic",
@@ -166,3 +168,51 @@ class Test_collect_tests:
         for test in tests:
             assert f"::pytest-alembic::{test}" in stdout
         assert "4 passed" in stdout
+
+
+class Test__chained_options:
+    """The `include`/`exclude` methods accumulate rather than replace.
+
+    Each starts its list at `None` -- "not specified", which is meaningfully different
+    from "specified as nothing" -- and only allocates on the first call. Applying the
+    same option twice is what exercises the already-allocated path.
+    """
+
+    def test_include_accumulates(self) -> None:
+        collector = OptionResolver.collect_test_definitions()
+        collector.include("upgrade").include("single_head_revision")
+
+        assert collector.included_tests == ["upgrade", "single_head_revision"]
+
+    def test_include_experimental_accumulates(self) -> None:
+        collector = OptionResolver.collect_test_definitions()
+        collector.include_experimental("downgrade_leaves_no_trace")
+        collector.include_experimental("all_models_register_on_metadata")
+
+        assert collector.included_experimental_tests == [
+            "downgrade_leaves_no_trace",
+            "all_models_register_on_metadata",
+        ]
+
+    def test_exclude_accumulates(self) -> None:
+        collector = OptionResolver.collect_test_definitions()
+        collector.exclude("upgrade").exclude("single_head_revision")
+
+        assert collector.excluded_tests == ["upgrade", "single_head_revision"]
+
+
+class Test_pytest_itemcollected:
+    def test_item_without_fixtures_is_ignored(self, pytestconfig: pytest.Config) -> None:
+        """Assert a collected node carrying no fixtures is left alone.
+
+        `pytest_itemcollected` sees every collected item, including nodes which are not
+        function items and so have no `fixturenames` at all.
+        """
+        plugin = PytestAlembicPlugin(pytestconfig)
+
+        item = mock.Mock()
+        del item.fixturenames
+
+        plugin.pytest_itemcollected(item)
+
+        item.add_marker.assert_not_called()

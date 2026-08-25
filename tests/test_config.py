@@ -62,3 +62,30 @@ def test_pyproject_toml() -> None:
     with exists, mock_patch("[alembic]", b"[tool.alembic]\nscript_location = 'asdf'"):
         alembic_config = config.make_alembic_config(io.StringIO())
     assert alembic_config.get_main_option("script_location") == "asdf"
+
+
+def test_legacy_alembic_without_toml_support() -> None:
+    """Assert the pre-`pyproject.toml` alembic path still builds a config.
+
+    `_supports_toml` gates two branches, and only one of them is reachable in any given
+    environment -- the installed alembic either has `get_alembic_option` or it does not.
+    Patching it is what lets the legacy branch be exercised on a modern alembic.
+    """
+    config = Config(config_options={"file": "foo.ini"})
+
+    supports_toml = mock.patch("pytest_alembic.config._supports_toml", return_value=False)
+    with supports_toml, mock_patch("[alembic]"):
+        alembic_config = config.make_alembic_config(io.StringIO())
+
+    assert alembic_config.config_file_name == "foo.ini"
+
+
+def test_legacy_alembic_reads_script_location_from_main_option() -> None:
+    """Assert `_get_option` falls back to `get_main_option` without toml support."""
+    config = Config()
+
+    supports_toml = mock.patch("pytest_alembic.config._supports_toml", return_value=False)
+    with supports_toml, mock_patch("[alembic]\nscript_location = legacy"):
+        alembic_config = config.make_alembic_config(io.StringIO())
+
+    assert alembic_config.get_main_option("script_location") == "legacy"

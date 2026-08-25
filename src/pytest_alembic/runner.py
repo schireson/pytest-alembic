@@ -154,9 +154,9 @@ class MigrationContext:
 
         self.command_executor.execute_fn(get_current)
 
-        if current:
-            return current
-        return "base"
+        # No fallback needed: `current` starts as "base" and `get_current` only ever
+        # reassigns it to a revision hash.
+        return current
 
     def refresh_history(self) -> AlembicHistory:
         """Refresh the context's version of the alembic history.
