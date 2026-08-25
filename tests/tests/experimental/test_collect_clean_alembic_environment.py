@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, ClassVar, Optional
+from typing import Any, ClassVar
 
 import pytest
 from sqlalchemy import MetaData
@@ -74,7 +74,7 @@ class Test_identify_modules:
 
 @dataclass
 class Loader:
-    name: Optional[str]
+    name: str | None
 
 
 class Test_get_referrer_module:
@@ -87,7 +87,7 @@ class Test_get_referrer_module:
             ("meow", ["meow"]),
         ],
     )
-    def test_get_referer(self, name: Optional[str], loader_name: list) -> None:
+    def test_get_referer(self, name: str | None, loader_name: list) -> None:
         referrer = {"__loader__": Loader(name)}
         actual_loader_name = list(get_referrer_module(referrer))
         assert actual_loader_name == loader_name

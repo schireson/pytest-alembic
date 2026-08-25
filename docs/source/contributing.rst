@@ -12,8 +12,8 @@ you will also need Docker running locally.
 
 Getting Setup
 -------------
-``pytest-alembic`` supports Python 3.9 and above (see ``requires-python`` in
-``pyproject.toml``). CI exercises 3.9 through 3.13 against a matrix of ``pytest``,
+``pytest-alembic`` supports Python 3.10 and above (see ``requires-python`` in
+``pyproject.toml``). CI exercises 3.10 through 3.13 against a matrix of ``pytest``,
 ``pytest-asyncio`` and ``sqlalchemy`` versions.
 
 Run :code:`make help` to list the common commands, but for some basic setup:

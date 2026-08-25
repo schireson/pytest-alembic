@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Any, cast, Dict, List, Optional, TYPE_CHECKING, Union
+from typing import Any, cast, TYPE_CHECKING
 
 import alembic.config
 
@@ -54,19 +54,19 @@ class Config:
        the use of this feature instead.
     """
 
-    config_options: Dict[str, Any] = field(default_factory=dict)
-    alembic_config: Optional[alembic.config.Config] = None
+    config_options: dict[str, Any] = field(default_factory=dict)
+    alembic_config: alembic.config.Config | None = None
 
-    before_revision_data: Optional[Union[Dict, "RevisionSpec"]] = None
-    at_revision_data: Optional[Union[Dict, "RevisionSpec"]] = None
+    before_revision_data: "dict | RevisionSpec | None" = None
+    at_revision_data: "dict | RevisionSpec | None" = None
 
-    minimum_downgrade_revision: Optional[str] = None
-    skip_revisions: Optional[List[str]] = None
+    minimum_downgrade_revision: str | None = None
+    skip_revisions: list[str] | None = None
 
     @classmethod
     def from_raw_config(
         cls,
-        raw_config: Union[Dict[str, Any], alembic.config.Config, "Config", None] = None,
+        raw_config: "dict[str, Any] | alembic.config.Config | Config | None" = None,
     ):
         """Adapt between pre-produced alembic config and raw config options.
 
