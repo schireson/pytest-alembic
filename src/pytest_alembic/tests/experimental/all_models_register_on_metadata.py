@@ -1,3 +1,12 @@
+"""The experimental test for models that never reach the ``MetaData``.
+
+A model defined but not imported by ``env.py`` is invisible to autogenerate, so its
+table is silently missing from every migration this project generates. Detecting that
+means comparing what a bare import registers against what importing *every* module
+below the model package registers — and the former only holds in a fresh interpreter,
+which is why part of this runs in a subprocess.
+"""
+
 import importlib
 import json
 import logging
@@ -160,6 +169,17 @@ def get_bare_import_tableset(
 
 
 def parse_collection_output(raw_output: str):
+    """Extract the JSON payload the collection subprocess printed.
+
+    The subprocess communicates through stdout, which it does not have exclusively:
+    alembic's offline mode prints its own output there too. The payload is therefore
+    wrapped in sentinel tags, and everything outside them is ignored.
+
+    Raises:
+        RuntimeError: If no payload is found, carrying the raw output. This means the
+            subprocess never got as far as reporting, so it indicates a bug here rather
+            than a problem with the migrations under test.
+    """
     # The default env.py offline execution mode, emits extra output that is
     # irrelevant to the expected output that a script execution would normally
     # produce, so we surround it with sentinel content.
@@ -248,6 +268,12 @@ def traverse_modules(
 
 
 def url_to_string(url: URL) -> str:
+    """Render a sqlalchemy URL back to a string, password included.
+
+    The password has to survive, because the string is handed to a subprocess which needs
+    to connect with it. Which call does that has changed across sqlalchemy versions, so
+    the alternatives are tried in turn.
+    """
     try:
         return url.render_as_string(hide_password=False)
     except TypeError:

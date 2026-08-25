@@ -1,3 +1,11 @@
+"""The fixtures a user overrides, and the one their tests receive.
+
+Three fixtures make up the plugin's public surface: :func:`alembic_config` and
+:func:`alembic_engine` are the ones a user is expected to override, and
+:func:`alembic_runner` is what the tests are handed. :func:`create_alembic_fixture`
+exists for the cases where one runner per test session is not enough.
+"""
+
 from typing import Any
 
 import alembic.config

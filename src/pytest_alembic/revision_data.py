@@ -1,3 +1,11 @@
+"""The data a user asks to be inserted at given points in the history.
+
+A migration that works on an empty table does not necessarily work on a populated
+one. :class:`RevisionSpec` is the parsed form of the ``before_revision_data`` and
+``at_revision_data`` config options, and :class:`RevisionData` is the pair of them
+the runner consults as it steps through revisions.
+"""
+
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
@@ -43,6 +51,11 @@ class RevisionData:
         )
 
     def get(self, revision_data: dict | list[dict]):
+        """Yield `revision_data` as individual rows, whether it is one row or many.
+
+        A single dict is a common enough shorthand for "one row" that both forms are
+        accepted everywhere; this is where the two are levelled out.
+        """
         if isinstance(revision_data, dict):
             yield revision_data
         else:

@@ -1,3 +1,11 @@
+"""The four tests which run by default.
+
+These are the tests ``--test-alembic`` inserts when no explicit selection is made:
+the history has a single head, it upgrades cleanly, the models match the DDL the
+migrations produce, and every migration can be undone. Anything more invasive lives
+in :mod:`pytest_alembic.tests.experimental` instead.
+"""
+
 import logging
 import warnings
 
