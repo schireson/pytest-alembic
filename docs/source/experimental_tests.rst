@@ -19,13 +19,14 @@ identify the source module from which the :code:`env.py` is loading its
 :code:`MetaData` and automatically search in that module/package
 
 .. code-block:: toml
-   :caption: pyproject.toml/setup.cfg/pytest.ini
+   :caption: pyproject.toml
 
-   # pyproject.toml
    [tool.pytest.ini_options]
    pytest_alembic_include_experimental = 'all_models_register_on_metadata'
 
-   # or setup.cfg/pytest.ini
+.. code-block:: ini
+   :caption: setup.cfg/pytest.ini
+
    [pytest]
    pytest_alembic_include_experimental = all_models_register_on_metadata
 
@@ -158,13 +159,14 @@ the changes performed in the upgrade.
 Enabling downgrade_leaves_no_trace (TL;DR)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 .. code-block:: toml
-   :caption: pyproject.toml/setup.cfg/pytest.ini
+   :caption: pyproject.toml
 
-   # pyproject.toml
    [tool.pytest.ini_options]
    pytest_alembic_include_experimental = 'downgrade_leaves_no_trace'
 
-   # or setup.cfg/pytest.ini
+.. code-block:: ini
+   :caption: setup.cfg/pytest.ini
+
    [pytest]
    pytest_alembic_include_experimental = downgrade_leaves_no_trace
 
