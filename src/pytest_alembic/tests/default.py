@@ -8,6 +8,7 @@ in :mod:`pytest_alembic.tests.experimental` instead.
 
 import logging
 import warnings
+from typing import Any
 
 import pytest
 from alembic.autogenerate.api import AutogenContext
@@ -73,7 +74,7 @@ def test_model_definitions_match_ddl(alembic_runner: MigrationContext) -> None:
     history) and your models).
     """
 
-    def verify_is_empty_revision(migration_context, __, directives):
+    def verify_is_empty_revision(migration_context: Any, __: Any, directives: Any) -> None:
         script = directives[0]
 
         migration_is_empty = script.upgrade_ops.is_empty()

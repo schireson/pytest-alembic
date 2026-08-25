@@ -1,6 +1,7 @@
 """The failure type the built-in tests raise, and how its context is rendered."""
 
 import textwrap
+from collections.abc import Sequence
 
 
 class AlembicTestFailure(AssertionError):  # noqa: N818
@@ -14,7 +15,7 @@ class AlembicTestFailure(AssertionError):  # noqa: N818
     or a revision listing, which is unreadable squeezed onto the assertion line.
     """
 
-    def __init__(self, message, context=None):
+    def __init__(self, message: str, context: Sequence[tuple[str, str]] | None = None) -> None:
         """Build the failure.
 
         Args:
@@ -36,7 +37,7 @@ class AlembicTestFailure(AssertionError):  # noqa: N818
             result.extend(["", f"{title}:", textwrap.indent(item, "    ")])
         return result
 
-    def __str__(self):
+    def __str__(self) -> str:
         content = self.format_context()
         segments = [super().__str__(), *content]
         return "\n".join(segments)

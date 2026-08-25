@@ -93,7 +93,7 @@ class AlembicHistory:
             revisions_by_index=revisions_by_index,
         )
 
-    def validate_revision(self, revision):
+    def validate_revision(self, revision: str | None) -> str:
         """Normalise `revision` and assert that it exists in this history.
 
         ``head`` is accepted as an alias of ``heads``, which is strictly more general, so
@@ -101,7 +101,9 @@ class AlembicHistory:
 
         Args:
             revision: A revision hash, or one of the ``base``/``head``/``heads``
-                sentinels.
+                sentinels. ``None`` is accepted because that is what
+                :meth:`previous_revision` and :meth:`next_revision` return at the ends
+                of the history; it is rejected here like any other unknown value.
 
         Returns:
             The revision, with ``head`` coerced to ``heads``.
@@ -132,7 +134,7 @@ class AlembicHistory:
         revision_index = self.revision_indices[revision]
         return self.revisions_by_index.get(revision_index + 1)
 
-    def revision_range(self, current_revision: str, dest_revision: str) -> list[str]:
+    def revision_range(self, current_revision: str | None, dest_revision: str | None) -> list[str]:
         """Return every revision from `current_revision` to `dest_revision`, inclusive.
 
         Both ends are validated, so an unknown revision raises rather than yielding a
@@ -145,7 +147,9 @@ class AlembicHistory:
         end_index = self.revision_indices[dest_revision]
         return [self.revisions[index] for index in range(start_index, end_index + 1)]
 
-    def revision_window(self, current_revision: str, dest_revision: str) -> list[tuple[str, str]]:
+    def revision_window(
+        self, current_revision: str | None, dest_revision: str | None
+    ) -> list[tuple[str, str]]:
         """Return the consecutive ``(from, to)`` pairs across a range of revisions.
 
         This is the shape the up/down tests iterate: each pair is one migration step, so

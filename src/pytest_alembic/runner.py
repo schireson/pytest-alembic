@@ -8,24 +8,35 @@ and the configured revision data.
 
 import contextlib
 import functools
+from collections.abc import Callable, Iterator
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 
 import alembic.command
 import alembic.migration
 import alembic.util
 from alembic.script.revision import RevisionMap
+from sqlalchemy import Table
+from sqlalchemy.engine import Connectable
 
 from pytest_alembic.executor import CommandExecutor, ConnectionExecutor
 from pytest_alembic.history import AlembicHistory
 from pytest_alembic.revision_data import RevisionData
 
 if TYPE_CHECKING:
+    from alembic.runtime.migration import MigrationContext as AlembicMigrationContext
+    from alembic.runtime.migration import RevisionStep
+
     from pytest_alembic.config import Config
+
+# A user-supplied ``process_revision_directives`` callback, as alembic invokes it:
+# the live migration context, the revision(s) being generated, and the list of
+# directives, which the callback mutates in place.
+ProcessRevisionDirectives = Callable[..., None]
 
 
 @contextlib.contextmanager
-def runner(config: "Config", engine=None):
+def runner(config: "Config", engine: Connectable | None = None) -> Iterator["MigrationContext"]:
     """Manage the alembic execution context, in a given context.
 
     Most tests never call this directly — the :func:`alembic_runner` fixture wraps it and
@@ -90,7 +101,7 @@ class MigrationContext:
         config: "Config",
         command_executor: CommandExecutor,
         connection_executor: ConnectionExecutor,
-    ):
+    ) -> "MigrationContext":
         """Assemble a context from its parts, parsing the history as it goes.
 
         The executors are passed in rather than built here, because the caller is what
@@ -134,7 +145,7 @@ class MigrationContext:
         """
         current = "base"
 
-        def get_current(rev, _):
+        def get_current(rev: Any, _: "AlembicMigrationContext") -> "list[RevisionStep]":
             nonlocal current
             if rev:
                 current = rev[0]
@@ -171,12 +182,12 @@ class MigrationContext:
 
     def generate_revision(
         self,
-        process_revision_directives=None,
+        process_revision_directives: ProcessRevisionDirectives | None = None,
         *,
-        prevent_file_generation=True,
-        autogenerate=False,
-        **kwargs,
-    ):
+        prevent_file_generation: bool = True,
+        autogenerate: bool = False,
+        **kwargs: Any,
+    ) -> list[str] | None:
         """Generate a test revision.
 
         If `prevent_file_generation` is `True`, the final act of this process raises a
@@ -204,11 +215,13 @@ class MigrationContext:
             if not prevent_file_generation:
                 self.refresh_history()
         except RevisionSuccess:
-            pass
+            # The sentinel means the revision was generated successfully but its file
+            # was deliberately not written, so there is no command output to hand back.
+            return None
         else:
             return result
 
-    def raw_command(self, *args, **kwargs):
+    def raw_command(self, *args: Any, **kwargs: Any) -> list[str]:
         """Execute a raw alembic command.
 
         An escape hatch for alembic commands with no dedicated method here. Arguments are
@@ -222,7 +235,9 @@ class MigrationContext:
         """
         return self.command_executor.run_command(*args, **kwargs)
 
-    def managed_upgrade(self, dest_revision, *, current=None, return_current=True):
+    def managed_upgrade(
+        self, dest_revision: str | None, *, current: str | None = None, return_current: bool = True
+    ) -> str | None:
         """Perform an upgrade one migration at a time, inserting static data at the given points."""
         if current is None:
             current = self.current
@@ -243,7 +258,9 @@ class MigrationContext:
             return self.current
         return None
 
-    def managed_downgrade(self, dest_revision, *, current=None, return_current=True):
+    def managed_downgrade(
+        self, dest_revision: str | None, *, current: str | None = None, return_current: bool = True
+    ) -> str | None:
         """Perform an downgrade, one migration at a time."""
         if current is None:
             current = self.current
@@ -266,7 +283,7 @@ class MigrationContext:
             return self.current
         return None
 
-    def migrate_up_before(self, revision):
+    def migrate_up_before(self, revision: str) -> str | None:
         """Migrate up to, but not including the given `revision`.
 
         This is the usual way to set up state that a migration is then asked to
@@ -282,7 +299,9 @@ class MigrationContext:
         preceeding_revision = self.history.previous_revision(revision)
         return self.managed_upgrade(preceeding_revision)
 
-    def migrate_up_to(self, revision, *, current: str | None = None, return_current: bool = True):
+    def migrate_up_to(
+        self, revision: str, *, current: str | None = None, return_current: bool = True
+    ) -> str | None:
         """Migrate up to, and including the given `revision`.
 
         Accepts ``"heads"`` to apply the whole history.
@@ -297,7 +316,7 @@ class MigrationContext:
         """
         return self.managed_upgrade(revision, current=current, return_current=return_current)
 
-    def migrate_up_one(self):
+    def migrate_up_one(self) -> str | None:
         """Migrate up by exactly one revision.
 
         Returns the revision migrated to, or ``None`` if already at the head — which
@@ -315,7 +334,7 @@ class MigrationContext:
             return None
         return new_revision
 
-    def migrate_down_before(self, revision):
+    def migrate_down_before(self, revision: str) -> str | None:
         """Migrate down to, but not including the given `revision`.
 
         Examples:
@@ -326,7 +345,9 @@ class MigrationContext:
         next_revision = self.history.next_revision(revision)
         return self.migrate_down_to(next_revision)
 
-    def migrate_down_to(self, revision, *, current: str | None = None, return_current: bool = True):
+    def migrate_down_to(
+        self, revision: str | None, *, current: str | None = None, return_current: bool = True
+    ) -> str | None:
         """Migrate down to, and including the given `revision`.
 
         Accepts ``"base"`` to unwind the entire history.
@@ -340,7 +361,7 @@ class MigrationContext:
         self.managed_downgrade(revision, current=current, return_current=return_current)
         return revision
 
-    def migrate_down_one(self):
+    def migrate_down_one(self) -> str | None:
         """Migrate down by exactly one revision.
 
         Returns the revision migrated down to.
@@ -356,7 +377,7 @@ class MigrationContext:
         self.managed_downgrade(previous_revision, current=current)
         return previous_revision
 
-    def roundtrip_next_revision(self):
+    def roundtrip_next_revision(self) -> str | None:
         """Upgrade, downgrade then upgrade.
 
         This is meant to ensure that the given revision is idempotent.
@@ -374,7 +395,9 @@ class MigrationContext:
             return self.migrate_up_one()
         return None
 
-    def insert_into(self, table: str | None, data: dict | list | None = None, revision=None):
+    def insert_into(
+        self, table: str | None, data: dict | list | None = None, revision: str | None = None
+    ) -> None:
         """Insert data into a given table.
 
         The table is reflected at `revision`, which defaults to the current revision — so
@@ -427,7 +450,9 @@ class MigrationContext:
             data=data,
         )
 
-    def table_at_revision(self, name, *, revision=None, schema=None):
+    def table_at_revision(
+        self, name: str, *, revision: str | None = None, schema: str | None = None
+    ) -> Table:
         """Return a reference to a `sqlalchemy.Table` at the given revision.
 
         Useful for asserting on what a migration actually did — the returned table is
@@ -449,7 +474,7 @@ class MigrationContext:
         revision = revision or self.current
         return self.connection_executor.table(revision=revision, name=name, schema=schema)
 
-    def set_revision(self, revision: str):
+    def set_revision(self, revision: str) -> None:
         """Declare the database to be at `revision` without running any migration.
 
         This stamps the alembic version table and nothing else. Useful for putting the
@@ -471,19 +496,23 @@ class RevisionSuccess(Exception):  # noqa: N818
     """
 
     @classmethod
-    def process_revision_directives(cls, fn):
+    def process_revision_directives(
+        cls, fn: ProcessRevisionDirectives
+    ) -> ProcessRevisionDirectives:
         """Wrap a real `process_revision_directives` function, preventing it from completing."""
 
         @functools.wraps(fn)
-        def _process_revision_directives(context, revision, directives):
+        def _process_revision_directives(context: Any, revision: Any, directives: Any) -> None:
             fn(context, revision, directives)
             raise cls
 
         return _process_revision_directives
 
 
-def _sequence_directives(*directives):
-    def directive_wrapper(*args, **kwargs):
+def _sequence_directives(
+    *directives: ProcessRevisionDirectives | None,
+) -> ProcessRevisionDirectives:
+    def directive_wrapper(*args: Any, **kwargs: Any) -> None:
         for directive in directives:
             if not directive:
                 continue

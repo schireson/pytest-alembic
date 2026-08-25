@@ -9,8 +9,10 @@ what the migration did goes through the latter.
 
 import contextlib
 import io
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from io import StringIO
+from typing import Any, TYPE_CHECKING
 
 import alembic
 import alembic.config
@@ -20,6 +22,20 @@ from sqlalchemy import MetaData, Table
 from sqlalchemy.engine import Connectable, Connection, Engine
 
 from pytest_alembic.config import Config
+
+if TYPE_CHECKING:
+    from alembic.runtime.migration import MigrationContext as AlembicMigrationContext
+    from alembic.runtime.migration import RevisionStep
+
+# The callback alembic's ``EnvironmentContext`` invokes: it is handed the revisions the
+# database is currently at, plus the live migration context, and returns the steps to
+# run -- an empty list when the caller only wants to *inspect* the environment.
+#
+# The first argument is really the `tuple[str, ...]` that `MigrationContext.get_current_heads`
+# produces, but it is typed `Any` deliberately: alembic's own `_upgrade_revs`/`_downgrade_revs`
+# declare `current_rev: str` while being fed exactly that tuple, so annotating it accurately
+# here would make every call site below an error against alembic's own signature.
+MigrationFn = Callable[[Any, "AlembicMigrationContext"], "list[RevisionStep]"]
 
 
 @dataclass
@@ -47,7 +63,7 @@ class CommandExecutor:
     script: ScriptDirectory
 
     @classmethod
-    def from_config(cls, config: Config):
+    def from_config(cls, config: Config) -> "CommandExecutor":
         """Build an executor, and the ``ScriptDirectory`` that must accompany it.
 
         The script directory has to be derived from the very same
@@ -63,7 +79,7 @@ class CommandExecutor:
             script=ScriptDirectory.from_config(alembic_config),
         )
 
-    def configure(self, **kwargs):
+    def configure(self, **kwargs: Any) -> None:
         """Set attributes on the alembic config, for the migrations' ``env.py`` to read.
 
         This is how the ``connection`` a test is bound to reaches ``env.py``: it is put in
@@ -73,7 +89,7 @@ class CommandExecutor:
         for key, value in kwargs.items():
             self.alembic_config.attributes[key] = value
 
-    def execute_fn(self, fn):
+    def execute_fn(self, fn: MigrationFn) -> None:
         """Run the migrations' ``env.py`` with `fn` as its migration function.
 
         Unlike :meth:`_run_env`, no destination revision is supplied, so nothing is
@@ -83,7 +99,7 @@ class CommandExecutor:
         with EnvironmentContext(self.alembic_config, self.script, fn=fn):
             self.script.run_env()
 
-    def run_command(self, command, *args, **kwargs):
+    def run_command(self, command: str, *args: Any, **kwargs: Any) -> list[str]:
         """Invoke the named ``alembic.command`` function and return what it printed.
 
         Only the output produced by *this* command is returned: the buffer position is
@@ -118,7 +134,7 @@ class CommandExecutor:
         self.stdout.seek(self.stream_position)
         return self.stdout.readlines()
 
-    def heads(self):
+    def heads(self) -> list[str]:
         """Return the revision hashes alembic considers to be heads.
 
         More than one means the history has branched without being merged, which is what
@@ -126,23 +142,23 @@ class CommandExecutor:
         """
         return [rev.revision for rev in self.script.get_revisions("heads")]
 
-    def upgrade(self, revision):
+    def upgrade(self, revision: str) -> None:
         """Upgrade to the given `revision`."""
 
-        def upgrade(rev, _):
+        def upgrade(rev: Any, _: "AlembicMigrationContext") -> "list[RevisionStep]":
             return self.script._upgrade_revs(revision, rev)  # noqa: SLF001
 
         self._run_env(upgrade, revision)
 
-    def downgrade(self, revision):
+    def downgrade(self, revision: str) -> None:
         """Downgrade to the given `revision`."""
 
-        def downgrade(rev, _):
+        def downgrade(rev: Any, _: "AlembicMigrationContext") -> "list[RevisionStep]":
             return self.script._downgrade_revs(revision, rev)  # noqa: SLF001
 
         self._run_env(downgrade, revision)
 
-    def stamp(self, revision: str):
+    def stamp(self, revision: str) -> list[str]:
         """Record `revision` as the current one, without running any migration.
 
         This writes the alembic version table only. It is how a test can be positioned at
@@ -151,7 +167,7 @@ class CommandExecutor:
         """
         return self.run_command("stamp", revision)
 
-    def _run_env(self, fn, revision=None):
+    def _run_env(self, fn: MigrationFn, revision: str | None = None) -> None:
         """Execute the migrations' env.py, given some function to execute."""
         dont_mutate = revision is None
         with EnvironmentContext(
@@ -176,7 +192,7 @@ class ConnectionExecutor:
     definition. See :meth:`metadata`.
     """
 
-    connection: Connectable
+    connection: Connectable | None
     metadatas: dict[str, MetaData] = field(default_factory=dict)
 
     def metadata(self, revision: str) -> MetaData:
@@ -249,7 +265,7 @@ class ConnectionExecutor:
         data: dict | list,
         tablename: str | None = None,
         schema: str | None = None,
-    ):
+    ) -> None:
         """Insert rows into a table as it exists at `revision`.
 
         This is what backs the ``before_revision_data``/``at_revision_data`` config: it
@@ -277,7 +293,7 @@ class ConnectionExecutor:
             data: dict | list,
             tablename: str | None = None,
             schema: str | None = None,
-        ):
+        ) -> None:
             if isinstance(data, dict):
                 data = [data]
 
@@ -300,7 +316,7 @@ class ConnectionExecutor:
 
         self.run_task(table_insert, data=data, tablename=tablename, schema=schema)
 
-    def run_task(self, fn, **kwargs):
+    def run_task(self, fn: Callable[..., Any], **kwargs: Any) -> Any:
         """Run a given task on the provided connect, with the correct async/sync context.
 
         Given an async engine, we need to run the task in an async execution context,
@@ -308,15 +324,18 @@ class ConnectionExecutor:
         running the migrations themselves, so this matches that style.
         """
         # The user may not have sqlalchemy 1.4+, and therefore may not even be able to
-        # use async engines.
-        AsyncEngine = None  # noqa: N806
+        # use async engines. The class is bound to a separate name rather than rebinding
+        # the import itself, so the sentinel and the class are not the same variable.
+        async_engine_cls: type | None = None
         with contextlib.suppress(ImportError):
             from sqlalchemy.ext.asyncio import AsyncEngine
 
-        if AsyncEngine and isinstance(self.connection, AsyncEngine):
+            async_engine_cls = AsyncEngine
+
+        if async_engine_cls and isinstance(self.connection, async_engine_cls):
             import asyncio
 
-            async def run(engine):
+            async def run(engine: Any) -> Any:
                 """Run `fn` inside an async connection, committing on success."""
                 async with engine.connect() as connection:
                     result = await connection.run_sync(fn, **kwargs)

@@ -10,7 +10,7 @@ pytest_options = (
 )
 
 
-def test_parse_raw_test_names_empty_skips():
+def test_parse_raw_test_names_empty_skips() -> None:
     result = sorted(parse_test_names("up_down_consistency,foo\n\n\nbar\n"))
 
     expected_result = ["bar", "foo", "up_down_consistency"]
@@ -18,7 +18,7 @@ def test_parse_raw_test_names_empty_skips():
 
 
 class Test__collect_test_definitions:
-    def test_default_only(self):
+    def test_default_only(self) -> None:
         collector = OptionResolver.collect_test_definitions(default=True, experimental=False)
 
         assert sorted(collector.available_tests) == [
@@ -28,7 +28,7 @@ class Test__collect_test_definitions:
             "upgrade",
         ]
 
-    def test_experimental_only(self):
+    def test_experimental_only(self) -> None:
         # `default=False` must actually exclude the default group. `pytest_addoption`
         # relies on this to describe `pytest_alembic_include_experimental`, so a
         # regression here silently advertises non-experimental tests as experimental.
@@ -39,7 +39,7 @@ class Test__collect_test_definitions:
             "downgrade_leaves_no_trace",
         ]
 
-    def test_both_groups(self):
+    def test_both_groups(self) -> None:
         collector = OptionResolver.collect_test_definitions(default=True, experimental=True)
 
         assert sorted(collector.available_tests) == [
@@ -51,14 +51,14 @@ class Test__collect_test_definitions:
             "upgrade",
         ]
 
-    def test_neither_group(self):
+    def test_neither_group(self) -> None:
         collector = OptionResolver.collect_test_definitions(default=False, experimental=False)
 
         assert collector.available_tests == {}
 
 
 class Test__OptionResolver:
-    def test_all_enabled(self):
+    def test_all_enabled(self) -> None:
         test_collector = OptionResolver.collect_test_definitions()
         result = [t.name for t in test_collector.tests()]
 
@@ -70,14 +70,14 @@ class Test__OptionResolver:
         ]
         assert expected_result == result
 
-    def test_include_specified_invalid(self):
+    def test_include_specified_invalid(self) -> None:
         test_collector = OptionResolver.collect_test_definitions()
         test_collector.include("foo", "bar")
 
         with pytest.raises(ValueError, match="bar, foo"):
             test_collector.tests()
 
-    def test_include_specified(self):
+    def test_include_specified(self) -> None:
         test_collector = OptionResolver.collect_test_definitions()
         test_collector.include("single_head_revision", "upgrade")
 
@@ -86,14 +86,14 @@ class Test__OptionResolver:
         expected_result = ["single_head_revision", "upgrade"]
         assert expected_result == result
 
-    def test_exclude_specified_invalid(self):
+    def test_exclude_specified_invalid(self) -> None:
         test_collector = OptionResolver.collect_test_definitions()
         test_collector.exclude("foo", "bar")
 
         with pytest.raises(ValueError, match="bar, foo"):
             test_collector.tests()
 
-    def test_exclude_specified(self):
+    def test_exclude_specified(self) -> None:
         test_collector = OptionResolver.collect_test_definitions()
         test_collector.exclude("single_head_revision", "upgrade")
 
@@ -105,7 +105,7 @@ class Test__OptionResolver:
         ]
         assert expected_result == result
 
-    def test_include_experimental(self):
+    def test_include_experimental(self) -> None:
         test_collector = OptionResolver.collect_test_definitions().include_experimental(
             "all_models_register_on_metadata"
         )
@@ -122,7 +122,7 @@ class Test__OptionResolver:
 
 
 class Test_collect_tests:
-    def test_disabled_cli(self, testdir):
+    def test_disabled_cli(self, testdir: pytest.Testdir) -> None:
         testdir.copy_example("test_no_data")
         result = testdir.runpytest("-vv")
         stdout = result.stdout.str()
@@ -130,7 +130,7 @@ class Test_collect_tests:
 
         assert result.ret == pytest.ExitCode.NO_TESTS_COLLECTED
 
-    def test_include_cfg(self, testdir):
+    def test_include_cfg(self, testdir: pytest.Testdir) -> None:
         testdir.copy_example("test_no_data")
         testdir.makefile(".ini", pytest="[pytest]\npytest_alembic_include=single_head_revision\n")
         result = testdir.runpytest(*pytest_options)
@@ -140,7 +140,7 @@ class Test_collect_tests:
         assert result.ret == 0
         assert "1 passed" in stdout
 
-    def test_exclude_cfg(self, testdir):
+    def test_exclude_cfg(self, testdir: pytest.Testdir) -> None:
         testdir.copy_example("test_no_data")
         testdir.makefile(".ini", pytest="[pytest]\npytest_alembic_exclude=single_head_revision\n")
         result = testdir.runpytest(*pytest_options)
@@ -150,7 +150,7 @@ class Test_collect_tests:
         assert result.ret == 0
         assert "3 passed" in stdout
 
-    def test_included_tests_start_with_tests(self, testdir):
+    def test_included_tests_start_with_tests(self, testdir: pytest.Testdir) -> None:
         testdir.copy_example("test_no_data")
         result = testdir.runpytest(*pytest_options)
         stdout = result.stdout.str()

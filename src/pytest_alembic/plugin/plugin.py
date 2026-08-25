@@ -10,7 +10,7 @@ import re
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path, PurePath
-from typing import cast
+from typing import Any, cast
 
 import pytest
 from _pytest import config
@@ -38,7 +38,9 @@ class PytestAlembicPlugin:
     # way to support both <7 and >=7 without weird nonsense like this.
     if pytest_version_tuple and pytest_version_tuple >= (8, 1, 0):
 
-        def pytest_collect_file(self, file_path, parent):
+        def pytest_collect_file(
+            self, file_path: Path, parent: pytest.Collector
+        ) -> "TestCollector | None":
             """Collect the built-in tests at *file_path* (pytest >= 8.1 signature)."""
             if self.should_register(file_path):
                 return TestCollector.from_parent(parent, path=file_path)
@@ -46,7 +48,12 @@ class PytestAlembicPlugin:
 
     elif pytest_version_tuple and pytest_version_tuple[0] >= 7:
 
-        def pytest_collect_file(self, file_path, path, parent):  # type: ignore[misc] # noqa: ARG002
+        def pytest_collect_file(  # type: ignore[misc]
+            self,
+            file_path: Path,
+            path: Any,  # noqa: ARG002
+            parent: pytest.Collector,
+        ) -> "TestCollector | None":
             """Collect the built-in tests at *file_path* (pytest 7 signature).
 
             ``path`` is accepted and ignored: pytest 7 passes both the legacy ``py.path``
@@ -58,13 +65,15 @@ class PytestAlembicPlugin:
 
     else:
 
-        def pytest_collect_file(self, path, parent):
+        def pytest_collect_file(  # type: ignore[misc]
+            self, path: Any, parent: pytest.Collector
+        ) -> "TestCollector | None":
             """Collect the built-in tests at *path* (pytest < 7 signature)."""
             if self.should_register(Path(path)):
                 return TestCollector.from_parent(parent, fspath=path)
             return None
 
-    def should_register(self, path):
+    def should_register(self, path: PurePath) -> bool:
         """Report whether *path* is the one file the built-in tests should bind to.
 
         Precedence is command line, then ini, then ``tests/conftest.py``. The comparison
@@ -88,7 +97,7 @@ class PytestAlembicPlugin:
 
         return False
 
-    def pytest_itemcollected(self, item):
+    def pytest_itemcollected(self, item: pytest.Item) -> None:
         """Attach a marker to each test which uses the alembic fixture."""
         if not hasattr(item, "fixturenames"):
             return
@@ -105,13 +114,13 @@ class TestCollector(pytest.Module):
     exists on disk.
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: Any) -> None:
         """Suffix the node id and mark every test below it as ``alembic``."""
         super().__init__(**kwargs)
         self._nodeid += "::pytest-alembic"
         self.add_marker("alembic")
 
-    def collect(self):
+    def collect(self) -> list[pytest.Item]:
         """Resolve which built-in tests are enabled and return them as pytest items.
 
         Returns an empty list unless ``--test-alembic`` was passed, so merely being
@@ -141,7 +150,7 @@ class TestCollector(pytest.Module):
             .exclude(*raw_excluded_tests)
         )
 
-        result = []
+        result: list[pytest.Item] = []
         for test in test_collector.sorted_tests():
             name = test.raw_name
             self.ihook.pytest_pycollect_makeitem(collector=self, name=name, obj=test)
@@ -158,7 +167,7 @@ class TestCollector(pytest.Module):
 class PytestAlembicItem(pytest.Function):
     """A single built-in test, reported under a ``[pytest-alembic]`` label."""
 
-    def reportinfo(self):
+    def reportinfo(self) -> tuple[Any, int, str]:
         """Report line 0 of the bound file, since these tests have no source location."""
         return (self.fspath, 0, f"[pytest-alembic] {self.name}")
 
@@ -178,7 +187,7 @@ class PytestAlembicTest:
     is_experimental: bool
 
     @property
-    def name(self):
+    def name(self) -> str:
         """The name used in options and reports, without the ``test_`` prefix.
 
         Examples:
@@ -218,9 +227,9 @@ class OptionResolver:
     def collect_test_definitions(
         cls,
         *,
-        default=True,
-        experimental=True,
-    ):
+        default: bool = True,
+        experimental: bool = True,
+    ) -> "OptionResolver":
         """Collect the built-in test functions into a new resolver.
 
         Discovery is by naming convention: any ``test_``-prefixed attribute of
@@ -265,7 +274,7 @@ class OptionResolver:
 
         return cls(all_tests)
 
-    def include(self, *tests):
+    def include(self, *tests: str) -> "OptionResolver":
         """Add *tests* to the explicit include list, and return ``self`` for chaining.
 
         Specifying any include is what suppresses the default selection, so an empty
@@ -278,7 +287,7 @@ class OptionResolver:
             self.included_tests.extend(tests)
         return self
 
-    def include_experimental(self, *tests):
+    def include_experimental(self, *tests: str) -> "OptionResolver":
         """Add experimental *tests* to the include list, and return ``self``.
 
         Tracked separately from :meth:`include` because experimental tests are never
@@ -291,7 +300,7 @@ class OptionResolver:
             self.included_experimental_tests.extend(tests)
         return self
 
-    def exclude(self, *tests):
+    def exclude(self, *tests: str) -> "OptionResolver":
         """Add *tests* to the exclude list, and return ``self`` for chaining.
 
         Exclusions are applied after inclusions, so naming a test in both drops it.
@@ -303,11 +312,11 @@ class OptionResolver:
             self.excluded_tests.extend(tests)
         return self
 
-    def sorted_tests(self):
+    def sorted_tests(self) -> list[PytestAlembicTest]:
         """The resolved tests in a stable order, so collection order is reproducible."""
         return sorted(self.tests(), key=lambda t: t.raw_name)
 
-    def tests(self):
+    def tests(self) -> list[PytestAlembicTest]:
         """Resolve the options into the selected tests.
 
         Every unrecognised name is gathered before raising, so a typo in one option does
@@ -350,7 +359,7 @@ class OptionResolver:
         return [self.available_tests[t] for t in selected_tests]
 
 
-def parse_test_names(raw_test_names):
+def parse_test_names(raw_test_names: str) -> set[str]:
     r"""Split a comma- or newline-separated option value into a set of test names.
 
     Both separators are accepted because pytest ini values are commonly written across
