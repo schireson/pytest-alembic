@@ -1,3 +1,11 @@
+"""The object tests actually hold: the migration context, and how it is built.
+
+:class:`MigrationContext` is what the :func:`alembic_runner` fixture yields, and the
+surface every test written against a migration history uses. This module assembles it
+from the pieces the other modules provide — the two executors, the flattened history,
+and the configured revision data.
+"""
+
 import contextlib
 import functools
 from dataclasses import dataclass
@@ -83,6 +91,11 @@ class MigrationContext:
         command_executor: CommandExecutor,
         connection_executor: ConnectionExecutor,
     ):
+        """Assemble a context from its parts, parsing the history as it goes.
+
+        The executors are passed in rather than built here, because the caller is what
+        knows the engine under test — see :func:`runner`.
+        """
         history = AlembicHistory.parse(command_executor.script.revision_map)
 
         return cls(
@@ -437,6 +450,16 @@ class MigrationContext:
         return self.connection_executor.table(revision=revision, name=name, schema=schema)
 
     def set_revision(self, revision: str):
+        """Declare the database to be at `revision` without running any migration.
+
+        This stamps the alembic version table and nothing else. Useful for putting the
+        database at a known point cheaply, but note that the schema is *not* brought in
+        line with that revision — that is the caller's problem.
+
+        Examples:
+            >>> def test_from_midway_through_the_history(alembic_runner):
+            ...     alembic_runner.set_revision("abc123")
+        """
         self.command_executor.stamp(revision)
 
 

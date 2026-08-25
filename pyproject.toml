@@ -149,10 +149,12 @@ incremental = true
 # symbol is required to carry a docstring, while this floor stops the overall
 # proportion from regressing. Public API first, internals as they are touched.
 #
-# Ratcheted floor, in the same spirit as [tool.coverage.report]. Held just below
-# the 71.7% observed locally so an unrelated refactor that adds an undocumented
-# helper does not redden the build; raise it whenever the measured number moves up.
-fail-under = 70
+# The ratchet has reached the top: every symbol interrogate counts is documented,
+# so the floor is the measured number. A new undocumented helper now fails the
+# build, which is the point — a 100% floor is the only one that cannot silently
+# erode, and the exclusions below define what "counts" narrowly enough that
+# meeting it does not mean writing docstrings for `__repr__`.
+fail-under = 100
 
 # Re-export modules (`__init__.py`) hold only imports and `__all__`; magic
 # methods and nested helpers are not a documentation surface. `ignore-init-method`

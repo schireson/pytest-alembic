@@ -1,3 +1,12 @@
+"""The two executors: one drives alembic, the other drives the database.
+
+:class:`CommandExecutor` wraps ``alembic.command`` so that migrations run against a
+captured config with their output buffered, and :class:`ConnectionExecutor` reflects
+and writes real tables through the connection under test. A :class:`MigrationContext`
+holds one of each — moving through the history goes through the former, asserting on
+what the migration did goes through the latter.
+"""
+
 import contextlib
 import io
 from dataclasses import dataclass, field
@@ -39,6 +48,12 @@ class CommandExecutor:
 
     @classmethod
     def from_config(cls, config: Config):
+        """Build an executor, and the ``ScriptDirectory`` that must accompany it.
+
+        The script directory has to be derived from the very same
+        ``alembic.config.Config`` the commands will run against, which is why this is the
+        supported way to construct the class rather than calling it directly.
+        """
         stdout = StringIO()
         alembic_config = config.make_alembic_config(stdout)
         return cls(
@@ -49,14 +64,45 @@ class CommandExecutor:
         )
 
     def configure(self, **kwargs):
+        """Set attributes on the alembic config, for the migrations' ``env.py`` to read.
+
+        This is how the ``connection`` a test is bound to reaches ``env.py``: it is put in
+        ``alembic_config.attributes``, which is the channel alembic itself documents for
+        passing objects into the environment.
+        """
         for key, value in kwargs.items():
             self.alembic_config.attributes[key] = value
 
     def execute_fn(self, fn):
+        """Run the migrations' ``env.py`` with `fn` as its migration function.
+
+        Unlike :meth:`_run_env`, no destination revision is supplied, so nothing is
+        migrated: this is the hook used by tests which only want to *inspect* the
+        environment, such as comparing model definitions against the live DDL.
+        """
         with EnvironmentContext(self.alembic_config, self.script, fn=fn):
             self.script.run_env()
 
     def run_command(self, command, *args, **kwargs):
+        """Invoke the named ``alembic.command`` function and return what it printed.
+
+        Only the output produced by *this* command is returned: the buffer position is
+        recorded first, and read from afterwards. Stderr is discarded, because alembic
+        logs the whole upgrade path there, which crowds out the real error when one
+        occurs without adding any context.
+
+        Args:
+            command: The name of an attribute of ``alembic.command``, e.g. ``"stamp"``.
+            *args: Positional arguments for that command, after the config.
+            **kwargs: Keyword arguments for that command.
+
+        Returns:
+            The lines the command wrote to stdout.
+
+        Raises:
+            RuntimeError: If alembic raises ``CommandError``. Re-raised as a plain
+                ``RuntimeError`` so callers need not import from ``alembic.util``.
+        """
         self.stream_position = self.stdout.tell()
 
         executable_command = getattr(alembic.command, command)
@@ -73,6 +119,11 @@ class CommandExecutor:
         return self.stdout.readlines()
 
     def heads(self):
+        """Return the revision hashes alembic considers to be heads.
+
+        More than one means the history has branched without being merged, which is what
+        ``test_single_head_revision`` exists to catch.
+        """
         return [rev.revision for rev in self.script.get_revisions("heads")]
 
     def upgrade(self, revision):
@@ -92,6 +143,12 @@ class CommandExecutor:
         self._run_env(downgrade, revision)
 
     def stamp(self, revision: str):
+        """Record `revision` as the current one, without running any migration.
+
+        This writes the alembic version table only. It is how a test can be positioned at
+        an arbitrary point in the history when the migrations themselves are not what is
+        under test.
+        """
         return self.run_command("stamp", revision)
 
     def _run_env(self, fn, revision=None):
@@ -159,6 +216,24 @@ class ConnectionExecutor:
         schema: str | None = None,
         connection: Connection | Engine | None = None,
     ) -> Table:
+        """Reflect `name` as it exists at `revision`.
+
+        The table is reflected from the live database on first request and then cached on
+        that revision's ``MetaData``, so repeated access within one revision does not
+        re-query. Because the cache is per revision, the same table reflected before and
+        after a migration correctly yields two different definitions.
+
+        Args:
+            revision: The revision whose ``MetaData`` the table is attached to.
+            name: The table name, optionally already qualified by the caller.
+            schema: The schema the table lives in, if not the default one.
+            connection: Reflect through this connection instead of the executor's own.
+                Used when reflecting inside an open transaction, where the table is not
+                yet visible to any other connection.
+
+        Returns:
+            The reflected ``Table``.
+        """
         meta = self.metadata(revision)
         if name in meta.tables:
             return meta.tables[name]
@@ -175,6 +250,28 @@ class ConnectionExecutor:
         tablename: str | None = None,
         schema: str | None = None,
     ):
+        """Insert rows into a table as it exists at `revision`.
+
+        This is what backs the ``before_revision_data``/``at_revision_data`` config: it
+        puts real rows in front of a migration, so that a migration which only works on
+        an empty table is caught.
+
+        A dict inserts one row, a list inserts several. Each row may name its own table
+        through a ``"__tablename__"`` key, which takes precedence over `tablename` and
+        may itself be schema-qualified (``"schema.table"``); that key is stripped before
+        the insert.
+
+        Args:
+            revision: The revision whose table definition the rows are inserted against.
+            data: One row as a dict, or several as a list of dicts.
+            tablename: The table to insert into, for rows which do not name their own.
+            schema: The schema the table lives in, if not the default one.
+
+        Raises:
+            ValueError: If a row names no table, either through `tablename` or through a
+                ``"__tablename__"`` key.
+        """
+
         def table_insert(
             connection: Connection,
             data: dict | list,
@@ -220,6 +317,7 @@ class ConnectionExecutor:
             import asyncio
 
             async def run(engine):
+                """Run `fn` inside an async connection, committing on success."""
                 async with engine.connect() as connection:
                     result = await connection.run_sync(fn, **kwargs)
                     await connection.commit()

@@ -45,6 +45,12 @@ def run():  # pragma: no cover
 
 
 def create_connectable(url, *, async_=False):
+    """Create an engine for `url`, async or sync as requested.
+
+    Both imports are deliberately deferred: ``sqlalchemy.ext.asyncio`` is not importable
+    on every supported sqlalchemy version, and this module is imported by the subprocess
+    whether or not async is in play.
+    """
     if async_:
         from sqlalchemy.ext.asyncio import create_async_engine
 
