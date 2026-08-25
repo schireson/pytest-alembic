@@ -3,6 +3,8 @@ from typing import Any, ClassVar
 
 import pytest
 from sqlalchemy import MetaData
+from sqlalchemy.engine import Engine
+from sqlalchemy.ext.asyncio import AsyncEngine
 
 try:
     from sqlalchemy.orm import declarative_base
@@ -14,6 +16,7 @@ from pytest_alembic.tests.experimental.all_models_register_on_metadata import (
     parse_collection_output,
 )
 from pytest_alembic.tests.experimental.collect_clean_alembic_environment import (
+    create_connectable,
     environment_context_fn,
     get_referrer_module,
     identify_modules,
@@ -91,3 +94,22 @@ class Test_get_referrer_module:
         referrer = {"__loader__": Loader(name)}
         actual_loader_name = list(get_referrer_module(referrer))
         assert actual_loader_name == loader_name
+
+
+class Test_create_connectable:
+    """The subprocess builds its own engine, sync or async, from a bare URL.
+
+    Neither call connects, so both are safe to make here; what is under test is which
+    factory gets used, since the async one is imported lazily and is not importable on
+    every supported sqlalchemy version.
+    """
+
+    def test_sync(self) -> None:
+        engine = create_connectable("sqlite://")
+
+        assert isinstance(engine, Engine)
+
+    def test_async(self) -> None:
+        engine = create_connectable("postgresql+asyncpg://user@localhost/dev", async_=True)
+
+        assert isinstance(engine, AsyncEngine)

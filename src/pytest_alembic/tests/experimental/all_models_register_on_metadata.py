@@ -33,7 +33,7 @@ try:
     from sqlalchemy.ext.asyncio import AsyncEngine
 
     async_engine_cls = True
-except ImportError:
+except ImportError:  # pragma: no cover
     async_engine_cls = False
 
 

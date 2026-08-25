@@ -1,12 +1,15 @@
 from collections.abc import Callable
-from typing import Any
+from typing import Any, cast
 
 import pytest
+from sqlalchemy.engine.url import make_url, URL
 
 from pytest_alembic.plugin.error import AlembicTestFailure
 from pytest_alembic.tests.experimental.all_models_register_on_metadata import (
     get_full_tableset,
+    parse_collection_output,
     traverse_modules,
+    url_to_string,
 )
 
 
@@ -104,3 +107,49 @@ class Test_get_full_tableset:
         with pytest.raises(AlembicTestFailure) as e:
             get_full_tableset("pytest_alembic")
         assert "Unable to locate a MetaData" in str(e.value)
+
+
+class Test_parse_collection_output:
+    """The subprocess reports through stdout, which it does not have to itself."""
+
+    def test_ignores_surrounding_noise(self) -> None:
+        payload = '<pytest-alembic>{"modules": [], "tables": ["t1"]}</pytest-alembic>'
+
+        assert parse_collection_output(payload) == {"modules": [], "tables": ["t1"]}
+
+    def test_missing_payload_is_a_bug_here(self) -> None:
+        """Assert output with no sentinel raises, carrying the raw output.
+
+        No payload means the subprocess never got as far as reporting, which indicates a
+        problem in the collection script rather than in the migrations under test -- so
+        the raw output is what the reader needs to see.
+        """
+        with pytest.raises(RuntimeError, match="alembic exploded"):
+            parse_collection_output("alembic exploded")
+
+
+class Test_url_to_string:
+    """The password has to survive: the string is handed to a subprocess which connects.
+
+    Which call renders it has changed across sqlalchemy versions, so the alternatives
+    are tried in turn.
+    """
+
+    def test_modern_url_keeps_the_password(self) -> None:
+        url = make_url("postgresql://user:hunter2@localhost/dev")
+
+        assert url_to_string(url) == "postgresql://user:hunter2@localhost/dev"
+
+    def test_url_without_the_hide_password_argument(self) -> None:
+        class OldUrl:
+            def render_as_string(self) -> str:
+                return "rendered"
+
+        assert url_to_string(cast("URL", OldUrl())) == "rendered"
+
+    def test_url_without_render_as_string_at_all(self) -> None:
+        class AncientUrl:
+            def __str__(self) -> str:
+                return "stringified"
+
+        assert url_to_string(cast("URL", AncientUrl())) == "stringified"
