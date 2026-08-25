@@ -11,6 +11,8 @@ import gc
 import json
 import os
 import sys
+from collections.abc import Iterator
+from typing import Any
 
 from alembic.config import Config
 from alembic.runtime.environment import EnvironmentContext
@@ -22,7 +24,7 @@ except ImportError:  # pragma: no cover
     from sqlalchemy.ext.declarative import DeclarativeMeta
 
 
-def run():  # pragma: no cover
+def run() -> None:  # pragma: no cover
     """Execute alembic in order to spin up the alembic environment.
 
     Cannot be covered with coverage due to the subprocess environment in which it's
@@ -44,7 +46,7 @@ def run():  # pragma: no cover
         script.run_env()
 
 
-def create_connectable(url, *, async_=False):
+def create_connectable(url: str, *, async_: bool = False) -> Any:
     """Create an engine for `url`, async or sync as requested.
 
     Both imports are deliberately deferred: ``sqlalchemy.ext.asyncio`` is not importable
@@ -61,7 +63,7 @@ def create_connectable(url, *, async_=False):
     return create_engine(url)
 
 
-def environment_context_fn(_, migration_context):
+def environment_context_fn(_: Any, migration_context: Any) -> list:
     """Print out the alembic environment context (given an alembic migration context)."""
     target_metadata = migration_context.opts["target_metadata"]
     if target_metadata:
@@ -83,7 +85,7 @@ def environment_context_fn(_, migration_context):
     return []
 
 
-def identify_modules(target_metadata):
+def identify_modules(target_metadata: Any) -> Iterator[str]:
     """Find all model referrers of the alembic `target_metadata`."""
     for referrer in gc.get_referrers(target_metadata):
         dict_referrer = isinstance(referrer, dict)
@@ -98,7 +100,7 @@ def identify_modules(target_metadata):
         yield from get_referrer_module(referrer)
 
 
-def get_model_base(referrer, target_metadata):
+def get_model_base(referrer: dict, target_metadata: Any) -> Any:
     """Find all model referrers of any model base referents of the `target_metadata`."""
     metadata = referrer.get("metadata")
     if not metadata or metadata is not target_metadata:
@@ -111,7 +113,7 @@ def get_model_base(referrer, target_metadata):
     return None
 
 
-def get_referrer_module(referrer):
+def get_referrer_module(referrer: Any) -> Iterator[str]:
     """Distinguish actual candidate modules from those which cannot be modules.
 
     Namely: non-modules, alembic-related things, scripts and such.

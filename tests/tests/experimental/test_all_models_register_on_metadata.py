@@ -1,3 +1,6 @@
+from collections.abc import Callable
+from typing import Any
+
 import pytest
 
 from pytest_alembic.plugin.error import AlembicTestFailure
@@ -8,10 +11,13 @@ from pytest_alembic.tests.experimental.all_models_register_on_metadata import (
 
 
 class Module:
-    pass
+    # A stand-in for a real module, declaring only the dunders `traverse_modules` reads.
+    __name__: str
+    __package__: str | None
+    __path__: list[str]
 
 
-def make_module(name, *, package=None, path=None):
+def make_module(name: str, *, package: str | None = None, path: str | None = None) -> Module:
     module = Module()
     module.__name__ = name
     module.__package__ = package
@@ -20,10 +26,10 @@ def make_module(name, *, package=None, path=None):
     return module
 
 
-def yield_per_call(*calls):
+def yield_per_call(*calls: Any) -> Callable[..., Any]:
     state = iter(calls)
 
-    def call(*_args, **_kwargs):
+    def call(*_args: Any, **_kwargs: Any) -> Any:
         result = next(state)
         if isinstance(result, Exception):
             raise result
@@ -33,25 +39,25 @@ def yield_per_call(*calls):
 
 
 class Test_traverse_modules:
-    def test_non_existent_module(self):
+    def test_non_existent_module(self) -> None:
         result = list(traverse_modules("asdf"))
         assert result == []
 
-    def test_non_package(self):
+    def test_non_package(self) -> None:
         module = make_module("foo")
         import_module = yield_per_call(module, module)
 
         result = list(traverse_modules("asdf", import_module=import_module))
         assert result == [module]
 
-    def test_package_without_path(self):
+    def test_package_without_path(self) -> None:
         module = make_module("name", package="name")
         import_module = yield_per_call(module)
 
         result = list(traverse_modules("asdf", import_module=import_module))
         assert result == []
 
-    def test_package_children_single_level(self):
+    def test_package_children_single_level(self) -> None:
         module = make_module("name", package="name", path="name")
         child = make_module("child", package="name.child", path="name")
         import_module = yield_per_call(module, child)
@@ -63,7 +69,7 @@ class Test_traverse_modules:
         )
         assert result == [module, child]
 
-    def test_package_child_import_error(self):
+    def test_package_child_import_error(self) -> None:
         module = make_module("name", package="name", path="name")
         import_module = yield_per_call(module, ImportError("name.child"))
 
@@ -74,7 +80,7 @@ class Test_traverse_modules:
         )
         assert result == [module]
 
-    def test_package_child_is_package(self):
+    def test_package_child_is_package(self) -> None:
         module = make_module("name", package="name", path="name")
         child = make_module("child", package="child.name", path="name")
         child_child = make_module("child", package="name.child")
@@ -89,12 +95,12 @@ class Test_traverse_modules:
 
 
 class Test_get_full_tableset:
-    def test_null_metadata(self):
+    def test_null_metadata(self) -> None:
         with pytest.raises(AlembicTestFailure) as e:
             get_full_tableset("foo")
         assert "Invalid module name: foo" in str(e.value)
 
-    def test_no_metadata(self):
+    def test_no_metadata(self) -> None:
         with pytest.raises(AlembicTestFailure) as e:
             get_full_tableset("pytest_alembic")
         assert "Unable to locate a MetaData" in str(e.value)

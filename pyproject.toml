@@ -143,6 +143,17 @@ ignore_missing_imports = true
 warn_unused_ignores = true
 incremental = true
 
+# Without this, a function carrying no annotations at all is not checked -- it is
+# *skipped*, so a clean `mypy src tests` says nothing about its body. Every definition
+# under `src` and `tests` is annotated, so this is a 100% floor rather than a ratchet,
+# like [tool.interrogate] below: a new unannotated function fails the build.
+#
+# `ignore_missing_imports` stays. Dropping it would demand stubs for the handful of
+# dependencies that ship none, which is a separate and much larger project; alembic,
+# sqlalchemy, pytest and pytest_mock_resources all ship `py.typed`, so the annotations
+# here are checked against their real signatures either way.
+disallow_untyped_defs = true
+
 [tool.interrogate]
 # Docstring *coverage*, as a ratchet. This deliberately complements ruff rather
 # than duplicating it: `D1` is ignored under [tool.ruff.lint], so no individual

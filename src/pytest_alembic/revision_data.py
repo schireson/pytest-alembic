@@ -6,6 +6,7 @@ one. :class:`RevisionSpec` is the parsed form of the ``before_revision_data`` an
 the runner consults as it steps through revisions.
 """
 
+from collections.abc import Iterator
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
@@ -20,7 +21,7 @@ class RevisionSpec:
     data: dict[str, dict | list[dict]]
 
     @classmethod
-    def parse(cls, data: "RevisionSpec | dict[str, dict | list[dict]] | None"):
+    def parse(cls, data: "RevisionSpec | dict[str, dict | list[dict]] | None") -> "RevisionSpec":
         """Parse a raw dict structure into a `RevisionSpec`."""
         if not data:
             return cls({})
@@ -43,14 +44,14 @@ class RevisionData:
     at_revision_data: RevisionSpec
 
     @classmethod
-    def from_config(cls, config: "Config"):
+    def from_config(cls, config: "Config") -> "RevisionData":
         """Produce a `RevisionData` from raw configuration from :func:`alembic_config`."""
         return cls(
             before_revision_data=RevisionSpec.parse(config.before_revision_data),
             at_revision_data=RevisionSpec.parse(config.at_revision_data),
         )
 
-    def get(self, revision_data: dict | list[dict]):
+    def get(self, revision_data: dict | list[dict]) -> Iterator[dict]:
         """Yield `revision_data` as individual rows, whether it is one row or many.
 
         A single dict is a common enough shorthand for "one row" that both forms are

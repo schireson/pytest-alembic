@@ -13,6 +13,9 @@ import logging
 import pkgutil
 import re
 import subprocess  # nosec
+from collections.abc import Callable, Iterator
+from types import ModuleType
+from typing import Any
 
 from sqlalchemy import MetaData
 from sqlalchemy.engine import Engine
@@ -43,7 +46,7 @@ def test_all_models_register_on_metadata(
     *,
     offline: bool = False,  # noqa: PT028
     async_: bool | None = None,  # noqa: PT028
-):
+) -> None:
     """Assert that all tables defined on your `MetaData`, are imported in the `env.py`.
 
     We'll call a "bare import", the minimum import of the model base/MetaData which is
@@ -168,7 +171,7 @@ def get_bare_import_tableset(
     return modules, tablenames
 
 
-def parse_collection_output(raw_output: str):
+def parse_collection_output(raw_output: str) -> dict[str, list[str]]:
     """Extract the JSON payload the collection subprocess printed.
 
     The subprocess communicates through stdout, which it does not have exclusively:
@@ -230,9 +233,9 @@ def get_full_tableset(*module_names: str) -> set[str]:
 
 def traverse_modules(
     package_name: str,
-    import_module=importlib.import_module,
-    walk_packages=pkgutil.walk_packages,
-):
+    import_module: Callable[..., ModuleType] = importlib.import_module,
+    walk_packages: Callable[..., Any] = pkgutil.walk_packages,
+) -> Iterator[ModuleType]:
     """Dynamically traverse the tree of packages below a given root and import them.
 
     Note this will perform the import of each module, which is an operation which can

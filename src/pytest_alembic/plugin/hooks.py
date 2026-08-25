@@ -4,10 +4,12 @@ Loaded through the ``pytest11`` entry point declared in ``pyproject.toml``, so p
 imports this module for every session, whether or not the plugin ends up active.
 """
 
+import pytest
+
 from pytest_alembic.plugin.plugin import OptionResolver, PytestAlembicPlugin
 
 
-def pytest_addoption(parser):
+def pytest_addoption(parser: pytest.Parser) -> None:
     """Register this plugin's ini options and command-line flags.
 
     The set of valid test names is not hard-coded: it is collected from
@@ -79,7 +81,7 @@ def pytest_addoption(parser):
     )
 
 
-def pytest_configure(config):
+def pytest_configure(config: pytest.Config) -> None:
     """Register the ``alembic`` marker, so selecting or deselecting these tests works.
 
     Registration also keeps the marker from tripping ``--strict-markers``.
@@ -90,7 +92,7 @@ def pytest_configure(config):
     config.addinivalue_line("markers", "alembic: Tests which use pytest-alembic.")
 
 
-def pytest_sessionstart(session):
+def pytest_sessionstart(session: pytest.Session) -> None:
     """Register the collection plugin, unless it has been disabled entirely.
 
     ``pytest_alembic_enabled`` is honoured here rather than at collection time so that

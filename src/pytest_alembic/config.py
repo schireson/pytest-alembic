@@ -7,7 +7,7 @@ the runner consumes.
 """
 
 from dataclasses import dataclass, field
-from typing import Any, cast, TYPE_CHECKING
+from typing import Any, cast, TextIO, TYPE_CHECKING
 
 import alembic.config
 
@@ -75,7 +75,7 @@ class Config:
     def from_raw_config(
         cls,
         raw_config: "dict[str, Any] | alembic.config.Config | Config | None" = None,
-    ):
+    ) -> "Config":
         """Adapt between pre-produced alembic config and raw config options.
 
         Allows one to specify raw pytest-alembic config options through raw dictionary,
@@ -113,7 +113,7 @@ class Config:
             skip_revisions=skip_revisions,
         )
 
-    def make_alembic_config(self, stdout):
+    def make_alembic_config(self, stdout: TextIO) -> alembic.config.Config:
         """Build the ``alembic.config.Config`` these options describe.
 
         A pre-built config supplied as ``alembic_config`` is reused as-is, with only its
@@ -184,7 +184,7 @@ class Config:
         return alembic_config.get_main_option(key, default)
 
 
-def duplicate_alembic_config(config: alembic.config.Config):
+def duplicate_alembic_config(config: alembic.config.Config) -> alembic.config.Config:
     """Copy an alembic config, so it can be reconfigured without affecting the original.
 
     Some tests need to run alembic a second time under different options — the

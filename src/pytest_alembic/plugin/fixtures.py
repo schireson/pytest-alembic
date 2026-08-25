@@ -6,17 +6,21 @@ Three fixtures make up the plugin's public surface: :func:`alembic_config` and
 exists for the cases where one runner per test session is not enough.
 """
 
+from collections.abc import Callable, Iterator
 from typing import Any
 
 import alembic.config
 import pytest
 import sqlalchemy
+from sqlalchemy.engine import Connectable, Engine
 
 from pytest_alembic.config import Config
-from pytest_alembic.runner import runner
+from pytest_alembic.runner import MigrationContext, runner
 
 
-def create_alembic_fixture(raw_config=None):
+def create_alembic_fixture(
+    raw_config: dict[str, Any] | alembic.config.Config | Config | None = None,
+) -> Callable[..., Iterator[MigrationContext]]:
     """Create a new fixture `alembic_runner`-like fixture.
 
     In many cases, this function should not be strictly necessary. You **can**
@@ -49,7 +53,7 @@ def create_alembic_fixture(raw_config=None):
     """
 
     @pytest.fixture
-    def alembic_fixture(alembic_engine):
+    def alembic_fixture(alembic_engine: Connectable) -> Iterator[MigrationContext]:
         config = Config.from_raw_config(raw_config)
         with runner(config=config, engine=alembic_engine) as migration_context:
             yield migration_context
@@ -58,7 +62,10 @@ def create_alembic_fixture(raw_config=None):
 
 
 @pytest.fixture
-def alembic_runner(alembic_config, alembic_engine):
+def alembic_runner(
+    alembic_config: dict[str, Any] | alembic.config.Config | Config,
+    alembic_engine: Connectable,
+) -> Iterator[MigrationContext]:
     """Produce the primary alembic migration context in which to execute alembic tests.
 
     This fixture allows authoring custom tests which are specific to your particular
@@ -128,7 +135,7 @@ def alembic_config() -> dict[str, Any] | alembic.config.Config | Config:
 
 
 @pytest.fixture
-def alembic_engine():
+def alembic_engine() -> Iterator[Engine]:
     """Override this fixture to provide pytest-alembic powered tests with a database handle."""
     engine = sqlalchemy.create_engine("sqlite:///")
     try:
