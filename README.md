@@ -118,15 +118,25 @@ that you would normally, through the use of the `alembic_runner`
 fixture.
 
 ```python
+from sqlalchemy import text
+
+
 def test_gnarly_migration_xyz123(alembic_engine, alembic_runner):
     # Migrate up to, but not including this new migration
     alembic_runner.migrate_up_before('xyz123')
 
     # Perform some very specific data setup, because this migration is sooooo complex.
     # ...
-    alembic_engine.execute(table.insert(id=1, name='foo'))
+    alembic_runner.insert_into('tablename', dict(id=1, name='foo'))
 
     alembic_runner.migrate_up_one()
+
+    # `alembic_engine` is a plain sqlalchemy engine, for whenever you need to
+    # inspect the result yourself.
+    with alembic_engine.connect() as conn:
+        rows = conn.execute(text('SELECT id FROM tablename')).fetchall()
+
+    assert rows == [(1,)]
 ```
 
 `alembic_runner` has a number of methods designed to make it convenient
