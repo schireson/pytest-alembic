@@ -144,9 +144,9 @@ incremental = true
 # proportion from regressing. Public API first, internals as they are touched.
 #
 # Ratcheted floor, in the same spirit as [tool.coverage.report]. Held just below
-# the 45.0% observed locally so an unrelated refactor that adds an undocumented
+# the 71.7% observed locally so an unrelated refactor that adds an undocumented
 # helper does not redden the build; raise it whenever the measured number moves up.
-fail-under = 44
+fail-under = 70
 
 # Re-export modules (`__init__.py`) hold only imports and `__all__`; magic
 # methods and nested helpers are not a documentation surface. `ignore-init-method`
