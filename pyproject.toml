@@ -25,6 +25,7 @@ dev = [
     "asyncpg",
     "coverage[toml]>=6.4.4",
     "greenlet>=3.0",
+    "interrogate>=1.7",
     "mypy>=1.11",
     "psycopg2-binary",
     "pytest>=8.3.2",
