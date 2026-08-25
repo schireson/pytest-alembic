@@ -1,4 +1,4 @@
-.PHONY: install build test lint format docs-coverage audit audit-all publish changelog
+.PHONY: install build test lint format docs docs-coverage audit audit-all publish changelog
 .DEFAULT_GOAL := test
 
 help:  ## Show this help
@@ -26,6 +26,13 @@ lint:  ## Check lint, formatting and types (ruff, mypy)
 format:  ## Apply ruff fixes and formatting in place
 	uv run ruff check --fix src tests examples
 	uv run ruff format src tests examples
+
+docs:  ## Build the HTML documentation (sphinx)
+	# `--group docs` because `make install` runs a bare `uv sync`, which does not
+	# include that group. `-W` holds the build at zero warnings: a broken
+	# cross-reference or an unlexable code block fails here rather than quietly
+	# degrading a rendered page on readthedocs after the merge.
+	uv run --group docs sphinx-build -W -b html docs/source docs/build/html
 
 docs-coverage:  ## Check docstring coverage (interrogate)
 	# No flags: every threshold and exclusion lives in [tool.interrogate] in
