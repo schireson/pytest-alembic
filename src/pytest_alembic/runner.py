@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import contextlib
 import functools
 from dataclasses import dataclass
@@ -19,7 +17,7 @@ if TYPE_CHECKING:
 
 
 @contextlib.contextmanager
-def runner(config: Config, engine=None):
+def runner(config: "Config", engine=None):
     """Manage the alembic execution context, in a given context.
 
     Most tests never call this directly — the :func:`alembic_runner` fixture wraps it and
@@ -76,12 +74,12 @@ class MigrationContext:
     revision_data: RevisionData
     connection_executor: ConnectionExecutor
     history: AlembicHistory
-    config: Config
+    config: "Config"
 
     @classmethod
     def from_config(
         cls,
-        config: Config,
+        config: "Config",
         command_executor: CommandExecutor,
         connection_executor: ConnectionExecutor,
     ):

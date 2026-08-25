@@ -2,7 +2,6 @@ import contextlib
 import io
 from dataclasses import dataclass, field
 from io import StringIO
-from typing import Dict, List, Optional, Union
 
 import alembic
 import alembic.config
@@ -121,7 +120,7 @@ class ConnectionExecutor:
     """
 
     connection: Connectable
-    metadatas: Dict[str, MetaData] = field(default_factory=dict)
+    metadatas: dict[str, MetaData] = field(default_factory=dict)
 
     def metadata(self, revision: str) -> MetaData:
         """Return the ``MetaData`` for `revision`, creating it on first use.
@@ -157,8 +156,8 @@ class ConnectionExecutor:
         self,
         revision: str,
         name: str,
-        schema: Optional[str] = None,
-        connection: Optional[Union[Connection, Engine]] = None,
+        schema: str | None = None,
+        connection: Connection | Engine | None = None,
     ) -> Table:
         meta = self.metadata(revision)
         if name in meta.tables:
@@ -172,15 +171,15 @@ class ConnectionExecutor:
     def table_insert(
         self,
         revision: str,
-        data: Union[Dict, List],
-        tablename: Optional[str] = None,
-        schema: Optional[str] = None,
+        data: dict | list,
+        tablename: str | None = None,
+        schema: str | None = None,
     ):
         def table_insert(
             connection: Connection,
-            data: Union[Dict, List],
-            tablename: Optional[str] = None,
-            schema: Optional[str] = None,
+            data: dict | list,
+            tablename: str | None = None,
+            schema: str | None = None,
         ):
             if isinstance(data, dict):
                 data = [data]

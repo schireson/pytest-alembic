@@ -5,9 +5,15 @@ description = "A pytest plugin for verifying alembic migrations."
 authors = [{ name = "Dan Cardin", email = "ddcardin@gmail.com" }]
 license = { text = "MIT" }
 keywords = ["pytest", "sqlalchemy", "alembic", "migration", "revision"]
-classifiers = ["Framework :: Pytest"]
+classifiers = [
+    "Framework :: Pytest",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
 readme = "README.md"
-requires-python = ">=3.9,<4"
+requires-python = ">=3.10,<4"
 dependencies = ["pytest>=7.0", "alembic", "sqlalchemy"]
 
 [project.urls]
@@ -33,7 +39,6 @@ dev = [
     "pytest-mock-resources[docker]>=2.6.3",
     "ruff>=0.15.0",
     "sqlalchemy[asyncio]>=2.0.42",
-    "types-dataclasses>=0.1.7,<0.7",
     "anyio",
 ]
 docs = ["myst-parser", "sphinx", "sphinx-rtd-theme", "sphinx-autodoc-typehints", "sphinx-autobuild"]
@@ -49,7 +54,7 @@ exclude_lines = ["pragma: no cover", "if TYPE_CHECKING:", "if __name__ == .__mai
 
 [tool.ruff]
 src = ["src", "tests"]
-target-version = "py37"
+target-version = "py310"
 line-length = 100
 
 [tool.ruff.lint]

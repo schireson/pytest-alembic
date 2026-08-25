@@ -7,9 +7,10 @@ the tests need is in scope wherever they land.
 """
 
 import re
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path, PurePath
-from typing import Callable, cast, Dict, List, Optional
+from typing import cast
 
 import pytest
 from _pytest import config
@@ -76,8 +77,8 @@ class PytestAlembicPlugin:
             path: The path pytest is currently offering for collection.
         """
         tests_path = PurePath(
-            cast("Optional[str]", self.config.option.pytest_alembic_tests_path)
-            or cast("Optional[str]", self.config.getini("pytest_alembic_tests_path"))
+            cast("str | None", self.config.option.pytest_alembic_tests_path)
+            or cast("str | None", self.config.getini("pytest_alembic_tests_path"))
             or "tests/conftest.py"
         )
         relative_path = path.relative_to(self.config.rootpath)
@@ -207,11 +208,11 @@ class OptionResolver:
         excluded_tests: Explicitly excluded tests, or ``None``.
     """
 
-    available_tests: Dict[str, PytestAlembicTest]
+    available_tests: dict[str, PytestAlembicTest]
 
-    included_tests: Optional[List[str]] = None
-    included_experimental_tests: Optional[List[str]] = None
-    excluded_tests: Optional[List[str]] = None
+    included_tests: list[str] | None = None
+    included_experimental_tests: list[str] | None = None
+    excluded_tests: list[str] | None = None
 
     @classmethod
     def collect_test_definitions(

@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from typing import List
 
 import pytest
 from alembic.script import revision
@@ -14,7 +13,7 @@ class Revision:
 
 @dataclass
 class RevisionMap(revision.RevisionMap):
-    history: List[Revision]
+    history: list[Revision]
 
     @classmethod
     def from_strs(cls, strs):

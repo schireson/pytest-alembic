@@ -1,7 +1,6 @@
 """The failure type the built-in tests raise, and how its context is rendered."""
 
 import textwrap
-from typing import List
 
 
 class AlembicTestFailure(AssertionError):  # noqa: N818
@@ -27,7 +26,7 @@ class AlembicTestFailure(AssertionError):  # noqa: N818
         self.exce = self
         self.item = None
 
-    def format_context(self) -> List[str]:
+    def format_context(self) -> list[str]:
         """Print out a custom error message to the terminal."""
         result = []
         if not self.context:

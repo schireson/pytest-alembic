@@ -4,7 +4,6 @@ import logging
 import pkgutil
 import re
 import subprocess  # nosec
-from typing import List, Optional, Set, Tuple
 
 from sqlalchemy import MetaData
 from sqlalchemy.engine import Engine
@@ -31,10 +30,10 @@ log = logging.getLogger(__name__)
 
 def test_all_models_register_on_metadata(
     alembic_runner: MigrationContext,
-    model_package: Optional[str] = None,  # noqa: PT028
+    model_package: str | None = None,  # noqa: PT028
     *,
     offline: bool = False,  # noqa: PT028
-    async_: Optional[bool] = None,  # noqa: PT028
+    async_: bool | None = None,  # noqa: PT028
 ):
     """Assert that all tables defined on your `MetaData`, are imported in the `env.py`.
 
@@ -124,7 +123,7 @@ def test_all_models_register_on_metadata(
 
 def get_bare_import_tableset(
     url: str, *, offline: bool = False, async_: bool = False
-) -> Tuple[List[str], Set[str]]:
+) -> tuple[list[str], set[str]]:
     """Get the set of tables which would have been added to the metadata on a bare ma.models import.
 
     Importantly, this cannot simply import the MetaData directly, as that may have already
@@ -172,7 +171,7 @@ def parse_collection_output(raw_output: str):
     raise RuntimeError(raw_output)
 
 
-def get_full_tableset(*module_names: str) -> Set[str]:
+def get_full_tableset(*module_names: str) -> set[str]:
     """Get the set of full set of tables which are defined.
 
     The theory is that if we import every module in the tree below ma.models, we should

@@ -1,4 +1,4 @@
-from typing import Any, Dict, Union
+from typing import Any
 
 import alembic.config
 import pytest
@@ -67,7 +67,7 @@ def alembic_runner(alembic_config, alembic_engine):
 
 
 @pytest.fixture
-def alembic_config() -> Union[Dict[str, Any], alembic.config.Config, Config]:
+def alembic_config() -> dict[str, Any] | alembic.config.Config | Config:
     """Override this fixture to configure the exact alembic context setup required.
 
     The return value of this fixture can be one of a few types.

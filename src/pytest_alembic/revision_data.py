@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Dict, List, TYPE_CHECKING, Union
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from pytest_alembic.config import Config
@@ -9,10 +9,10 @@ if TYPE_CHECKING:
 class RevisionSpec:
     """Describe a set of valid database data at a set of revisions."""
 
-    data: Dict[str, Union[Dict, List[Dict]]]
+    data: dict[str, dict | list[dict]]
 
     @classmethod
-    def parse(cls, data: Union["RevisionSpec", Dict[str, Union[Dict, List[Dict]]], None]):
+    def parse(cls, data: "RevisionSpec | dict[str, dict | list[dict]] | None"):
         """Parse a raw dict structure into a `RevisionSpec`."""
         if not data:
             return cls({})
@@ -22,7 +22,7 @@ class RevisionSpec:
 
         return cls(data)
 
-    def get(self, revision: str) -> Union[Dict, List[Dict]]:
+    def get(self, revision: str) -> dict | list[dict]:
         """Get the database data described at a particular revision."""
         return self.data.get(revision, [])
 
@@ -42,18 +42,18 @@ class RevisionData:
             at_revision_data=RevisionSpec.parse(config.at_revision_data),
         )
 
-    def get(self, revision_data: Union[Dict, List[Dict]]):
-        if isinstance(revision_data, Dict):
+    def get(self, revision_data: dict | list[dict]):
+        if isinstance(revision_data, dict):
             yield revision_data
         else:
             yield from revision_data
 
-    def get_before(self, revision: str) -> List[Dict]:
+    def get_before(self, revision: str) -> list[dict]:
         """Yield the individual data insertions which should occur before the given revision."""
         before_revision_data = self.before_revision_data.get(revision)
         return list(self.get(before_revision_data))
 
-    def get_at(self, revision: str) -> Union[Dict, List[Dict]]:
+    def get_at(self, revision: str) -> dict | list[dict]:
         """Yield individual data insertions which should occur upon reaching the given revision."""
         at_revision_data = self.at_revision_data.get(revision)
         return list(self.get(at_revision_data))
