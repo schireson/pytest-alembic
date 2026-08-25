@@ -1,7 +1,24 @@
+"""The pytest hook implementations which expose this plugin's options and register it.
+
+Loaded through the ``pytest11`` entry point declared in ``pyproject.toml``, so pytest
+imports this module for every session, whether or not the plugin ends up active.
+"""
+
 from pytest_alembic.plugin.plugin import OptionResolver, PytestAlembicPlugin
 
 
 def pytest_addoption(parser):
+    """Register this plugin's ini options and command-line flags.
+
+    The set of valid test names is not hard-coded: it is collected from
+    :mod:`pytest_alembic.tests` at option-registration time, so ``--help`` always
+    lists the tests this version actually ships. Default and experimental tests are
+    collected separately because they are opted into differently — experimental ones
+    must be named explicitly.
+
+    Args:
+        parser: The pytest parser to register ini values and options against.
+    """
     default_collector = OptionResolver.collect_test_definitions(default=True, experimental=False)
     default_tests = ", ".join(t.name for t in default_collector.available_tests.values())
 
@@ -63,10 +80,26 @@ def pytest_addoption(parser):
 
 
 def pytest_configure(config):
+    """Register the ``alembic`` marker, so selecting or deselecting these tests works.
+
+    Registration also keeps the marker from tripping ``--strict-markers``.
+
+    Args:
+        config: The pytest config object for the session being configured.
+    """
     config.addinivalue_line("markers", "alembic: Tests which use pytest-alembic.")
 
 
 def pytest_sessionstart(session):
+    """Register the collection plugin, unless it has been disabled entirely.
+
+    ``pytest_alembic_enabled`` is honoured here rather than at collection time so that
+    a disabled plugin adds no hooks at all, instead of adding hooks which decline to
+    collect.
+
+    Args:
+        session: The pytest session being started.
+    """
     if session.config.getini("pytest_alembic_enabled"):
         plugin = PytestAlembicPlugin(session.config)
         session.config.pluginmanager.register(plugin, "pytest-alembic")

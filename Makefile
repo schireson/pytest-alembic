@@ -1,4 +1,4 @@
-.PHONY: install build test lint format audit audit-all publish changelog
+.PHONY: install build test lint format docs-coverage audit audit-all publish changelog
 .DEFAULT_GOAL := test
 
 help:  ## Show this help
@@ -26,6 +26,11 @@ lint:  ## Check lint, formatting and types (ruff, mypy)
 format:  ## Apply ruff fixes and formatting in place
 	uv run ruff check --fix src tests examples
 	uv run ruff format src tests examples
+
+docs-coverage:  ## Check docstring coverage (interrogate)
+	# No flags: every threshold and exclusion lives in [tool.interrogate] in
+	# pyproject.toml, so a local run and CI measure the same thing.
+	uv run interrogate
 
 audit:  ## Audit runtime dependencies for known vulnerabilities
 	uv export --frozen --no-emit-project --no-dev --no-hashes --format requirements-txt \

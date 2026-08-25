@@ -109,6 +109,27 @@ jobs:
         # be reported into a log nobody reads.
         run: make audit-all
 
+  docs-coverage:
+    # Docstring coverage. Outside the test matrix for the same reason the audit job
+    # documents above: the answer is identical for every matrix entry, so running it
+    # 20 times would report the same number 20 times. Unlike `audit`, this one needs
+    # the dev group installed, since interrogate is a declared dependency rather than
+    # a `uvx` download.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v7
+        with:
+          python-version: "3.12"
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - name: Install dependencies
+        run: make install
+
+      - name: Check docstring coverage
+        run: make docs-coverage
+
   finish:
     needs:
       - test
