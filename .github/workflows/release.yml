@@ -5,6 +5,12 @@ on:
     tags:
       - "v*.*.*"
 
+# Read by default, including for the `test` job's call into build.yml, which a
+# reusable workflow can never exceed. `gh-release` re-grants the one write this
+# workflow actually needs, on the single job that needs it.
+permissions:
+  contents: read
+
 jobs:
   # Run the full CI matrix for the tagged commit before anything is published.
   # `needs: test` below is what makes this a gate: a tag pushed onto a commit
@@ -18,11 +24,15 @@ jobs:
   gh-release:
     needs: test
     runs-on: ubuntu-latest
+    permissions:
+      # Creating the release and uploading its assets is a write to this
+      # repository; no other job here gets one.
+      contents: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
       - name: Release
-        uses: softprops/action-gh-release@v3
+        uses: softprops/action-gh-release@3d0d9888cb7fd7b750713d6e236d1fcb99157228 # v3.0.2
         with:
           generate_release_notes: true
 
@@ -30,8 +40,8 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-      - uses: astral-sh/setup-uv@v7
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+      - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7.6.0
         with:
           python-version: "3.12"
 
