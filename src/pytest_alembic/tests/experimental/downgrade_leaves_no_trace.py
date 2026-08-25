@@ -92,7 +92,7 @@ def _test_downgrade_leaves_no_trace(
 
         # Semantically, we'll solely upgrade for as long as we're below the `minimum_downgrade_revision`,
         # if set. If not set, then this is always done.
-        if not below_minimum:
+        elif not below_minimum:
             # Leaves the database in its previous state, to avoid subtle upgrade -> downgrade issues.
             check_revision_cycle(alembic_runner, connection, revision)
 

@@ -226,6 +226,15 @@ def test_unimplemented_downgrade_warning(pytester: pytest.Pytester) -> None:
         assert "minimum_downgrade_revision" in warning_str
 
 
+def test_minimum_downgrade_revision_downgrade_leaves_no_trace(pytester: pytest.Pytester) -> None:
+    """Assert downgrade_leaves_no_trace skips the minimum_downgrade_revision itself.
+
+    The cccccccccccc migration has a broken downgrade (pass) that leaves a trace.
+    With minimum_downgrade_revision="cccccccccccc", the test must skip that cycle entirely.
+    """
+    run_pytest(pytester, passed=5)
+
+
 def test_failing_downgrade(pytester: pytest.Pytester) -> None:
     """Assert failing downgrade, fails test."""
     result = run_pytest(pytester, passed=3, failed=2, success=False)
