@@ -1467,9 +1467,9 @@ docs = [
 
 [package.metadata]
 requires-dist = [
-    { name = "alembic" },
+    { name = "alembic", specifier = ">=1.7" },
     { name = "pytest", specifier = ">=7.0" },
-    { name = "sqlalchemy" },
+    { name = "sqlalchemy", specifier = ">=1.4" },
 ]
 
 [package.metadata.requires-dev]

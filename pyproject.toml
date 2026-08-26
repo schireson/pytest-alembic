@@ -14,7 +14,33 @@ classifiers = [
 ]
 readme = "README.md"
 requires-python = ">=3.10,<4"
-dependencies = ["pytest>=7.0", "alembic", "sqlalchemy"]
+# Floors, not pins -- the point is that an unusable combination fails at resolve
+# time rather than at import time. Both were `"*"` from the initial commit through
+# the poetry-to-uv migration, so a `pip install pytest-alembic` was free to pull a
+# sqlalchemy this package cannot run on.
+#
+# `sqlalchemy>=1.4` is a hard technical boundary, not a preference: `executor.py`
+# imports `sqlalchemy.ext.asyncio`, which does not exist before 1.4.0. On 1.3.24 the
+# suite does not even collect (`ModuleNotFoundError: sqlalchemy.ext.asyncio`).
+#
+# The bound stays at 1.4 rather than at the lowest version the *suite* can run, which
+# is 1.4.24: pytest-mock-resources excludes 1.4.0 through 1.4.23, so the harness cannot
+# reach them even though this package can. That is a development constraint, and
+# imposing it on an installing user would refuse a combination that works for them.
+# Verified end-to-end at 1.4.24 (149 passed, 1 skipped) and 1.4.54 (150 passed); at
+# 1.4.0 exactly, `uv pip install --resolution lowest-direct .` resolves and every
+# module imports. Alembic narrows this further on its own account
+# (`SQLAlchemy>=1.4.23` as of 1.19), which composes correctly without being restated.
+#
+# `alembic>=1.7` is a floor of evidence rather than of API. Every alembic symbol this
+# package touches -- `EnvironmentContext`, `ScriptDirectory`, `RevisionMap`,
+# `util.exc.CommandError`, `Config(file_=..., stdout=...)`, and the private
+# `autogenerate.render._render_cmd_body` -- resolves as far back as 1.0.11, so there is
+# no import that fixes the number. 1.7.0 is the oldest release the suite has actually
+# been run against end-to-end. Newer alembic is not required for the pyproject.toml
+# support: `_supports_toml()` feature-detects `Config.get_alembic_option`, and
+# `test_legacy_alembic_without_toml_support` covers the fallback path.
+dependencies = ["pytest>=7.0", "alembic>=1.7", "sqlalchemy>=1.4"]
 
 [project.urls]
 repository = "https://github.com/schireson/pytest-alembic"
