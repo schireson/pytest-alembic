@@ -1,6 +1,6 @@
 [project]
 name = "pytest-alembic"
-version = "0.12.1"
+version = "0.13.0"
 description = "A pytest plugin for verifying alembic migrations."
 authors = [{ name = "Dan Cardin", email = "ddcardin@gmail.com" }]
 license = { text = "MIT" }
