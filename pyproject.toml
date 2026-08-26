@@ -3,7 +3,8 @@ name = "pytest-alembic"
 version = "0.12.1"
 description = "A pytest plugin for verifying alembic migrations."
 authors = [{ name = "Dan Cardin", email = "ddcardin@gmail.com" }]
-license = { text = "MIT" }
+license = "MIT"
+license-files = ["LICENSE"]
 keywords = ["pytest", "sqlalchemy", "alembic", "migration", "revision"]
 classifiers = [
     "Framework :: Pytest",
