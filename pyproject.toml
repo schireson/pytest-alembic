@@ -3,7 +3,14 @@ name = "pytest-alembic"
 version = "0.12.1"
 description = "A pytest plugin for verifying alembic migrations."
 authors = [{ name = "Dan Cardin", email = "ddcardin@gmail.com" }]
-license = { text = "MIT" }
+# PEP 639: an SPDX expression plus the files it refers to. The table form
+# (`license = { text = "MIT" }`) is the pre-639 spelling and is rejected outright once
+# `license-files` is present -- "project.license must be an SPDX expression string" --
+# so the two move together rather than as a style choice. The effect on the artifacts is
+# that `LICENSE` is now packaged instead of the licence surviving only as a metadata
+# string with nothing behind it.
+license = "MIT"
+license-files = ["LICENSE"]
 keywords = ["pytest", "sqlalchemy", "alembic", "migration", "revision"]
 classifiers = [
     "Framework :: Pytest",
