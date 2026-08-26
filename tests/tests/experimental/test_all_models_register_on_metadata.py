@@ -1,11 +1,14 @@
+import sys
 from collections.abc import Callable
 from typing import Any, cast
+from unittest import mock
 
 import pytest
 from sqlalchemy.engine.url import make_url, URL
 
 from pytest_alembic.plugin.error import AlembicTestFailure
 from pytest_alembic.tests.experimental.all_models_register_on_metadata import (
+    get_bare_import_tableset,
     get_full_tableset,
     parse_collection_output,
     traverse_modules,
@@ -153,3 +156,31 @@ class Test_url_to_string:
                 return "stringified"
 
         assert url_to_string(cast("URL", AncientUrl())) == "stringified"
+
+
+class Test_get_bare_import_tableset:
+    def test_spawns_the_running_interpreter(self) -> None:
+        """Assert the collection subprocess is *this* interpreter, not `PATH`'s `python`.
+
+        The child imports `pytest_alembic` itself, so it has to be the interpreter the
+        parent is running under. Resolving "python" through PATH finds whichever comes
+        first, which is a different one under tox or an unactivated venv, and on Windows
+        is often not an interpreter at all.
+        """
+        payload = '<pytest-alembic>{"modules": ["a.models"], "tables": ["t1"]}</pytest-alembic>'
+        completed = mock.Mock()
+        completed.stdout = payload
+
+        target = "pytest_alembic.tests.experimental.all_models_register_on_metadata.subprocess.run"
+        with mock.patch(target, return_value=completed) as run:
+            modules, tablenames = get_bare_import_tableset("sqlite://")
+
+        assert modules == ["a.models"]
+        assert tablenames == {"t1"}
+
+        command = run.call_args.args[0]
+        assert command[0] == sys.executable
+        assert command[1:3] == [
+            "-m",
+            "pytest_alembic.tests.experimental.collect_clean_alembic_environment",
+        ]
