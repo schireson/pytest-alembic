@@ -45,27 +45,42 @@ jobs:
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
 
     runs-on: ubuntu-latest
+    # `uv run` re-syncs the environment to uv.lock before executing, which silently
+    # reverts the pins installed below -- including from `make lint`, which runs first.
+    # This makes every `uv run` in the job use the environment as-is. `uv sync` in
+    # `make install` is unaffected, so the environment is still fully populated.
+    env:
+      UV_NO_SYNC: "1"
     strategy:
       fail-fast: false
       matrix:
         include:
-          # Sweep across python version sweep with the highest checked dependency version.
-          # Older pytest versions are tested separately below on a single interpreter
+          # Every version here is applied with `==`, not `~=`, and the job runs with
+          # UV_NO_SYNC so `uv run` cannot revert it. Both matter: `~=2.0.40` means
+          # ">=2.0.40, ==2.0.*", which resolves to the newest 2.0.x and so pins nothing,
+          # and a plain `uv run` re-syncs to uv.lock and reinstalls the locked version.
+          # Read the `platform ... pytest-X.Y.Z` banner in the log to confirm what ran.
+
+          # Sweep across python versions at the highest checked dependency versions.
+          # Older tool versions are tested separately below on a single interpreter
           # since we have no reason to believe interpreter-specific breakage would
-          # surface in those older versions but not in pytest 9,
+          # surface in those older versions but not in the newest,
           # but we **do** know that newer versions of dependencies may not support arbitrarily old
           # python versions.
-          - {python-version: "3.10", pytest-version: "9.1.1", sqlalchemy-version: "2.0.40"}
-          - {python-version: "3.11", pytest-version: "9.1.1", sqlalchemy-version: "2.0.40"}
-          - {python-version: "3.12", pytest-version: "9.1.1", sqlalchemy-version: "2.0.40"}
-          - {python-version: "3.13", pytest-version: "9.1.1", sqlalchemy-version: "2.0.40"}
-          - {python-version: "3.14", pytest-version: "9.1.1", sqlalchemy-version: "2.0.40"}
-          - {python-version: "3.15", pytest-version: "9.1.1", sqlalchemy-version: "2.0.40"}
+          - {python-version: "3.10", pytest-version: "9.1.1", sqlalchemy-version: "2.0.52"}
+          - {python-version: "3.11", pytest-version: "9.1.1", sqlalchemy-version: "2.0.52"}
+          - {python-version: "3.12", pytest-version: "9.1.1", sqlalchemy-version: "2.0.52"}
+          - {python-version: "3.13", pytest-version: "9.1.1", sqlalchemy-version: "2.0.52"}
+          - {python-version: "3.14", pytest-version: "9.1.1", sqlalchemy-version: "2.0.52"}
+          - {python-version: "3.15", pytest-version: "9.1.1", sqlalchemy-version: "2.0.52"}
 
           # For older tool versions, we can just stick to a single python version, again, because we
           # have no reason to believe their pytest-alembic specifically impacts their compatibility.
-          # 7.0.0 is the floor declared in [project.dependencies]; 8.3.5 covers the
-          # intervening major, whose hook API differs from both neighbours.
+          # pytest 7.0.0 is the floor declared in [project.dependencies]; 8.3.5 covers
+          # the intervening major, whose hook API differs from both neighbours.
+          # sqlalchemy 2.0.40 is the oldest checked version. It is paired only with 3.13
+          # because it publishes no cp314/cp315 wheels, and running the pure-python
+          # fallback there would test the fallback rather than the version.
           - {python-version: "3.13", pytest-version: "7.0.0", sqlalchemy-version: "2.0.40"}
           - {python-version: "3.13", pytest-version: "8.3.5", sqlalchemy-version: "2.0.40"}
 
@@ -82,8 +97,8 @@ jobs:
 
       - name: Install specific versions
         run: |
-          uv pip install 'sqlalchemy~=${{ matrix.sqlalchemy-version }}'
-          uv pip install 'pytest~=${{ matrix.pytest-version }}'
+          uv pip install 'sqlalchemy==${{ matrix.sqlalchemy-version }}'
+          uv pip install 'pytest==${{ matrix.pytest-version }}'
 
       - name: Run linters
         run: make lint

@@ -32,6 +32,9 @@ dev = [
     "asyncpg",
     "coverage[toml]>=6.4.4",
     "deptry>=0.20",
+    # What `sqlalchemy[asyncio]` pulls in, declared directly. The extra resolves to
+    # `greenlet>=1`, so it added nothing over this. sqlalchemy itself is a runtime
+    # dependency; CI pins the version under test explicitly.
     "greenlet>=3.0",
     "interrogate>=1.7",
     "mypy>=1.11",
@@ -39,7 +42,6 @@ dev = [
     "pytest>=8.3.2",
     "pytest-mock-resources[docker]>=2.13.0",
     "ruff>=0.15.0",
-    "sqlalchemy[asyncio]>=2.0.42",
 ]
 docs = ["myst-parser", "sphinx", "sphinx-rtd-theme", "sphinx-autodoc-typehints", "sphinx-autobuild"]
 
@@ -52,8 +54,8 @@ skip_covered = true
 # lets a new untested path hide inside the slack.
 #
 # The previous floor of 93 was set because the CI matrix skipped the asyncio tests on
-# sqlalchemy versions without asyncio support. That reason is gone: the matrix pins a
-# single sqlalchemy (2.0.40), so no entry skips them any more.
+# sqlalchemy versions without asyncio support. That reason is gone: every matrix entry
+# pins a sqlalchemy 2.x, so `requires_asyncio_support` never skips.
 #
 # Each matrix entry enforces this on its own -- `make test` runs the report per job --
 # so what is excluded below has to be excluded for *every* entry, not just this one.
