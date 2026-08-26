@@ -183,6 +183,47 @@ jobs:
       - name: Check dependency hygiene
         run: make deps
 
+  lowest-deps:
+    # The declared dependency floors, as a gate. `--resolution lowest-direct` pins every
+    # *direct* dependency to the minimum its specifier allows, so this job is the only
+    # thing that distinguishes a floor the project has verified from a number somebody
+    # typed. Outside the test matrix for the reason `audit` and `docs-coverage` document
+    # above: the resolution comes from `pyproject.toml`, which does not vary by entry.
+    #
+    # It earns its slot. Introducing it caught `alembic>=1.7`, which passes against
+    # sqlalchemy 1.4 and fails at import against sqlalchemy 2 -- a pair nothing else in
+    # this workflow builds, since the matrix installs one sqlalchemy over a normal sync.
+    # It also caught `greenlet>=3.0` and a bare `sphinx-autobuild`, which resolved to a
+    # 2013 release that builds only against Python's removed `imp`.
+    #
+    # `--resolution lowest-direct`, not `lowest`: transitive dependencies stay at their
+    # normal versions. Flooring those too tests other people's release histories rather
+    # than this project's declared support, and fails on packages that never published a
+    # wheel for a supported Python.
+    #
+    # One thing this does *not* cover: `sqlalchemy>=1.4`. The dev group needs
+    # `sqlalchemy[asyncio]>=2.0.42` for the async tests, and the higher floor wins, so
+    # the resolution lands on 2.0.42 rather than 1.4. That end of the range is verified
+    # by hand -- see the comment on `dependencies` in pyproject.toml.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+      - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7.6.0
+        with:
+          python-version: "3.12"
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - name: Install the project at its declared floors
+        run: uv sync --all-groups --resolution lowest-direct
+
+      - name: Run the suite at the declared floors
+        # Not `make test`: that runs under coverage against the 100% floor, which the
+        # oldest supported alembic cannot meet -- `test_pyproject_toml` skips there,
+        # since `_supports_toml()` correctly reports no pyproject.toml support. This job
+        # asks whether the code runs at its floors, and `make test` already owns coverage.
+        run: uv run --all-groups --resolution lowest-direct pytest src tests -q
+
   docs:
     # The documentation build, as a gate. Outside the test matrix for the same
     # reason `audit` and `docs-coverage` document above: the .rst sources do not
