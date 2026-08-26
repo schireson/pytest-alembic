@@ -323,47 +323,55 @@ class OptionResolver:
         """The resolved tests in a stable order, so collection order is reproducible."""
         return sorted(self.tests(), key=lambda t: t.raw_name)
 
+    def _requested_names(self) -> list[str]:
+        """The names the options select, in collection order, with exclusions applied.
+
+        ``included_tests`` of ``None`` means "not specified", which selects every
+        non-experimental test; experimental ones are only ever selected by name, which
+        is why the two lists are walked separately rather than merged.
+
+        Names are returned whether or not they are recognised -- validating them is
+        :meth:`_unrecognised_names`'s job, and it needs to see them.
+        """
+        excluded = set(self.excluded_tests or [])
+
+        if self.included_tests is None:
+            included = [t.name for t in self.available_tests.values() if t.is_experimental is False]
+        else:
+            included = self.included_tests
+
+        return [
+            name
+            for group in (included, self.included_experimental_tests or [])
+            for name in group
+            if name not in excluded
+        ]
+
+    def _unrecognised_names(self, requested: list[str]) -> list[str]:
+        """Every option value which does not name a known test.
+
+        Both directions are checked -- excluding a test that does not exist is as much
+        a typo as including one -- and every offender is gathered rather than raised on
+        sight, so a typo in one option does not hide a typo in another.
+        """
+        candidates = [*set(self.excluded_tests or []), *requested]
+        return [name for name in candidates if name not in self.available_tests]
+
     def tests(self) -> list[PytestAlembicTest]:
         """Resolve the options into the selected tests.
-
-        Every unrecognised name is gathered before raising, so a typo in one option does
-        not hide a typo in another.
 
         Raises:
             ValueError: If any included or excluded name is not a known test.
         """
-        selected_tests = []
-        invalid_tests = []
+        requested = self._requested_names()
 
-        excluded_set = set(self.excluded_tests or [])
-        for excluded_test in excluded_set:
-            if excluded_test not in self.available_tests:
-                invalid_tests.append(excluded_test)
-
-        if self.included_tests is None:
-            included_tests = [
-                t.name for t in self.available_tests.values() if t.is_experimental is False
-            ]
-        else:
-            included_tests = self.included_tests
-
-        for test_group in [included_tests, self.included_experimental_tests or []]:
-            for included_test in test_group:
-                if included_test in excluded_set:
-                    continue
-
-                if included_test not in self.available_tests:
-                    invalid_tests.append(included_test)
-                    continue
-
-                selected_tests.append(included_test)
-
-        if invalid_tests:
-            invalid_str = ", ".join(sorted(invalid_tests))
+        unrecognised = self._unrecognised_names(requested)
+        if unrecognised:
+            invalid_str = ", ".join(sorted(unrecognised))
             message = f"The following tests were unrecognized: {invalid_str}"
             raise ValueError(message)
 
-        return [self.available_tests[t] for t in selected_tests]
+        return [self.available_tests[name] for name in requested]
 
 
 def parse_test_names(raw_test_names: str) -> set[str]:
