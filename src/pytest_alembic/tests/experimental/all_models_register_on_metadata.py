@@ -13,6 +13,7 @@ import logging
 import pkgutil
 import re
 import subprocess  # nosec
+import sys
 from collections.abc import Callable, Iterator
 from types import ModuleType
 from typing import Any
@@ -147,7 +148,15 @@ def get_bare_import_tableset(
     """
 
     command = [
-        "python",
+        # `sys.executable`, not the string "python": the child has to import this very
+        # package, so it has to be *this* interpreter. Resolving "python" through PATH
+        # instead finds whichever one happens to be first, which is not the running one
+        # under tox, or under any runner that invokes a venv's interpreter by absolute
+        # path without activating it -- and on Windows is frequently not an interpreter
+        # at all. The failure then surfaces through the `CalledProcessError` handler
+        # below as an `AlembicTestFailure`, i.e. as a problem with the user's migrations
+        # rather than with their environment.
+        sys.executable,
         "-m",
         "pytest_alembic.tests.experimental.collect_clean_alembic_environment",
         url,
