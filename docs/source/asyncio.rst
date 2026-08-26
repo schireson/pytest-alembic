@@ -53,7 +53,7 @@ something like
 .. code-block:: python
 
    from sqlalchemy import create_engine
-   from sqlalchemy.ext.asyncio import create_engine_async, AsyncEngine
+   from sqlalchemy.ext.asyncio import create_async_engine, AsyncEngine
 
    @pytest.fixture
    def alembic_engine(...):
@@ -70,6 +70,16 @@ something like
    from pytest_mock_resources import create_postgres_fixture
 
    alembic_engine = create_postgres_fixture(async_=True)
+
+Note that ``pytest-alembic`` itself only cares that the fixture *yields* an
+:class:`~sqlalchemy.ext.asyncio.AsyncEngine`; it never needs to await your fixture. The
+two plain ``@pytest.fixture`` forms above therefore work with no extra plugins, and are
+the forms exercised by this project's own test suite.
+
+The ``pytest-mock-resources`` form is different: ``async_=True`` produces a genuine
+async fixture, so resolving it requires an async-fixture plugin (such as
+``pytest-asyncio``) in **your** project. That is a requirement of the fixture, not of
+``pytest-alembic``.
 
 
 A slightly more versatile setup
