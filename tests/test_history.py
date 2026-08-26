@@ -54,7 +54,7 @@ def test_previous_revision_base() -> None:
     alembic_history = AlembicHistory.parse(revision_map)
     result = alembic_history.previous_revision("base")
 
-    assert result is result
+    assert result is None
 
 
 def test_next_revision() -> None:
