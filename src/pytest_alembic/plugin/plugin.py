@@ -13,7 +13,6 @@ from pathlib import Path, PurePath
 from typing import Any, cast
 
 import pytest
-from _pytest import config
 
 pytest_version_tuple = getattr(pytest, "version_tuple", None)
 
@@ -31,7 +30,7 @@ class PytestAlembicPlugin:
         registered: Whether the built-in tests have already been bound.
     """
 
-    config: config.Config
+    config: pytest.Config
     registered = False
 
     # Some weird decisions were made by pytest it seems like. There is not an obvious
