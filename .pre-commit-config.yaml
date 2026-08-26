@@ -1,0 +1,44 @@
+# Local, pre-push feedback for checks CI already runs. What this adds is timing: `ruff
+# format` disagreeing shows up on `git commit` rather than after a push and a full
+# matrix run.
+#
+# Every hook is `repo: local` and goes through `uv run`, deliberately. The usual mirrors
+# (ruff-pre-commit, mirrors-mypy) carry their own `rev:`, which would give this repo a
+# second pin for a tool `uv.lock` already pins -- two versions drifting apart, so a hook
+# could pass here while the identical check fails in CI. Going through `uv run` means
+# both run the locked version, and adds no third-party code to the toolchain.
+#
+# `files:` matches `make lint`'s scope exactly. Widening it would start reporting on
+# files the project deliberately does not lint, `docs/source/conf.py` among them.
+default_install_hook_types: [pre-commit]
+
+repos:
+  - repo: local
+    hooks:
+      - id: ruff-check
+        name: ruff check
+        # Fixing rather than reporting: a hook exists to make the commit right, not to
+        # refuse it. `make lint` is the check-only form, and is what gates CI.
+        entry: uv run ruff check --fix --force-exclude
+        language: system
+        types_or: [python, pyi]
+        files: ^(src|tests|examples)/
+        require_serial: true
+
+      - id: ruff-format
+        name: ruff format
+        entry: uv run ruff format --force-exclude
+        language: system
+        types_or: [python, pyi]
+        files: ^(src|tests|examples)/
+        require_serial: true
+
+      - id: mypy
+        name: mypy
+        # Whole-tree rather than per-file: mypy needs imports to resolve, and
+        # [tool.mypy] applies to `src` and `tests` as a unit.
+        entry: uv run mypy src tests
+        language: system
+        types: [python]
+        pass_filenames: false
+        require_serial: true
