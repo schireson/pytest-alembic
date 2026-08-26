@@ -21,22 +21,11 @@ from typing import Any
 from sqlalchemy import MetaData
 from sqlalchemy.engine import Engine
 from sqlalchemy.engine.url import URL
+from sqlalchemy.ext.asyncio import AsyncEngine
+from sqlalchemy.orm import DeclarativeMeta
 
 from pytest_alembic.plugin.error import AlembicTestFailure
 from pytest_alembic.runner import MigrationContext
-
-try:
-    from sqlalchemy.orm import DeclarativeMeta
-except ImportError:  # pragma: no cover
-    from sqlalchemy.ext.declarative import DeclarativeMeta
-
-try:
-    from sqlalchemy.ext.asyncio import AsyncEngine
-
-    async_engine_cls = True
-except ImportError:  # pragma: no cover
-    async_engine_cls = False
-
 
 log = logging.getLogger(__name__)
 
@@ -94,9 +83,8 @@ def test_all_models_register_on_metadata(
     """
     connection = alembic_runner.connection_executor.connection
     # If `async_` is None, then we should automatically detect whether to run in
-    # async mode. If `AsyncEngine` is None, then we're not running on a version
-    # of sqlalchemy which supports it.
-    if async_engine_cls and isinstance(connection, AsyncEngine):
+    # async mode, which the engine's own type answers.
+    if isinstance(connection, AsyncEngine):
         if async_ is None:
             async_ = True
         url = connection.url

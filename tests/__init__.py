@@ -1,12 +1,8 @@
-import pytest
-import sqlalchemy
+"""Shared helpers for the test suite.
 
-sqlalchemy_version = getattr(sqlalchemy, "__version__", "1.3")
-supports_asyncio = sqlalchemy_version.startswith(("1.4", "2."))
-is_sqlalchemy_2 = sqlalchemy_version.startswith("2.")
-
-requires_asyncio_support = pytest.mark.skipif(
-    not supports_asyncio,
-    reason="Requires asyncio support",
-)
-requires_sqlalchemy_2 = pytest.mark.skipif(not is_sqlalchemy_2, reason="Requires v2")
+The sqlalchemy version guards that used to live here -- ``requires_asyncio_support``
+and ``requires_sqlalchemy_2`` -- are gone. Both asked whether the installed sqlalchemy
+was new enough to have ``ext.asyncio``, and the declared floor is now 2.0, so the
+answer is always yes and the skips could never fire. ``requires_sqlalchemy_2`` was
+already unreferenced.
+"""

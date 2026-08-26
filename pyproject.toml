@@ -15,22 +15,29 @@ classifiers = [
 readme = "README.md"
 requires-python = ">=3.10,<4"
 # Floors, not pins -- the point is that an unusable combination fails at resolve
-# time rather than at import time. Both were `"*"` from the initial commit through
-# the poetry-to-uv migration, so a `pip install pytest-alembic` was free to pull a
-# sqlalchemy this package cannot run on.
+# time rather than at import time. `alembic` and `sqlalchemy` were `"*"` from the
+# initial commit through the poetry-to-uv migration, so a `pip install pytest-alembic`
+# was free to pull a sqlalchemy this package cannot run on.
 #
-# `sqlalchemy>=1.4` is a hard technical boundary, not a preference: `executor.py`
-# imports `sqlalchemy.ext.asyncio`, which does not exist before 1.4.0. On 1.3.24 the
-# suite does not even collect (`ModuleNotFoundError: sqlalchemy.ext.asyncio`).
+# `pytest>=9` is the plugin's host, so its floor is the most consequential one here: a
+# pytest plugin loaded by an older pytest fails inside that pytest's startup, which is
+# the worst place to report it. 9 also aligns the floor with `requires-python`, since
+# pytest 9 itself requires >=3.10, exactly what this package declares. Verified on
+# 9.1.1 with pytest-asyncio 1.4.0 (149 passed, 1 skipped).
 #
-# The bound stays at 1.4 rather than at the lowest version the *suite* can run, which
-# is 1.4.24: pytest-mock-resources excludes 1.4.0 through 1.4.23, so the harness cannot
-# reach them even though this package can. That is a development constraint, and
-# imposing it on an installing user would refuse a combination that works for them.
-# Verified end-to-end at 1.4.24 (149 passed, 1 skipped) and 1.4.54 (150 passed); at
-# 1.4.0 exactly, `uv pip install --resolution lowest-direct .` resolves and every
-# module imports. Alembic narrows this further on its own account
-# (`SQLAlchemy>=1.4.23` as of 1.19), which composes correctly without being restated.
+# `sqlalchemy>=2.0` drops 1.x, and that is a support decision rather than a technical
+# one -- the suite passes on 1.4.24 and 1.4.54. What it does not have is any
+# verification: the CI matrix installs a 2.0.x for every entry, the dev group needs
+# `sqlalchemy[asyncio]>=2.0.42` for the async tests, the 42 example projects pin
+# nothing, and the `lowest-deps` job resolves to the dev group's higher floor. A `1.4`
+# bound would therefore be a claim of support that nothing in this repository checks,
+# which is the failure mode the floors and that job exist to remove. Declaring 2.0 makes
+# what ships and what is tested the same statement.
+#
+# This is a breaking change for anyone still on 1.x, so it belongs with the Python 3.9
+# drop in the 0.13.0 release rather than in a patch. It also retires the `DeclarativeMeta`
+# and `AsyncEngine` import fallbacks in `executor.py` and the two experimental tests:
+# both symbols exist unconditionally on 2.0, verified even with greenlet absent.
 #
 # `alembic>=1.9` is a compatibility boundary, and specifically not an API one. Every
 # alembic symbol this package touches -- `EnvironmentContext`, `ScriptDirectory`,
@@ -46,7 +53,7 @@ requires-python = ">=3.10,<4"
 # feature-detects `Config.get_alembic_option`, and
 # `test_legacy_alembic_without_toml_support` covers the fallback path, which is why the
 # floor stays at 1.9 rather than following alembic's latest.
-dependencies = ["pytest>=7.0", "alembic>=1.9", "sqlalchemy>=1.4"]
+dependencies = ["pytest>=9", "alembic>=1.9", "sqlalchemy>=2.0"]
 
 [project.urls]
 repository = "https://github.com/schireson/pytest-alembic"
@@ -66,7 +73,6 @@ build-backend = "uv_build"
 # on PyPI. Left bare, `sphinx-autobuild` resolved to v0.1.0 (2013), which builds only
 # against Python's long-removed `imp` module and failed the sync outright.
 dev = [
-    "anyio>=4.0",
     "asyncpg>=0.30",
     "coverage[toml]>=6.4.4",
     "deptry>=0.20",
@@ -74,8 +80,8 @@ dev = [
     "interrogate>=1.7",
     "mypy>=1.11",
     "psycopg2-binary>=2.9.10",
-    "pytest>=8.3.2",
-    "pytest-asyncio>=0.24",
+    "pytest>=9",
+    "pytest-asyncio>=1.0",
     "pytest-mock-resources[docker]>=2.6.3",
     "ruff>=0.15.0",
     "sqlalchemy[asyncio]>=2.0.42",

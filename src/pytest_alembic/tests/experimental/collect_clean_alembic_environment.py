@@ -17,11 +17,7 @@ from typing import Any
 from alembic.config import Config
 from alembic.runtime.environment import EnvironmentContext
 from alembic.script import ScriptDirectory
-
-try:
-    from sqlalchemy.orm import DeclarativeMeta
-except ImportError:  # pragma: no cover
-    from sqlalchemy.ext.declarative import DeclarativeMeta
+from sqlalchemy.orm import DeclarativeMeta
 
 
 def run() -> None:  # pragma: no cover

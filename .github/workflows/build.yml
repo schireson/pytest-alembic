@@ -49,14 +49,15 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ["3.10", "3.11", "3.12", "3.13"]
-        pytest-version: ["7.0.0", "8.3.5"]
-        pytest-asyncio-version: ["0.16.0", "0.23.0"]
+        # Floor and current, on both axes. The 7.0.0/8.3.5 and 0.16.0/0.23.0 entries
+        # these replace are below the declared floors -- `pytest>=9` and, in the dev
+        # group, `pytest-asyncio>=1.0` -- so they tested combinations the package no
+        # longer claims to support. pytest-asyncio 1.x is what pytest 9 requires, which
+        # is why the two axes move together; the `exclude` that paired old pytest-asyncio
+        # with new pytest goes with them, since neither old version is installed now.
+        pytest-version: ["9.0.0", "9.1.1"]
+        pytest-asyncio-version: ["1.0.0", "1.4.0"]
         sqlalchemy-version: ["2.0.40"]
-
-        exclude:
-          # old versions of pytest-asyncio use old pytest hook syntax
-          - pytest-version: "8.3.5"
-            pytest-asyncio-version: "0.16.0"
 
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0

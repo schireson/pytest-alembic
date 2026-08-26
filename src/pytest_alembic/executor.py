@@ -323,16 +323,13 @@ class ConnectionExecutor:
         even though all internals are synchronous. This is how alembic suggests
         running the migrations themselves, so this matches that style.
         """
-        # The user may not have sqlalchemy 1.4+, and therefore may not even be able to
-        # use async engines. The class is bound to a separate name rather than rebinding
-        # the import itself, so the sentinel and the class are not the same variable.
-        async_engine_cls: type | None = None
-        with contextlib.suppress(ImportError):
-            from sqlalchemy.ext.asyncio import AsyncEngine
+        # Imported here rather than at module scope so that merely having this plugin
+        # installed does not pull in sqlalchemy's asyncio stack during pytest startup.
+        # The ImportError guard this used to carry is gone: it existed for sqlalchemy
+        # below 1.4, and the floor is now 2.0, where the symbol always resolves.
+        from sqlalchemy.ext.asyncio import AsyncEngine
 
-            async_engine_cls = AsyncEngine
-
-        if async_engine_cls and isinstance(self.connection, async_engine_cls):
+        if isinstance(self.connection, AsyncEngine):
             import asyncio
 
             async def run(engine: Any) -> Any:

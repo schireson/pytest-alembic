@@ -1,7 +1,5 @@
 import pytest
 
-from tests import requires_asyncio_support
-
 
 def run_pytest(
     pytester: pytest.Pytester,
@@ -261,13 +259,11 @@ def test_failing_downgrade(pytester: pytest.Pytester) -> None:
     )
 
 
-@requires_asyncio_support
 def test_async_sqlalchemy(pytester: pytest.Pytester) -> None:
     """Assert pytest-alembic works with async manually adapted sqlalchemy engine."""
     run_pytest(pytester, passed=4)
 
 
-@requires_asyncio_support
 def test_async_sqlalchemy_native(pytester: pytest.Pytester) -> None:
     """Assert pytest-alembic works with native async sqlalchemy engine.
 
@@ -277,7 +273,6 @@ def test_async_sqlalchemy_native(pytester: pytest.Pytester) -> None:
     run_pytest(pytester, passed=6)
 
 
-@requires_asyncio_support
 def test_experimental_all_models_register_async(pytester: pytest.Pytester) -> None:
     """Assert all_models_register_on_metadata runs with async_ param."""
     run_pytest(pytester, passed=1, test_alembic=False)

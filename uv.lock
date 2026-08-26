@@ -1434,7 +1434,6 @@ dependencies = [
 
 [package.dev-dependencies]
 dev = [
-    { name = "anyio" },
     { name = "asyncpg" },
     { name = "coverage", extra = ["toml"] },
     { name = "deptry" },
@@ -1465,13 +1464,12 @@ docs = [
 [package.metadata]
 requires-dist = [
     { name = "alembic", specifier = ">=1.9" },
-    { name = "pytest", specifier = ">=7.0" },
-    { name = "sqlalchemy", specifier = ">=1.4" },
+    { name = "pytest", specifier = ">=9" },
+    { name = "sqlalchemy", specifier = ">=2.0" },
 ]
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "anyio", specifier = ">=4.0" },
     { name = "asyncpg", specifier = ">=0.30" },
     { name = "coverage", extras = ["toml"], specifier = ">=6.4.4" },
     { name = "deptry", specifier = ">=0.20" },
@@ -1479,8 +1477,8 @@ dev = [
     { name = "interrogate", specifier = ">=1.7" },
     { name = "mypy", specifier = ">=1.11" },
     { name = "psycopg2-binary", specifier = ">=2.9.10" },
-    { name = "pytest", specifier = ">=8.3.2" },
-    { name = "pytest-asyncio", specifier = ">=0.24" },
+    { name = "pytest", specifier = ">=9" },
+    { name = "pytest-asyncio", specifier = ">=1.0" },
     { name = "pytest-mock-resources", extras = ["docker"], specifier = ">=2.6.3" },
     { name = "ruff", specifier = ">=0.15.0" },
     { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2.0.42" },
