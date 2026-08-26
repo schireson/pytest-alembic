@@ -30,6 +30,7 @@ build-backend = "uv_build"
 dev = [
     "asyncpg",
     "coverage[toml]>=6.4.4",
+    "deptry>=0.20",
     "greenlet>=3.0",
     "interrogate>=1.7",
     "mypy>=1.11",
@@ -162,6 +163,20 @@ incremental = true
 # sqlalchemy, pytest and pytest_mock_resources all ship `py.typed`, so the annotations
 # here are checked against their real signatures either way.
 disallow_untyped_defs = true
+
+[tool.deptry]
+# Dependency hygiene, as a gate. Runs over `src` only: the dev and docs groups exist to
+# support the test suite and the docs build, which deptry would otherwise report as
+# unused because nothing under `src` imports them.
+
+[tool.deptry.per_rule_ignores]
+# DEP004 is "imported but declared as a dev dependency", and here that is deliberate.
+# `collect_clean_alembic_environment` is executed as a subprocess by the experimental
+# `all_models_register_on_metadata` test, and imports coverage only under
+# `if __name__ == "__main__"`, behind a `COVERAGE_PROCESS_START` environment check, so
+# that the subprocess's lines are measured when the suite runs under coverage. It is
+# never reached by a user of this package, so coverage stays a dev dependency.
+DEP004 = ["coverage"]
 
 [tool.interrogate]
 # Docstring *coverage*, as a ratchet. This deliberately complements ruff rather

@@ -1,4 +1,4 @@
-.PHONY: install build test lint format docs docs-coverage audit audit-all publish changelog
+.PHONY: install build test lint format deps docs docs-coverage audit audit-all publish changelog
 .DEFAULT_GOAL := test
 
 help:  ## Show this help
@@ -26,6 +26,12 @@ lint:  ## Check lint, formatting and types (ruff, mypy)
 format:  ## Apply ruff fixes and formatting in place
 	uv run ruff check --fix src tests examples
 	uv run ruff format src tests examples
+
+deps:  ## Check dependency hygiene (deptry)
+	# No flags: every exception lives in [tool.deptry] in pyproject.toml, so a local
+	# run and CI measure the same thing. `--group docs` so deptry can introspect the
+	# docs packages too, rather than guessing their module names.
+	uv run --group docs deptry src
 
 docs:  ## Build the HTML documentation (sphinx)
 	# `--group docs` because `make install` runs a bare `uv sync`, which does not
