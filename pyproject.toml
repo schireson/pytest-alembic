@@ -37,11 +37,9 @@ dev = [
     "mypy>=1.11",
     "psycopg2-binary",
     "pytest>=8.3.2",
-    "pytest-asyncio",
     "pytest-mock-resources[docker]>=2.13.0",
     "ruff>=0.15.0",
     "sqlalchemy[asyncio]>=2.0.42",
-    "anyio",
 ]
 docs = ["myst-parser", "sphinx", "sphinx-rtd-theme", "sphinx-autodoc-typehints", "sphinx-autobuild"]
 
@@ -133,7 +131,6 @@ parallel = true
 [tool.pytest.ini_options]
 doctest_optionflags = "NORMALIZE_WHITESPACE IGNORE_EXCEPTION_DETAIL ELLIPSIS"
 addopts = "--doctest-modules -vv --ff --strict-markers"
-asyncio_default_fixture_loop_scope = "function"
 pytest_alembic_exclude = 'up_down_consistency'
 norecursedirs = ".* build dist *.egg"
 pytester_example_dir = "examples"
@@ -145,7 +142,6 @@ filterwarnings = [
     "ignore:unclosed connection.*:ResourceWarning",
     "ignore:pkg_resources is deprecated as an API:DeprecationWarning",
     "ignore:.*is deprecated and will be removed in Python 3.14.*:DeprecationWarning",
-    "ignore:.*asyncio_default_fixture_loop_scope.*:pytest.PytestDeprecationWarning",
 ]
 
 [tool.mypy]

@@ -50,26 +50,24 @@ jobs:
       matrix:
         include:
           # Sweep across python version sweep with the highest checked dependency version.
-          # Older pytest/asyncio versions are tested separately below on a single
-          # interpreter since we have no reason to believe interpreter-specific breakage
-          # would surface in those older versions but not in pytest 9 + asyncio 1.x,
+          # Older pytest versions are tested separately below on a single interpreter
+          # since we have no reason to believe interpreter-specific breakage would
+          # surface in those older versions but not in pytest 9,
           # but we **do** know that newer versions of dependencies may not support arbitrarily old
           # python versions.
-          - {python-version: "3.10", pytest-version: "9.1.1", pytest-asyncio-version: "1.4.0", sqlalchemy-version: "2.0.40"}
-          - {python-version: "3.11", pytest-version: "9.1.1", pytest-asyncio-version: "1.4.0", sqlalchemy-version: "2.0.40"}
-          - {python-version: "3.12", pytest-version: "9.1.1", pytest-asyncio-version: "1.4.0", sqlalchemy-version: "2.0.40"}
-          - {python-version: "3.13", pytest-version: "9.1.1", pytest-asyncio-version: "1.4.0", sqlalchemy-version: "2.0.40"}
-          - {python-version: "3.14", pytest-version: "9.1.1", pytest-asyncio-version: "1.4.0", sqlalchemy-version: "2.0.40"}
-          - {python-version: "3.15", pytest-version: "9.1.1", pytest-asyncio-version: "1.4.0", sqlalchemy-version: "2.0.40"}
+          - {python-version: "3.10", pytest-version: "9.1.1", sqlalchemy-version: "2.0.40"}
+          - {python-version: "3.11", pytest-version: "9.1.1", sqlalchemy-version: "2.0.40"}
+          - {python-version: "3.12", pytest-version: "9.1.1", sqlalchemy-version: "2.0.40"}
+          - {python-version: "3.13", pytest-version: "9.1.1", sqlalchemy-version: "2.0.40"}
+          - {python-version: "3.14", pytest-version: "9.1.1", sqlalchemy-version: "2.0.40"}
+          - {python-version: "3.15", pytest-version: "9.1.1", sqlalchemy-version: "2.0.40"}
 
           # For older tool versions, we can just stick to a single python version, again, because we
           # have no reason to believe their pytest-alembic specifically impacts their compatibility.
-          - {python-version: "3.13", pytest-version: "7.0.0", pytest-asyncio-version: "0.16.0", sqlalchemy-version: "2.0.40"}
-
-          # pytest-asyncio 0.23.x pairs with pytest 8 (0.23 is incompatible with
-          # pytest 7's hook API and triggers filterwarnings=error on 3.14 via
-          # deprecated asyncio APIs).
-          - {python-version: "3.13", pytest-version: "8.3.5", pytest-asyncio-version: "0.23.0", sqlalchemy-version: "2.0.40"}
+          # 7.0.0 is the floor declared in [project.dependencies]; 8.3.5 covers the
+          # intervening major, whose hook API differs from both neighbours.
+          - {python-version: "3.13", pytest-version: "7.0.0", sqlalchemy-version: "2.0.40"}
+          - {python-version: "3.13", pytest-version: "8.3.5", sqlalchemy-version: "2.0.40"}
 
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
@@ -86,7 +84,6 @@ jobs:
         run: |
           uv pip install 'sqlalchemy~=${{ matrix.sqlalchemy-version }}'
           uv pip install 'pytest~=${{ matrix.pytest-version }}'
-          uv pip install 'pytest-asyncio~=${{ matrix.pytest-asyncio-version }}'
 
       - name: Run linters
         run: make lint
@@ -97,7 +94,7 @@ jobs:
       - name: Store test result artifacts
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: coverage-${{ runner.os }}-${{ matrix.python-version }}-${{ matrix.pytest-version }}-${{ matrix.pytest-asyncio-version }}-${{ matrix.sqlalchemy-version }}
+          name: coverage-${{ runner.os }}-${{ matrix.python-version }}-${{ matrix.pytest-version }}-${{ matrix.sqlalchemy-version }}
           path: coverage.xml
 
       - name: Coveralls
