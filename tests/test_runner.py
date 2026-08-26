@@ -93,7 +93,12 @@ def test_multiple_schemata(pytester: pytest.Pytester) -> None:
 
 
 def test_schema_revision_data(pytester: pytest.Pytester) -> None:
-    """Assert that revision data handles schema names included in the table name."""
+    """Assert that revision data handles schema names included in the table name.
+
+    The assertion is inside migration ``bbbbbbbbbbbb``, which selects from ``meow.foo``
+    and checks it holds exactly the configured row. Breaking the ``"schema.table"``
+    parsing in ``ConnectionExecutor.table_insert`` turns this test red.
+    """
     run_pytest(pytester, passed=3)
 
 
@@ -207,7 +212,13 @@ def test_downgrade_leaves_no_trace_failure(pytester: pytest.Pytester) -> None:
 
 
 def test_minimum_downgrade_revision(pytester: pytest.Pytester) -> None:
-    """Assert the minimum_downgrade_revision config option is abided."""
+    """Assert the minimum_downgrade_revision config option is abided.
+
+    As with ``test_skip_revision``, the assertion is in the history: ``bbbbbbbbbbbb``'s
+    ``downgrade()`` raises ``ValueError``, and the configured floor is ``cccccccccccc``,
+    so a downgrade that walked past the floor would hit it. Neutering the option in
+    ``src/`` turns this test red.
+    """
     run_pytest(pytester, passed=5)
 
 
@@ -289,7 +300,13 @@ def test_generate_revision(pytester: pytest.Pytester) -> None:
 
 
 def test_skip_revision(pytester: pytest.Pytester) -> None:
-    """Assert a revision can be skipped through configuring the "skip_revisions" config."""
+    """Assert a revision can be skipped through configuring the "skip_revisions" config.
+
+    The assertion lives in the history rather than here: revision ``bbbbbbbbbbbb``'s
+    ``upgrade()`` raises unconditionally, so the built-in tests pass only if it was
+    stamped rather than run. That ``raise`` is load-bearing -- neutering
+    ``skip_revisions`` in ``src/`` turns this test red.
+    """
     run_pytest(pytester, passed=4)
 
 
@@ -299,12 +316,23 @@ def test_pytest_alembic_tests_path(pytester: pytest.Pytester) -> None:
 
 
 def test_version_table_schema(pytester: pytest.Pytester) -> None:
-    """Assert the setting the version_table_schema option functions correctly."""
-    run_pytest(pytester, passed=5)
+    """Assert the setting the version_table_schema option functions correctly.
+
+    The example carries its own `test_migrations.py` asserting *where* the version
+    table ended up, because nothing else here would notice: the migrations touch
+    `foo` rather than `alembic_version`, so the built-in tests pass whether or not
+    `env.py`'s `version_table_schema` was honoured.
+    """
+    run_pytest(pytester, passed=6)
 
 
 def test_branched_history_before_upgrade_data(pytester: pytest.Pytester) -> None:
-    """Assert branched upgrade data is only inserted once per migration."""
+    """Assert branched upgrade data is only inserted once per migration.
+
+    The assertion is the primary key: the configured row is ``{"id": 1}``, so inserting
+    it a second time raises rather than passing silently. Duplicating the
+    ``insert_into`` call in ``managed_upgrade`` turns this test red.
+    """
     run_pytest(pytester, passed=4)
 
 
