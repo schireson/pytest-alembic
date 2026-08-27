@@ -1,11 +1,3 @@
-<!-- Badges are grouped: the package itself, then what CI proves about it, then the
-     toolchain. Every URL is absolute -- this file is included verbatim into the sphinx
-     docs by docs/source/quickstart.rst, where a repo-relative link would not resolve.
-     The Python row is hardcoded rather than using img.shields.io/pypi/pyversions,
-     which reads the *published* classifiers and so currently renders "3.9 | 3.10 |
-     3.11" -- including a version that has been dropped. Keep it in step with the
-     matrix in .github/workflows/build.yml and the classifiers in pyproject.toml. -->
-
 [![PyPI version](https://img.shields.io/pypi/v/pytest-alembic)](https://pypi.org/project/pytest-alembic/)
 [![Python versions](https://img.shields.io/badge/Python-3.10%20%E2%80%A2%203.11%20%E2%80%A2%203.12%20%E2%80%A2%203.13%20%E2%80%A2%203.14%20%E2%80%A2%203.15-blue?logo=python&logoColor=white)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://github.com/schireson/pytest-alembic/blob/main/LICENSE)
