@@ -222,6 +222,31 @@ jobs:
         # Not `make test`: that runs under coverage against the 100% floor.
         run: uv run --all-groups --resolution lowest-direct pytest src tests -q
 
+  cross-platform:
+    # We have a couple of potentially OS dependent code paths (path manipulation and
+    # subprocess calls). Our reliance on the postgres service for tests is incompatible with
+    # macos/windows, so we instead just run the test subsets which do not rely on a database.
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+      - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7.6.0
+        with:
+          python-version: "3.13"
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Run the tests that need no database
+        run: uv run pytest src tests -m "not postgres" -q
+
   docs:
     # The documentation build, as a gate. Outside the test matrix for the same
     # reason `audit` and `docs-coverage` document above: the .rst sources do not
