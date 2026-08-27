@@ -212,10 +212,7 @@ jobs:
         run: uv sync --all-groups --resolution lowest-direct
 
       - name: Run the suite at the declared floors
-        # Not `make test`: that runs under coverage against the 100% floor, which the
-        # oldest supported alembic cannot meet -- `test_pyproject_toml` skips there,
-        # since `_supports_toml()` correctly reports no pyproject.toml support. This job
-        # asks whether the code runs at its floors, and `make test` already owns coverage.
+        # Not `make test`: that runs under coverage against the 100% floor.
         run: uv run --all-groups --resolution lowest-direct pytest src tests -q
 
   docs:

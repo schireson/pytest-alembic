@@ -337,15 +337,6 @@ class ConnectionExecutor:
 
             async def run(engine: Any) -> Any:
                 """Run `fn` inside an async connection, committing on success."""
-                # `begin()`, not `connect()` followed by an explicit `commit()`. The two
-                # are equivalent on the happy path -- both commit on success and roll
-                # back on an exception -- but `AsyncConnection.commit` does not exist
-                # before sqlalchemy 2.0, so the explicit form raises `AttributeError:
-                # 'Connection' object has no attribute 'commit'` against every 1.4
-                # release, from 1.4.24 (the lowest the suite can reach) through 1.4.54
-                # (the last). `begin()` is available across the whole declared range,
-                # which is what makes the `sqlalchemy>=1.4` floor in pyproject.toml
-                # true for async engines and not only for sync ones.
                 async with engine.begin() as connection:
                     result = await connection.run_sync(fn, **kwargs)
 
