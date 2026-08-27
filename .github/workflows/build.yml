@@ -45,6 +45,9 @@ jobs:
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
 
     runs-on: ubuntu-latest
+    env:
+      UV_NO_SYNC: "1"
+
     strategy:
       fail-fast: false
       matrix:
@@ -55,12 +58,12 @@ jobs:
           # surface in those older versions but not in pytest 9,
           # but we **do** know that newer versions of dependencies may not support arbitrarily old
           # python versions.
-          - {python-version: "3.10", pytest-version: "9.1.1", sqlalchemy-version: "2.0.40"}
-          - {python-version: "3.11", pytest-version: "9.1.1", sqlalchemy-version: "2.0.40"}
-          - {python-version: "3.12", pytest-version: "9.1.1", sqlalchemy-version: "2.0.40"}
-          - {python-version: "3.13", pytest-version: "9.1.1", sqlalchemy-version: "2.0.40"}
-          - {python-version: "3.14", pytest-version: "9.1.1", sqlalchemy-version: "2.0.40"}
-          - {python-version: "3.15", pytest-version: "9.1.1", sqlalchemy-version: "2.0.40"}
+          - {python-version: "3.10", pytest-version: "9.1.1", sqlalchemy-version: "2.0.52"}
+          - {python-version: "3.11", pytest-version: "9.1.1", sqlalchemy-version: "2.0.52"}
+          - {python-version: "3.12", pytest-version: "9.1.1", sqlalchemy-version: "2.0.52"}
+          - {python-version: "3.13", pytest-version: "9.1.1", sqlalchemy-version: "2.0.52"}
+          - {python-version: "3.14", pytest-version: "9.1.1", sqlalchemy-version: "2.0.52"}
+          - {python-version: "3.15", pytest-version: "9.1.1", sqlalchemy-version: "2.0.52"}
 
           # For older tool versions, we can just stick to a single python version, again, because we
           # have no reason to believe their pytest-alembic specifically impacts their compatibility.
@@ -81,9 +84,13 @@ jobs:
         run: make install
 
       - name: Install specific versions
+        # `==`, not `~=`. `sqlalchemy~=2.0.40` means ">=2.0.40, ==2.0.*", which the
+        # already-installed newest 2.0.x satisfies -- so the step emitted no install
+        # line at all and the column never varied anything. A pin that logs nothing is
+        # the tell; a real one logs `- x==a` / `+ x==b`.
         run: |
-          uv pip install 'sqlalchemy~=${{ matrix.sqlalchemy-version }}'
-          uv pip install 'pytest~=${{ matrix.pytest-version }}'
+          uv pip install 'sqlalchemy==${{ matrix.sqlalchemy-version }}'
+          uv pip install 'pytest==${{ matrix.pytest-version }}'
 
       - name: Run linters
         run: make lint
