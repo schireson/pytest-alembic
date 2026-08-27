@@ -10,6 +10,6 @@ build:
   jobs:
     post_create_environment:
       - pip install uv
-      - uv sync --group docs
+      - uv pip install --group docs
 
 formats: all
