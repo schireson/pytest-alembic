@@ -9,11 +9,14 @@
 import os
 import sys
 
+from sphinx_pyproject import SphinxConfig
+
 sys.path.insert(0, os.path.abspath(".."))
 
+_config = SphinxConfig("../../pyproject.toml", globalns=globals())
 project = "Pytest Alembic"
-release = "0.4.0"
-version = "0.4.0"
+version = _config.version
+release = _config.version
 
 extensions = [
     "myst_parser",
