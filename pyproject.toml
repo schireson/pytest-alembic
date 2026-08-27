@@ -6,12 +6,18 @@ authors = [{ name = "Dan Cardin", email = "ddcardin@gmail.com" }]
 license = "MIT"
 license-files = ["LICENSE"]
 keywords = ["pytest", "sqlalchemy", "alembic", "migration", "revision"]
+# One entry per interpreter the CI matrix in .github/workflows/build.yml actually
+# gates. Keep the two lists in step: `requires-python` decides what installs, but
+# these are what PyPI and installers *advertise*, so a version tested on every push
+# and missing here is support the project verifies without claiming.
 classifiers = [
     "Framework :: Pytest",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: 3.15",
 ]
 readme = "README.md"
 requires-python = ">=3.10,<4"
