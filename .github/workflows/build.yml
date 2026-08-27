@@ -45,17 +45,6 @@ jobs:
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
 
     runs-on: ubuntu-latest
-
-    # `uv run` re-syncs the environment to uv.lock before executing, which reinstalled
-    # the locked versions over whatever the "Install specific versions" step below had
-    # just pinned. `make lint` runs first and reverted the pin before `make test` ever
-    # saw it, so every entry ran the locked pytest and sqlalchemy while its job name
-    # advertised something else. This affects `uv run` only -- `uv sync` in
-    # `make install` still populates the environment, and local development is
-    # untouched.
-    #
-    # Scoped to this job deliberately: `deps` and `docs` invoke `uv run --group <g>` and
-    # *depend* on that implicit sync to install the group, so they break with it set.
     env:
       UV_NO_SYNC: "1"
 
@@ -80,12 +69,6 @@ jobs:
           # have no reason to believe their pytest-alembic specifically impacts their compatibility.
           # 7.0.0 is the floor declared in [project.dependencies]; 8.3.5 covers the
           # intervening major, whose hook API differs from both neighbours.
-          #
-          # sqlalchemy 2.0.40 is the oldest version checked, and it stays on 3.13 only:
-          # it publishes cp37-cp313 wheels, so on a newer interpreter pip would fall
-          # back to the `py3-none-any` build and the row would test the pure-python
-          # package rather than the version. The sweep above therefore names 2.0.52,
-          # which covers cp38-cp314 and is what those rows have in fact been running.
           - {python-version: "3.13", pytest-version: "7.0.0", sqlalchemy-version: "2.0.40"}
           - {python-version: "3.13", pytest-version: "8.3.5", sqlalchemy-version: "2.0.40"}
 
