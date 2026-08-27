@@ -15,7 +15,37 @@ classifiers = [
 ]
 readme = "README.md"
 requires-python = ">=3.10,<4"
-dependencies = ["pytest>=7.0", "alembic", "sqlalchemy"]
+# Floors, not pins -- the point is that an unusable combination fails at resolve time
+# rather than at import time. `alembic` and `sqlalchemy` were declared bare from the
+# initial commit through the poetry-to-uv migration, so `pip install pytest-alembic`
+# was free to pull a sqlalchemy this package cannot run on.
+#
+# `sqlalchemy>=1.4` is a technical boundary, not a preference: `executor.py` imports
+# `sqlalchemy.ext.asyncio`, which does not exist before 1.4.0. On 1.3.24 the suite does
+# not even collect (`ModuleNotFoundError: sqlalchemy.ext.asyncio`).
+#
+# The bound stays at 1.4 rather than at the lowest version the *suite* can run, which
+# is 1.4.24: pytest-mock-resources excludes 1.4.0 through 1.4.23, so the harness cannot
+# reach them even though this package can. That is a development constraint, and
+# imposing it on an installing user would refuse a combination that works for them.
+# Alembic narrows this further on its own account (`SQLAlchemy>=1.4.23` as of 1.19),
+# which composes correctly without being restated here.
+#
+# `alembic>=1.9` is a compatibility boundary, and specifically not an API one. Every
+# alembic symbol this package touches -- `EnvironmentContext`, `ScriptDirectory`,
+# `RevisionMap`, `util.exc.CommandError`, `Config(file_=..., stdout=...)`, and the
+# private `autogenerate.render._render_cmd_body` -- resolves as far back as 1.0.11, and
+# the suite passes on alembic 1.7.0 against sqlalchemy 1.4. What fixes the number is
+# sqlalchemy 2: alembic gained 2.0 support in 1.9, and 1.7.0 paired with sqlalchemy
+# 2.0.42 fails at import with `NameError: name 'TextClause' is not defined` from
+# `alembic/operations/ops.py`. Alembic does not upper-bound sqlalchemy, so nothing else
+# rejects that pair -- this floor is what does.
+#
+# Newer alembic is not required for the pyproject.toml support: `_supports_toml()`
+# feature-detects `Config.get_alembic_option`, and
+# `test_legacy_alembic_without_toml_support` covers the fallback path, which is why the
+# floor stays at 1.9 rather than following alembic's latest.
+dependencies = ["pytest>=7.0", "alembic>=1.9", "sqlalchemy>=1.4"]
 
 [project.urls]
 repository = "https://github.com/schireson/pytest-alembic"
@@ -28,20 +58,32 @@ requires = ["uv_build>=0.6,<0.13"]
 build-backend = "uv_build"
 
 [dependency-groups]
+# Floored for the same reason the runtime dependencies above are, plus one specific to
+# these groups: the `lowest-deps` CI job resolves every *direct* dependency to its
+# declared minimum (`uv sync --resolution lowest-direct`), so an unbounded entry here
+# does not mean "any version is fine" -- it means that job installs the oldest release
+# on PyPI. Left bare, `sphinx-autobuild` resolves to v0.1.0 (2013), which builds only
+# against Python's long-removed `imp` module and fails the sync outright.
 dev = [
-    "asyncpg",
+    "asyncpg>=0.30",
     "coverage[toml]>=6.4.4",
     "deptry>=0.20",
-    "greenlet>=3.0",
+    "greenlet>=3.1",
     "interrogate>=1.7",
     "mypy>=1.11",
-    "psycopg2-binary",
+    "psycopg2-binary>=2.9.10",
     "pytest>=8.3.2",
     "pytest-mock-resources[docker]>=2.13.0",
     "ruff>=0.15.0",
     "sqlalchemy[asyncio]>=2.0.42",
 ]
-docs = ["myst-parser", "sphinx", "sphinx-rtd-theme", "sphinx-autodoc-typehints", "sphinx-autobuild"]
+docs = [
+    "myst-parser>=2.0",
+    "sphinx>=7.0",
+    "sphinx-autobuild>=2024.2.4",
+    "sphinx-autodoc-typehints>=2.0",
+    "sphinx-rtd-theme>=2.0",
+]
 
 [tool.coverage.report]
 show_missing = true
