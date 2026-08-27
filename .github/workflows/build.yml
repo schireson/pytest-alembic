@@ -223,24 +223,9 @@ jobs:
         run: uv run --all-groups --resolution lowest-direct pytest src tests -q
 
   cross-platform:
-    # Every other job here is `ubuntu-latest`, which left the one piece of explicitly
-    # platform-dependent reasoning in the package unexecuted: `get_bare_import_tableset`
-    # spawns `sys.executable` rather than PATH's `python`, and the comment at
-    # src/pytest_alembic/tests/experimental/all_models_register_on_metadata.py:151-158
-    # justifies that specifically for Windows, "where [PATH's python] is frequently not
-    # an interpreter at all". Nothing verified it there.
-    #
-    # This job carries no postgres service, because GitHub supports service containers on
-    # Linux runners only. It therefore deselects the tests that need a real database via
-    # the `postgres` marker that tests/conftest.py derives -- 133 of 150 tests remain, and
-    # the Linux matrix above still runs all 150.
-    #
-    # Not `make test`, for two reasons. The first is the one `lowest-deps` gives below:
-    # that target runs under coverage against the 100% floor, which a deliberate subset
-    # cannot meet. The second is that the Makefile's recipes are POSIX shell -- `make test`
-    # sets its environment with `VAR=value cmd` -- so it is not portable to a Windows
-    # runner. `uv sync` and `uv run` are, which is why this job goes to them directly
-    # rather than through the front door the other jobs use.
+    # We have a couple of potentially OS dependent code paths (path manipulation and
+    # subprocess calls). Our reliance on the postgres service for tests is incompatible with
+    # macos/windows, so we instead just run the test subsets which do not rely on a database.
     strategy:
       fail-fast: false
       matrix:
