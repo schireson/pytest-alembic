@@ -41,11 +41,6 @@ html_sidebars = {"**": ["globaltoc.html", "relations.html", "sourcelink.html", "
 
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
-    # 2.0, not the 1.3 this pointed at for years. The project supports sqlalchemy
-    # >= 1.4 and the CI matrix runs 2.0.x, so the 1.3 inventory sent readers to
-    # documentation for a version pytest-alembic no longer works with -- and
-    # `sqlalchemy.ext.asyncio` does not exist in it at all, so the AsyncEngine
-    # reference on the asyncio page silently rendered as unlinked text.
     "sqlalchemy": ("https://docs.sqlalchemy.org/en/20/", None),
 }
 
