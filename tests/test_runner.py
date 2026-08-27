@@ -39,8 +39,21 @@ def run_pytest(
 
 
 def assert_has_test(result: pytest.HookRecorder, test_name: str) -> None:
+    """Assert exactly one test named `test_name` ran, whatever its outcome.
+
+    Presence and uniqueness are checked by the `matchreport` call itself: it raises
+    when the name matches no report, and again when it matches more than one. It has
+    no `None` return, which is why the assertion below is not `report is not None` --
+    that read like a check but could never fail.
+
+    What `matchreport` does not establish is that the test *ran*. A test that dies
+    during collection is reported too, as a `CollectReport`, which has no call phase;
+    asserting on the phase is what separates "collected" from "executed". The outcome
+    itself is deliberately not asserted here -- `run_pytest` already pins the exact
+    passed/skipped/failed counts, and one caller expects this test to have failed.
+    """
     report = result.matchreport(test_name)
-    assert report is not None
+    assert getattr(report, "when", None) == "call", report
 
 
 def assert_failed_test_has_content(result: pytest.HookRecorder, *, test: str, content: str) -> None:
