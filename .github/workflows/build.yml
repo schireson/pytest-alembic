@@ -212,10 +212,13 @@ jobs:
     # than this project's declared support, and fails on packages that never published a
     # wheel for a supported Python.
     #
-    # One thing this does *not* cover: `sqlalchemy>=1.4`. The dev group needs
-    # `sqlalchemy[asyncio]>=2.0.42` for the async tests, and the higher floor wins, so
-    # the resolution lands on 2.0.42 rather than 1.4. That end of the range is verified
-    # by hand -- see the comment on `dependencies` in pyproject.toml.
+    # It covers `sqlalchemy>=1.4` too, which it briefly did not: the dev group used to
+    # carry `sqlalchemy[asyncio]>=2.0.42`, and since the higher floor wins, the
+    # resolution landed on 2.0.42 and never exercised the 1.4 end at all. Removing that
+    # override dropped the resolution to 1.4.24 and immediately failed `run_task`, which
+    # called `AsyncConnection.commit()` -- a method that does not exist before
+    # sqlalchemy 2.0. The dev pin had been hiding a real incompatibility rather than
+    # recording one, so the fix went into `executor.py`, not back into the pin.
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0

@@ -72,10 +72,8 @@ dev = [
     "interrogate>=1.7",
     "mypy>=1.11",
     "psycopg2-binary>=2.9.10",
-    "pytest>=8.3.2",
     "pytest-mock-resources[docker]>=2.13.0",
     "ruff>=0.15.0",
-    "sqlalchemy[asyncio]>=2.0.42",
 ]
 docs = [
     "myst-parser>=2.0",
