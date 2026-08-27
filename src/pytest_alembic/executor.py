@@ -20,6 +20,7 @@ from alembic.runtime.environment import EnvironmentContext
 from alembic.script.base import ScriptDirectory
 from sqlalchemy import MetaData, Table
 from sqlalchemy.engine import Connectable, Connection, Engine
+from sqlalchemy.ext.asyncio import AsyncEngine
 
 from pytest_alembic.config import Config
 
@@ -323,16 +324,7 @@ class ConnectionExecutor:
         even though all internals are synchronous. This is how alembic suggests
         running the migrations themselves, so this matches that style.
         """
-        # The user may not have sqlalchemy 1.4+, and therefore may not even be able to
-        # use async engines. The class is bound to a separate name rather than rebinding
-        # the import itself, so the sentinel and the class are not the same variable.
-        async_engine_cls: type | None = None
-        with contextlib.suppress(ImportError):
-            from sqlalchemy.ext.asyncio import AsyncEngine
-
-            async_engine_cls = AsyncEngine
-
-        if async_engine_cls and isinstance(self.connection, async_engine_cls):
+        if isinstance(self.connection, AsyncEngine):
             import asyncio
 
             async def run(engine: Any) -> Any:
