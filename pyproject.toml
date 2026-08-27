@@ -141,6 +141,13 @@ addopts = "--doctest-modules -vv --ff --strict-markers"
 pytest_alembic_exclude = 'up_down_consistency'
 norecursedirs = ".* build dist *.egg"
 pytester_example_dir = "examples"
+# Applied automatically by `pytest_collection_modifyitems` in tests/conftest.py -- never
+# by hand, so it cannot drift out of step with what the examples actually use. It exists
+# so the non-Linux CI job can deselect the tests that need a real postgres: GitHub
+# supports service containers on Linux runners only.
+markers = [
+    "postgres: needs a reachable postgres; deselected on runners that have none",
+]
 filterwarnings = [
     "error",
     "default:.*which short-circuited the downgrade operation and may have passed the test.*:UserWarning",

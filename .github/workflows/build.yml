@@ -222,6 +222,46 @@ jobs:
         # Not `make test`: that runs under coverage against the 100% floor.
         run: uv run --all-groups --resolution lowest-direct pytest src tests -q
 
+  cross-platform:
+    # Every other job here is `ubuntu-latest`, which left the one piece of explicitly
+    # platform-dependent reasoning in the package unexecuted: `get_bare_import_tableset`
+    # spawns `sys.executable` rather than PATH's `python`, and the comment at
+    # src/pytest_alembic/tests/experimental/all_models_register_on_metadata.py:151-158
+    # justifies that specifically for Windows, "where [PATH's python] is frequently not
+    # an interpreter at all". Nothing verified it there.
+    #
+    # This job carries no postgres service, because GitHub supports service containers on
+    # Linux runners only. It therefore deselects the tests that need a real database via
+    # the `postgres` marker that tests/conftest.py derives -- 133 of 150 tests remain, and
+    # the Linux matrix above still runs all 150.
+    #
+    # Not `make test`, for two reasons. The first is the one `lowest-deps` gives below:
+    # that target runs under coverage against the 100% floor, which a deliberate subset
+    # cannot meet. The second is that the Makefile's recipes are POSIX shell -- `make test`
+    # sets its environment with `VAR=value cmd` -- so it is not portable to a Windows
+    # runner. `uv sync` and `uv run` are, which is why this job goes to them directly
+    # rather than through the front door the other jobs use.
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+      - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7.6.0
+        with:
+          python-version: "3.13"
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Run the tests that need no database
+        run: uv run pytest src tests -m "not postgres" -q
+
   docs:
     # The documentation build, as a gate. Outside the test matrix for the same
     # reason `audit` and `docs-coverage` document above: the .rst sources do not
