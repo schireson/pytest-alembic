@@ -41,7 +41,7 @@ html_sidebars = {"**": ["globaltoc.html", "relations.html", "sourcelink.html", "
 
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
-    "sqlalchemy": ("https://docs.sqlalchemy.org/en/13/", None),
+    "sqlalchemy": ("https://docs.sqlalchemy.org/en/20/", None),
 }
 
 autoclass_content = "both"
