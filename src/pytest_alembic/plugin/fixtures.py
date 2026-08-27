@@ -44,8 +44,8 @@ def create_alembic_fixture(
         ...     tests.test_upgrade_head(alembic)
         >>>
         >>> def test_specific_migration(alembic):
-        ...     alembic_runner.migrate_up_to('xxxxxxx')
-        ...     assert ...
+        ...     alembic.migrate_up_to('xxxxxxx')
+        ...     assert alembic.current == 'xxxxxxx'
 
         Config can also be supplied similarly to the :func:`alembic_config` fixture.
 
@@ -74,7 +74,7 @@ def alembic_runner(
     Examples:
         >>> def test_specific_migration(alembic_runner):
         ...     alembic_runner.migrate_up_to('xxxxxxx')
-        ...     assert ...
+        ...     assert alembic_runner.current == 'xxxxxxx'
     """
     config = Config.from_raw_config(alembic_config)
     with runner(config=config, engine=alembic_engine) as migration_context:
