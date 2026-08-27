@@ -1,6 +1,25 @@
-![Github Actions Build](https://github.com/schireson/pytest-alembic/actions/workflows/build.yml/badge.svg)
+<!-- Badges are grouped: the package itself, then what CI proves about it, then the
+     toolchain. Every URL is absolute -- this file is included verbatim into the sphinx
+     docs by docs/source/quickstart.rst, where a repo-relative link would not resolve.
+     The Python row is hardcoded rather than using img.shields.io/pypi/pyversions,
+     which reads the *published* classifiers and so currently renders "3.9 | 3.10 |
+     3.11" -- including a version that has been dropped. Keep it in step with the
+     matrix in .github/workflows/build.yml and the classifiers in pyproject.toml. -->
+
+[![PyPI version](https://img.shields.io/pypi/v/pytest-alembic)](https://pypi.org/project/pytest-alembic/)
+[![Python versions](https://img.shields.io/badge/Python-3.10%20%E2%80%A2%203.11%20%E2%80%A2%203.12%20%E2%80%A2%203.13%20%E2%80%A2%203.14%20%E2%80%A2%203.15-blue?logo=python&logoColor=white)](https://www.python.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://github.com/schireson/pytest-alembic/blob/main/LICENSE)
+[![PyPI downloads](https://static.pepy.tech/personalized-badge/pytest-alembic?period=month&units=international_system&left_color=black&right_color=orange&left_text=PyPI%20downloads%20per%20month)](https://pepy.tech/project/pytest-alembic)
+
+[![CI](https://github.com/schireson/pytest-alembic/actions/workflows/build.yml/badge.svg)](https://github.com/schireson/pytest-alembic/actions/workflows/build.yml)
 [![Coverage Status](https://coveralls.io/repos/github/schireson/pytest-alembic/badge.svg?branch=main)](https://coveralls.io/github/schireson/pytest-alembic?branch=main)
 [![Documentation Status](https://readthedocs.org/projects/pytest-alembic/badge/?version=latest)](https://pytest-alembic.readthedocs.io/en/latest/?badge=latest)
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/schireson/pytest-alembic/badge)](https://scorecard.dev/viewer/?uri=github.com/schireson/pytest-alembic)
+
+[![Code style: ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg?logo=ruff)](https://github.com/astral-sh/ruff)
+[![Types: mypy](https://img.shields.io/badge/types-mypy-blue.svg)](https://mypy-lang.org/)
+[![uv](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/uv/main/assets/badge/v0.json)](https://github.com/astral-sh/uv)
+[![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
 
 See the full documentation [here](https://pytest-alembic.readthedocs.io/en/latest/).
 
