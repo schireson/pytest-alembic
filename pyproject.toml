@@ -47,6 +47,7 @@ docs = [
     "sphinx-autobuild>=2024.2.4",
     "sphinx-autodoc-typehints>=2.0",
     "sphinx-rtd-theme>=2.0",
+    "sphinx-pyproject>=0.3",
 ]
 
 [tool.coverage.report]
