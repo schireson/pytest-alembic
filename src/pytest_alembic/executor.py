@@ -337,9 +337,8 @@ class ConnectionExecutor:
 
             async def run(engine: Any) -> Any:
                 """Run `fn` inside an async connection, committing on success."""
-                async with engine.connect() as connection:
+                async with engine.begin() as connection:
                     result = await connection.run_sync(fn, **kwargs)
-                    await connection.commit()
 
                 await engine.dispose()
                 return result
