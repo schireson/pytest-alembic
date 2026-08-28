@@ -110,11 +110,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           COVERALLS_PARALLEL: true
         run: |
-          # From the lockfile, through the `ci` group. An ad-hoc `uv pip install coveralls`
-          # let a coveralls release change what this step ran with no commit to this repo.
-          # `--only-group --inexact` so the sync adds the group without disturbing the
-          # version pins the earlier steps installed, and `uv run` does not re-sync
-          # because UV_NO_SYNC is set at the job level.
+          # Install the CI deps without disturbing the
+          # version pins from earlier steps due to UV_NO_SYNC.
           uv sync --frozen --inexact --only-group ci
           uv run coveralls --service=github
 
