@@ -121,6 +121,9 @@ def alembic_config() -> dict[str, Any] | alembic.config.Config | Config:
       **and** construct your own :class:`alembic.config.Config`.
 
     Examples:
+        >>> import alembic.config
+        >>> import pytest
+
         >>> @pytest.fixture
         ... def alembic_config():
         ...     return {'file': 'migrations.ini'}

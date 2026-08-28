@@ -38,6 +38,7 @@ dev = [
     "interrogate>=1.7",
     "mypy>=1.11",
     "psycopg2-binary>=2.9.10",
+    "pyflakes>=3.4.0",
     "pytest-mock-resources[docker]>=2.13.0",
     "ruff>=0.15.0",
 ]
