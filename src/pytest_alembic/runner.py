@@ -65,6 +65,20 @@ def runner(config: "Config", engine: Connectable | None = None) -> Iterator["Mig
     yield migration_context
 
 
+# On this module's size, which is deliberate. `runner.py` is the largest module in the
+# package and the most imported one, and `MigrationContext` below carries both the
+# migration verbs (`migrate_up_one`, `migrate_down_to`, `roundtrip_next_revision`) and the
+# history/state accessors (`current`, `heads`, `table_at_revision`, `insert_into`). Read as
+# a class in isolation, that is two responsibilities and an obvious split.
+#
+# It is one class because it is *the* documented public surface: the object
+# `alembic_runner` yields, and the receiver of every call in every example in the docs.
+# Splitting it would rename or re-home names that users have written tests against, for no
+# defect -- the metrics are healthy (no block above `B`, maintainability index `A`), so the
+# split would buy a tidier graph at the cost of an API break.
+#
+# If a genuine reason to split arrives, keep the public names on this class and delegate,
+# rather than asking callers to reach for a second object.
 @dataclass
 class MigrationContext:
     """Within a given environment/execution context, executes alembic commands.
