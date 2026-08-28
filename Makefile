@@ -29,9 +29,9 @@ format:  ## Apply ruff fixes and formatting in place
 
 deps:  ## Check dependency hygiene (deptry)
 	# No flags: every exception lives in [tool.deptry] in pyproject.toml, so a local
-	# run and CI measure the same thing. `--group docs` so deptry can introspect the
-	# docs packages too, rather than guessing their module names.
-	uv run --group docs deptry src
+	# run and CI measure the same thing. `--group docs --group ci` so deptry can
+	# introspect those packages too, rather than guessing their module names.
+	uv run --group docs --group ci deptry src
 
 docs:  ## Build the HTML documentation (sphinx)
 	# `--group docs` because `make install` runs a bare `uv sync`, which does not
