@@ -55,7 +55,3 @@ audit-all:  ## Audit every dependency group, including dev and docs
 
 publish: build  ## Build and publish to PyPI
 	uv publish --token '${PYPI_TOKEN}'
-
-changelog:  ## Regenerate CHANGELOG.md via convco
-	# https://convco.github.io/
-	convco changelog > CHANGELOG.md
