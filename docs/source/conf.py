@@ -45,15 +45,12 @@ html_sidebars = {"**": ["globaltoc.html", "relations.html", "sourcelink.html", "
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
     "sqlalchemy": ("https://docs.sqlalchemy.org/en/20/", None),
-    # alembic's own inventory, so `:class:`alembic.config.Config`` resolves to alembic's
-    # page rather than being dropped.
     "alembic": ("https://alembic.sqlalchemy.org/en/latest/", None),
 }
 
 # Every unresolved cross-reference is a warning, and `make docs` builds under `-W`, so it
 # is an error. Without this, sphinx silently drops an unresolved Python reference and
-# renders the text unlinked -- which is how the stale intersphinx entry fixed in #227 got
-# past a `-W` build in the first place: there was nothing for `-W` to see.
+# renders the text unlinked.
 nitpicky = True
 
 autoclass_content = "both"
