@@ -65,6 +65,9 @@ def runner(config: "Config", engine: Connectable | None = None) -> Iterator["Mig
     yield migration_context
 
 
+# This class may seem to be overly large and have a, perhaps, over broad set of responsibilities.
+# However it represents the public API of a migration, containing all the utilities a migration test
+# author (users of this library) should require to manipulate migrations within their tests.
 @dataclass
 class MigrationContext:
     """Within a given environment/execution context, executes alembic commands.
