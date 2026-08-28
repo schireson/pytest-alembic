@@ -132,7 +132,7 @@ in a single project. How should you structure your tests?
 This is likely one of the times you want to avoid the use of the :code:`--test-alembic`
 flag and the automatic insertion of tests.
 
-Instead, you'll likely want to want to make use of :func:`create_alembic_fixture`.
+Instead, you'll likely want to want to make use of :func:`~pytest_alembic.plugin.fixtures.create_alembic_fixture`.
 
 .. code-block:: python
 

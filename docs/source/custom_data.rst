@@ -51,15 +51,15 @@ semantically model more closely), one or the other option may be more appropriat
 Schema
 ------
 
-The value for either :code:`before_revision_data` or :code:`at_revision_data`, should be a :func:`dict`
+The value for either :code:`before_revision_data` or :code:`at_revision_data`, should be a :class:`dict`
 where the keys are the revision for which the data is being described.
 
-The value can either be a :func:`dict` (single row), or a :func:`list` of :func:`dict` (multiple
+The value can either be a :class:`dict` (single row), or a :class:`list` of :class:`dict` (multiple
 rows). :code:`__tablename__` is a special key which tells us the name of the table to insert the
 data into, and the rest of the spec should describe the columns and the column data for that row,
 similar to what you might do for a :meth:`table.insert().values(...) <sqlalchemy.sql.expression.Insert.values>` call.
 
-Alternatively, you can directly import and instantiate a :class:`RevisionSpec` and set that as the
+Alternatively, you can directly import and instantiate a :class:`~pytest_alembic.revision_data.RevisionSpec` and set that as the
 value to  either :code:`before_revision_data` or :code:`at_revision_data`.
 
 Example

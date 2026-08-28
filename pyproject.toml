@@ -8,6 +8,9 @@ license-files = ["LICENSE"]
 keywords = ["pytest", "sqlalchemy", "alembic", "migration", "revision"]
 classifiers = [
     "Framework :: Pytest",
+    # The cross-platform CI job runs the database-free tests on Windows and macOS, and the
+    # matrix runs everything on Linux, so this is gated rather than assumed.
+    "Operating System :: OS Independent",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",

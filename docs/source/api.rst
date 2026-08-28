@@ -29,10 +29,11 @@ create_alembic_fixture
 Alembic Runner
 --------------
 
-The object yielded into a test from an `alembic_runner` fixture is the :class:`MigrationContext`
+The object yielded into a test from an `alembic_runner` fixture is the
+:class:`~pytest_alembic.runner.MigrationContext`
 
 .. automodule:: pytest_alembic.runner
-    :members: MigrationContext
+    :members: MigrationContext, runner
 
 .. automodule:: pytest_alembic.history
     :members: AlembicHistory
