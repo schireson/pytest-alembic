@@ -24,7 +24,7 @@ Honestly, there's not much to it by this point!
 
        assert rows == [(1,)]
 
-:class:`alembic_runner <pytest_alembic.MigrationContext>` has all sorts of convenience methods
+:class:`alembic_runner <pytest_alembic.runner.MigrationContext>` has all sorts of convenience methods
 for altering the state of the database for your test:
 
 .. autoclass:: pytest_alembic.runner.MigrationContext

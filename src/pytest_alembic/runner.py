@@ -1,6 +1,6 @@
 """The object tests actually hold: the migration context, and how it is built.
 
-:class:`MigrationContext` is what the :func:`alembic_runner` fixture yields, and the
+:class:`MigrationContext` is what the :func:`~pytest_alembic.plugin.fixtures.alembic_runner` fixture yields, and the
 surface every test written against a migration history uses. This module assembles it
 from the pieces the other modules provide — the two executors, the flattened history,
 and the configured revision data.
@@ -39,7 +39,7 @@ ProcessRevisionDirectives = Callable[..., None]
 def runner(config: "Config", engine: Connectable | None = None) -> Iterator["MigrationContext"]:
     """Manage the alembic execution context, in a given context.
 
-    Most tests never call this directly — the :func:`alembic_runner` fixture wraps it and
+    Most tests never call this directly — the :func:`~pytest_alembic.plugin.fixtures.alembic_runner` fixture wraps it and
     yields the same :class:`MigrationContext`. Reach for it when you need a runner outside
     a fixture, such as in a ``conftest.py`` helper.
 
@@ -72,7 +72,7 @@ def runner(config: "Config", engine: Connectable | None = None) -> Iterator["Mig
 class MigrationContext:
     """Within a given environment/execution context, executes alembic commands.
 
-    This is the object the :func:`alembic_runner` fixture yields, and the primary surface
+    This is the object the :func:`~pytest_alembic.plugin.fixtures.alembic_runner` fixture yields, and the primary surface
     for tests written against a specific migration history. The methods fall into three
     groups:
 
@@ -108,7 +108,7 @@ class MigrationContext:
         """Assemble a context from its parts, parsing the history as it goes.
 
         The executors are passed in rather than built here, because the caller is what
-        knows the engine under test — see :func:`runner`.
+        knows the engine under test — see :func:`~pytest_alembic.runner.runner`.
         """
         history = AlembicHistory.parse(command_executor.script.revision_map)
 

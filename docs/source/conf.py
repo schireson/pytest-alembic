@@ -45,7 +45,13 @@ html_sidebars = {"**": ["globaltoc.html", "relations.html", "sourcelink.html", "
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
     "sqlalchemy": ("https://docs.sqlalchemy.org/en/20/", None),
+    "alembic": ("https://alembic.sqlalchemy.org/en/latest/", None),
 }
+
+# Every unresolved cross-reference is a warning, and `make docs` builds under `-W`, so it
+# is an error. Without this, sphinx silently drops an unresolved Python reference and
+# renders the text unlinked.
+nitpicky = True
 
 autoclass_content = "both"
 master_doc = "index"

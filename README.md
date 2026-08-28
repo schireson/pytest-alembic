@@ -20,6 +20,9 @@ See the full documentation [here](https://pytest-alembic.readthedocs.io/en/lates
 A pytest plugin to test alembic migrations (with default tests) and
 which enables you to write tests specific to your migrations.
 
+Runs on Python 3.10 – 3.15 with alembic 1.9+ and SQLAlchemy 1.4+, on Linux, macOS and
+Windows.
+
 ```bash
 $ pip install pytest-alembic
 $ pytest --test-alembic

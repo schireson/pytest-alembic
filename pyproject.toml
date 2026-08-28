@@ -8,6 +8,7 @@ license-files = ["LICENSE"]
 keywords = ["pytest", "sqlalchemy", "alembic", "migration", "revision"]
 classifiers = [
     "Framework :: Pytest",
+    "Operating System :: OS Independent",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",

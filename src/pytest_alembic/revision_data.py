@@ -45,7 +45,7 @@ class RevisionData:
 
     @classmethod
     def from_config(cls, config: "Config") -> "RevisionData":
-        """Produce a `RevisionData` from raw configuration from :func:`alembic_config`."""
+        """Produce a `RevisionData` from raw configuration from :func:`~pytest_alembic.plugin.fixtures.alembic_config`."""
         return cls(
             before_revision_data=RevisionSpec.parse(config.before_revision_data),
             at_revision_data=RevisionSpec.parse(config.at_revision_data),
