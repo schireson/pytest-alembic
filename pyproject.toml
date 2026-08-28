@@ -1,6 +1,6 @@
 [project]
 name = "pytest-alembic"
-version = "0.12.1"
+version = "0.13.0"
 description = "A pytest plugin for verifying alembic migrations."
 authors = [{ name = "Dan Cardin", email = "ddcardin@gmail.com" }]
 license = "MIT"
@@ -47,10 +47,7 @@ dev = [
 # ad hoc in the workflow so they resolve from `uv.lock`, are covered by `make audit-all`,
 # and are visible to dependabot -- a `pip install coveralls` in a `run:` step let a
 # coveralls release change what CI ran with no commit to this repo.
-ci = [
-    "coveralls>=4.0",
-    "tomli>=2.0",
-]
+ci = ["coveralls>=4.0", "tomli>=2.0"]
 docs = [
     "myst-parser>=2.0",
     "sphinx>=7.0",
@@ -156,9 +153,7 @@ pytester_example_dir = "examples"
 # by hand, so it cannot drift out of step with what the examples actually use. It exists
 # so the non-Linux CI job can deselect the tests that need a real postgres: GitHub
 # supports service containers on Linux runners only.
-markers = [
-    "postgres: needs a reachable postgres; deselected on runners that have none",
-]
+markers = ["postgres: needs a reachable postgres; deselected on runners that have none"]
 filterwarnings = [
     "error",
     "default:.*which short-circuited the downgrade operation and may have passed the test.*:UserWarning",
