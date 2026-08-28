@@ -41,6 +41,14 @@ dev = [
     "pytest-mock-resources[docker]>=2.13.0",
     "ruff>=0.15.0",
 ]
+# The two packages CI needs and nothing else does. Declared here rather than installed
+# ad hoc in the workflow so they resolve from `uv.lock`, are covered by `make audit-all`,
+# and are visible to dependabot -- a `pip install coveralls` in a `run:` step let a
+# coveralls release change what CI ran with no commit to this repo.
+ci = [
+    "coveralls>=4.0",
+    "tomli>=2.0",
+]
 docs = [
     "myst-parser>=2.0",
     "sphinx>=7.0",
