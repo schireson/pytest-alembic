@@ -1,16 +1,5 @@
 """Undefined names in doctest examples, as a gate -- including inside `>>> def` bodies.
 
-`--doctest-modules` executes the examples under ``src``, but 26 of them consist of a bare
-``def test_...(alembic):`` whose body calls into the fixture. Those need a live fixture and
-a database, so they cannot carry doctest output and are not meant to run: doctest only
-*compiles* the function definition and never resolves the names inside its body.
-
-That is how the example fixed in #236 shipped. It bound the fixture to one name and then
-called another in the body -- an undefined name that raised `NameError` for anyone who
-copied it -- and got past a 100%-coverage suite, `--doctest-modules`, and a docs build.
-
-(No example in this docstring, deliberately: `--doctest-modules` collects this file too, and
-an illustration of the broken shape would be collected as a doctest of its own.)
 
 ruff does not lint code inside docstrings (checked against exactly that shape with
 `--select F821`), so this reads the examples out with `doctest` and runs pyflakes over them.
