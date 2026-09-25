@@ -2,7 +2,7 @@
 
 ## 0.13
 
-### 0.13.0 (Unreleased)
+### 0.13.0
 
 - breaking: drop Python 3.9, minimum now 3.10
 - feat: add type hints to exposed tests
@@ -11,6 +11,7 @@
 - fix: incorrect execution of the min revision downgrade in "leaves-no-trace" test
 - fix: honour the `default` argument of `collect_test_definitions`
 - fix: readthedocs build
+- fix: Remove requires_python version upper limit
 
 ## 0.12
 
