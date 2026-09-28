@@ -216,3 +216,21 @@ class Test_pytest_itemcollected:
         plugin.pytest_itemcollected(item)
 
         item.add_marker.assert_not_called()
+
+
+class Test_should_register:
+    def test_path_outside_rootpath_is_declined(self, pytester: pytest.Pytester) -> None:
+        """Assert a file collected from outside `rootpath` is collected, not an error.
+
+        pytest offers every collected file to `pytest_collect_file`, including ones
+        outside the root when `--rootdir` points elsewhere. Such a path cannot be the
+        configured tests path, so it must be declined rather than raise out of
+        `Path.relative_to` and abort collection.
+        """
+        root = pytester.mkdir("root")
+        outside = pytester.makepyfile(test_outside="def test_ok() -> None: ...")
+
+        result = pytester.inline_run(f"--rootdir={root}", str(outside))
+
+        assert result.ret == pytest.ExitCode.OK
+        result.assertoutcome(passed=1)

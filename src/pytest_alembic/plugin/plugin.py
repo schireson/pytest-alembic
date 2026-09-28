@@ -84,7 +84,8 @@ class PytestAlembicPlugin:
 
         Precedence is command line, then ini, then ``tests/conftest.py``. The comparison
         is against the path relative to ``rootpath``, so the configured value is written
-        the same way regardless of where pytest was invoked from.
+        the same way regardless of where pytest was invoked from. A path outside
+        ``rootpath`` (collectable via ``--rootdir``) can never match and is declined.
 
         Returns ``True`` at most once per session; every later call returns ``False``.
 
@@ -96,6 +97,9 @@ class PytestAlembicPlugin:
             or cast("str | None", self.config.getini("pytest_alembic_tests_path"))
             or "tests/conftest.py"
         )
+        if not path.is_relative_to(self.config.rootpath):
+            return False
+
         relative_path = path.relative_to(self.config.rootpath)
         if relative_path == tests_path and not self.registered:
             self.registered = True
