@@ -1,9 +1,11 @@
+import sys
 from io import StringIO
+from typing import Any, cast
 
 import alembic.config
 import pytest
 from pytest_mock_resources import create_postgres_fixture
-from sqlalchemy import Column, MetaData, Table, types
+from sqlalchemy import Column, create_engine, MetaData, Table, text, types
 from sqlalchemy.engine import Engine
 
 from pytest_alembic.executor import CommandExecutor, ConnectionExecutor
@@ -47,3 +49,26 @@ def test_table_insert_without_a_table_name() -> None:
 
     with pytest.raises(ValueError, match="No table name provided"):
         connection_executor.table_insert("", [{"name": "who"}])
+
+
+def test_run_task_without_sqlalchemy_asyncio(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Assert a sync engine still works when `sqlalchemy.ext.asyncio` cannot be imported.
+
+    From sqlalchemy 2.1, greenlet is only installed with the `sqlalchemy[asyncio]` extra,
+    and importing `sqlalchemy.ext.asyncio` without it raises `ImportError`. A `None` entry
+    in `sys.modules` makes the import raise the same way.
+    """
+    modules = cast("dict[str, Any]", sys.modules)
+    monkeypatch.setitem(modules, "sqlalchemy.ext.asyncio", None)
+
+    engine = create_engine("sqlite://")
+    connection_executor = ConnectionExecutor(engine)
+
+    try:
+        result = connection_executor.run_task(
+            lambda connection: connection.execute(text("select 1")).scalar()
+        )
+    finally:
+        engine.dispose()
+
+    assert result == 1
