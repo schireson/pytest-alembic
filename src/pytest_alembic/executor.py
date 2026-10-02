@@ -20,7 +20,6 @@ from alembic.runtime.environment import EnvironmentContext
 from alembic.script.base import ScriptDirectory
 from sqlalchemy import MetaData, Table
 from sqlalchemy.engine import Connectable, Connection, Engine
-from sqlalchemy.ext.asyncio import AsyncEngine
 
 from pytest_alembic.config import Config
 
@@ -37,6 +36,23 @@ if TYPE_CHECKING:
 # declare `current_rev: str` while being fed exactly that tuple, so annotating it accurately
 # here would make every call site below an error against alembic's own signature.
 MigrationFn = Callable[[Any, "AlembicMigrationContext"], "list[RevisionStep]"]
+
+
+def _is_async_engine(connection: Any) -> bool:
+    """Report whether `connection` is a sqlalchemy ``AsyncEngine``.
+
+    The import is deferred and guarded rather than done at module level: from sqlalchemy
+    2.1, ``sqlalchemy.ext.asyncio`` raises ``ImportError`` on import unless greenlet is
+    installed (it moved to the ``sqlalchemy[asyncio]`` extra), and this module is imported
+    by the pytest plugin itself. Without greenlet no ``AsyncEngine`` can exist, so the
+    answer is simply no.
+    """
+    try:
+        from sqlalchemy.ext.asyncio import AsyncEngine
+    except ImportError:
+        return False
+
+    return isinstance(connection, AsyncEngine)
 
 
 @dataclass
@@ -324,7 +340,7 @@ class ConnectionExecutor:
         even though all internals are synchronous. This is how alembic suggests
         running the migrations themselves, so this matches that style.
         """
-        if isinstance(self.connection, AsyncEngine):
+        if _is_async_engine(self.connection):
             import asyncio
 
             async def run(engine: Any) -> Any:
