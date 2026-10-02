@@ -2,6 +2,10 @@
 
 ## 0.13
 
+### 0.13.1
+
+- fix: Compatibility with sqlalchemy 2.1 early raising without greenlet.
+
 ### 0.13.0
 
 - breaking: drop Python 3.9, minimum now 3.10
