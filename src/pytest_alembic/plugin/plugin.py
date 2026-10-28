@@ -124,10 +124,11 @@ class TestCollector(pytest.Module):
     exists on disk.
     """
 
-    def __init__(self, **kwargs: Any) -> None:
+    def __init__(self, *, path: Path, parent: pytest.Collector, **kwargs: Any) -> None:
         """Suffix the node id and mark every test below it as ``alembic``."""
-        super().__init__(**kwargs)
-        self._nodeid += "::pytest-alembic"
+        # pytest 9.2 annotates FSCollector's nodeid as NodeId, but Node still accepts a str.
+        kwargs["nodeid"] = f"{path.relative_to(parent.config.rootpath).as_posix()}::pytest-alembic"
+        super().__init__(path=path, parent=parent, **kwargs)
         self.add_marker("alembic")
 
     def collect(self) -> list[pytest.Item]:

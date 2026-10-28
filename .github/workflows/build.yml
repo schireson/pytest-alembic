@@ -58,25 +58,27 @@ jobs:
           # surface in those older versions but not in pytest 9,
           # but we **do** know that newer versions of dependencies may not support arbitrarily old
           # python versions.
-          - {python-version: "3.10", pytest-version: "9.1.1", sqlalchemy-version: "2.0.52"}
-          - {python-version: "3.11", pytest-version: "9.1.1", sqlalchemy-version: "2.0.52"}
-          - {python-version: "3.12", pytest-version: "9.1.1", sqlalchemy-version: "2.0.52"}
-          - {python-version: "3.13", pytest-version: "9.1.1", sqlalchemy-version: "2.0.52"}
-          - {python-version: "3.14", pytest-version: "9.1.1", sqlalchemy-version: "2.0.52"}
-          - {python-version: "3.15", pytest-version: "9.1.1", sqlalchemy-version: "2.0.52"}
+          - {python-version: "3.10", pytest-version: "9.2.0", sqlalchemy-version: "2.0.52"}
+          - {python-version: "3.11", pytest-version: "9.2.0", sqlalchemy-version: "2.0.52"}
+          - {python-version: "3.12", pytest-version: "9.2.0", sqlalchemy-version: "2.0.52"}
+          - {python-version: "3.13", pytest-version: "9.2.0", sqlalchemy-version: "2.0.52"}
+          - {python-version: "3.14", pytest-version: "9.2.0", sqlalchemy-version: "2.0.52"}
+          - {python-version: "3.15", pytest-version: "9.2.0", sqlalchemy-version: "2.0.52"}
 
           # For older tool versions, we can just stick to a single python version, again, because we
           # have no reason to believe their pytest-alembic specifically impacts their compatibility.
           # 7.0.0 is the floor declared in [project.dependencies]; 8.3.5 covers the
-          # intervening major, whose hook API differs from both neighbours.
+          # intervening major, whose hook API differs from both neighbours. 9.1.1 is the
+          # last release before pytest 9.2 replaced the stored node id string with NodeId.
           - {python-version: "3.13", pytest-version: "7.0.0", sqlalchemy-version: "2.0.40"}
           - {python-version: "3.13", pytest-version: "8.3.5", sqlalchemy-version: "2.0.40"}
+          - {python-version: "3.13", pytest-version: "9.1.1", sqlalchemy-version: "2.0.40"}
 
           # The sqlalchemy range, for the same reason and by the same logic. `lowest-deps`
           # covers the 1.4 floor and the rows above cover two adjacent 2.0 patches, which
           # left the end of the 1.4 series and the 2.0.0 boundary gated by nothing.
-          - {python-version: "3.13", pytest-version: "9.1.1", sqlalchemy-version: "1.4.54"}
-          - {python-version: "3.11", pytest-version: "9.1.1", sqlalchemy-version: "2.0.0"}
+          - {python-version: "3.13", pytest-version: "9.2.0", sqlalchemy-version: "1.4.54"}
+          - {python-version: "3.11", pytest-version: "9.2.0", sqlalchemy-version: "2.0.0"}
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
