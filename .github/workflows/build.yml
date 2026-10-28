@@ -77,7 +77,9 @@ jobs:
           # The sqlalchemy range, for the same reason and by the same logic. `lowest-deps`
           # covers the 1.4 floor and the rows above cover two adjacent 2.0 patches, which
           # left the end of the 1.4 series and the 2.0.0 boundary gated by nothing.
-          - {python-version: "3.13", pytest-version: "9.2.0", sqlalchemy-version: "1.4.54"}
+          # alembic 1.20 requires sqlalchemy>=2.0, and `uv pip install sqlalchemy==...` does not
+          # re-resolve the already-installed alembic, so the 1.4 row pins a compatible one.
+          - {python-version: "3.13", pytest-version: "9.2.0", sqlalchemy-version: "1.4.54", alembic-requirement: "alembic<1.20"}
           - {python-version: "3.11", pytest-version: "9.2.0", sqlalchemy-version: "2.0.0"}
 
     steps:
@@ -99,6 +101,10 @@ jobs:
         run: |
           uv pip install 'sqlalchemy==${{ matrix.sqlalchemy-version }}'
           uv pip install 'pytest==${{ matrix.pytest-version }}'
+
+      - name: Install specific alembic
+        if: matrix.alembic-requirement
+        run: uv pip install '${{ matrix.alembic-requirement }}'
 
       - name: Run linters
         run: make lint

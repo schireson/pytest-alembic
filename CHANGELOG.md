@@ -2,6 +2,10 @@
 
 ## 0.13
 
+### 0.13.2
+
+- fix: Compatibility with pytest 9.2 use of private _nodeid attribute.
+
 ### 0.13.1
 
 - fix: Compatibility with sqlalchemy 2.1 early raising without greenlet.
